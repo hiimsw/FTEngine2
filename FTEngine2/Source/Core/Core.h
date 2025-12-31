@@ -15,7 +15,6 @@ public:
 	void Finalize();
 
 	void ChangeScene(Scene* scene);
-	void SetSceneType(const Scene::SCENE_TYPE type);
 
 private:
 	ID2D1Factory* mFactory = nullptr;
@@ -25,6 +24,4 @@ private:
 
 	Helper mHelper{};
 	Scene* mScene = nullptr;
-
-	Scene::SCENE_TYPE mSceneType{};
 };

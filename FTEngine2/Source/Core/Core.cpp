@@ -197,11 +197,5 @@ void Core::ChangeScene(Scene* scene)
 
 	mScene = scene;
 	mScene->_Preinitialize(&mHelper);
-	mScene->SetType(mSceneType);
 	mScene->Initialize();
-}
-
-void Core::SetSceneType(const Scene::SCENE_TYPE type)
-{
-	mSceneType = type;
 }

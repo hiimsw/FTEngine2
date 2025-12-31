@@ -64,7 +64,6 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	Input::Get()._Initialize(hWnd);
 
-	gCore.SetSceneType(Scene::SCENE_TYPE::Village);
 	gCore.Initialize(hWnd, new MainScene);
 	gGameScene = eGameScene::VillageScene;
 

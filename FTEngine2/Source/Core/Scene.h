@@ -8,15 +8,6 @@ class Sprite;
 class Scene
 {
 public:
-	enum class SCENE_TYPE
-	{
-		Start,
-		Village,
-		Stage01,
-		End
-	};
-
-public:
 	Scene() = default;
 	Scene(const Scene&) = delete;
 	const Scene& operator=(const Scene&) = delete;
@@ -40,16 +31,9 @@ public:
 public:
 	void _Preinitialize(Helper* helper);
 
-public:
-	[[nodiscard]] const SCENE_TYPE GetType() const;
-	void SetType(const SCENE_TYPE type);
-
 private:
 	Helper* mHelper = nullptr;
 	const std::vector<Sprite*>* mSprites = nullptr;
 	const std::vector<Label*>* mLabels = nullptr;
 	const Camera* mCamera = nullptr;
-
-protected:
-	SCENE_TYPE mSceneType{};
 };
