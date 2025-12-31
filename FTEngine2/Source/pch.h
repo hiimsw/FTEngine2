@@ -16,8 +16,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-constexpr char PROJECT_PATH[] = "C:\\Users\\peach\\github\\FTEngine\\FTEngine\\Source";
-
 #define RELEASE(x) \
 if ((x) != nullptr) \
 { \
@@ -45,7 +43,7 @@ void(0)
 #define LOG(format, ...) \
 { \
 	char log[256]{}; \
-	sprintf_s(log, sizeof(log), "%s(%d): " format "\n", __FILE__ + sizeof(PROJECT_PATH), __LINE__, __VA_ARGS__); \
+	sprintf_s(log, sizeof(log), "%s(%d): " format "\n", strstr(__FILE__, "Source"), __LINE__, __VA_ARGS__); \
 	printf(log); \
 	OutputDebugStringA(log); \
 } \
@@ -54,7 +52,7 @@ void(0)
 #define LOG_W(format, ...) \
 { \
 	wchar_t log[256]{}; \
-	swprintf_s(log, sizeof(log), "%s(%d): " format "\n", __FILE__ + sizeof(PROJECT_PATH), __LINE__, __VA_ARGS__); \
+	swprintf_s(log, sizeof(log), "%s(%d): " format "\n", strstr(__FILE__, "Source"), __LINE__, __VA_ARGS__); \
 	wprintf(log); \
 	OutputDebugStringW(log); \
 } \
