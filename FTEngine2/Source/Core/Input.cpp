@@ -147,6 +147,11 @@ void Input::_ConfineCursor() const
 	RECT clientRect = {};
 	GetClientRect(mHWnd, &clientRect);
 	MapWindowPoints(mHWnd, nullptr, reinterpret_cast<LPPOINT>(&clientRect), 2);
+
+	clientRect.left += 1;
+	clientRect.top += 1;
+	clientRect.right -= 1;
+	clientRect.bottom -= 1;
 	ClipCursor(&clientRect);
 }
 
