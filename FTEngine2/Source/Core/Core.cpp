@@ -89,8 +89,8 @@ bool Core::Update(const float deltaTime)
 				ID2D1Bitmap* bitmap = texture->_GetBitmap();
 
 				D2D1_POINT_2F center = sprite->GetCenter();
-				center.x = -(center.x + 0.5f) * (texture->GetWidth() - 1.0f);
-				center.y = (center.y - 0.5f) * (texture->GetHeight() - 1.0f);
+				center.x = -(center.x + 0.5f) * texture->GetWidth();
+				center.y = (center.y - 0.5f) * texture->GetHeight();
 
 				D2D1_POINT_2F position = sprite->GetPosition();
 				position.y = Constant::Get().GetHeight() - position.y - 1.0f;
