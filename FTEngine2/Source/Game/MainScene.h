@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Core/Camera.h"
 #include "Core/Scene.h"
+#include "Core/Sprite.h"
+#include "Core/Texture.h"
 
 class MainScene final : public Scene
 {
@@ -12,4 +15,13 @@ public:
 	void Initialize() override;
 	bool Update(const float deltaTime) override;
 	void Finalize() override;
+
+private:
+	Texture mRectangleTexture{};
+
+	Camera mMainCamera{};
+
+	std::vector<Sprite*> mSprites{};
+	Sprite mHero{};
+	Sprite mMonster{};
 };

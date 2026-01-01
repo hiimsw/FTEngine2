@@ -129,3 +129,31 @@ void(0)
 #endif
 
 #endif
+
+namespace Math
+{
+	inline D2D1_POINT_2F AddVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs);
+	inline float GetVectorLength(D2D1_POINT_2F vector);
+	inline D2D1_POINT_2F GetNormalizeVector(D2D1_POINT_2F vector);
+
+	D2D1_POINT_2F AddVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs)
+	{
+		D2D1_POINT_2F sumVector{ .x = lhs.x + rhs.x, .y = lhs.y + rhs.y };
+		return sumVector;
+	}
+
+	float GetVectorLength(D2D1_POINT_2F vector)
+	{
+		float lenght = sqrt(vector.x * vector.x + vector.y * vector.y);
+		return lenght;
+	}
+
+	D2D1_POINT_2F GetNormalizeVector(D2D1_POINT_2F vector)
+	{
+		float lenght = GetVectorLength(vector);
+		vector.x /= lenght;
+		vector.y /= lenght;
+
+		return vector;
+	}
+}
