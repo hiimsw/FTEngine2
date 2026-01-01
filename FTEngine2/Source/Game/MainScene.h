@@ -25,4 +25,6 @@ private:
 	Sprite mHero{};
 	Sprite mMonster{};
 	Sprite mZoom{};
+	
+	std::array<Sprite, 4> mBars{};
 };

@@ -36,11 +36,48 @@ void MainScene::Initialize()
 		mSpriteLayer.push_back(&mMonster);
 	}
 
-	// 줌을 초기화 한다.
-	mZoom.SetAngle(45.0f);
-	mZoom.SetUI(true);
-	mZoom.SetTexture(&mRectangleTexture);
-	mSpriteLayer.push_back(&mZoom);
+	// 바운더리를 초기화한다.
+	{
+		constexpr D2D1_SIZE_F BOUNDARY_SIZE = { .width = 30.0f, .height = 20.0f };
+
+		D2D1_POINT_2F offset =
+		{
+			.x = mRectangleTexture.GetWidth() * BOUNDARY_SIZE.width * 0.5f,
+			.y = mRectangleTexture.GetHeight() * BOUNDARY_SIZE.height * 0.5f
+		};
+
+		mBars[0].SetScale({ .width = 0.2f, .height = BOUNDARY_SIZE.height });
+		mBars[0].SetCenter({ .x = 0.0f, .y = 0.5f });
+		mBars[0].SetPosition({ .x = -offset.x, .y = offset.y });
+		mBars[0].SetTexture(&mRectangleTexture);
+		mSpriteLayer.push_back(&mBars[0]);
+
+		mBars[1].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
+		mBars[1].SetCenter({ .x = -0.5f, .y = 0.0f });
+		mBars[1].SetPosition({ .x = -offset.x, .y = offset.y });
+		mBars[1].SetTexture(&mRectangleTexture);
+		mSpriteLayer.push_back(&mBars[1]);
+
+		mBars[2].SetScale({ .width = 0.2f, .height = BOUNDARY_SIZE.height });
+		mBars[2].SetCenter({ .x = 0.0f, .y = -0.5f });
+		mBars[2].SetPosition({ .x = offset.x, .y = -offset.y });
+		mBars[2].SetTexture(&mRectangleTexture);
+		mSpriteLayer.push_back(&mBars[2]);
+
+		mBars[3].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
+		mBars[3].SetCenter({ .x = 0.5f, .y = 0.0f });
+		mBars[3].SetPosition({ .x = offset.x, .y = -offset.y });
+		mBars[3].SetTexture(&mRectangleTexture);
+		mSpriteLayer.push_back(&mBars[3]);
+	}
+
+	// 줌을 초기화한다.
+	{
+		mZoom.SetAngle(45.0f);
+		mZoom.SetUI(true);
+		mZoom.SetTexture(&mRectangleTexture);
+		mSpriteLayer.push_back(&mZoom);
+	}
 
 	// 카메라를 초기화한다.
 	{
@@ -52,13 +89,13 @@ void MainScene::Initialize()
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
 	{
-		for (Sprite* sprite : mSpriteLayer)
-		{
-			D2D1_SIZE_F scale = sprite->GetScale();
-			scale.width *= SCALE;
-			scale.height *= SCALE;
-			sprite->SetScale(scale);
-		}
+		//for (Sprite* sprite : mSpriteLayer)
+		//{
+		//	D2D1_SIZE_F scale = sprite->GetScale();
+		//	scale.width *= SCALE;
+		//	scale.height *= SCALE;
+		//	sprite->SetScale(scale);
+		//}
 	}
 }
 
