@@ -132,36 +132,40 @@ void(0)
 
 namespace Math
 {
-	inline D2D1_POINT_2F AddVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs);
-	inline D2D1_POINT_2F MinusVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs);
-	inline float GetVectorLength(D2D1_POINT_2F vector);
-	inline D2D1_POINT_2F GetNormalizeVector(D2D1_POINT_2F vector);
+	inline D2D1_POINT_2F AddVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
+	inline D2D1_POINT_2F SubtractVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
+	inline D2D1_POINT_2F ScaleVector(const D2D1_POINT_2F vector, const float scalar);
+	inline float GetVectorLength(const D2D1_POINT_2F vector);
+	inline D2D1_POINT_2F GetNormalizeVector(const D2D1_POINT_2F vector);
 
-	D2D1_POINT_2F AddVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs)
+	D2D1_POINT_2F AddVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
 	{
-		D2D1_POINT_2F sumVector{ .x = lhs.x + rhs.x, .y = lhs.y + rhs.y };
-		return sumVector;
+		D2D1_POINT_2F result{ .x = lhs.x + rhs.x, .y = lhs.y + rhs.y };
+		return result;
 	}
 
-	D2D1_POINT_2F MinusVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs)
+	D2D1_POINT_2F SubtractVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
 	{
-		// TODO: 변수명 수정이 필요하다.
-		D2D1_POINT_2F minusVector{ .x = lhs.x - rhs.x, .y = lhs.y - rhs.y };
-		return minusVector;
+		D2D1_POINT_2F result{ .x = lhs.x - rhs.x, .y = lhs.y - rhs.y };
+		return result;
 	}
 
-	float GetVectorLength(D2D1_POINT_2F vector)
+	D2D1_POINT_2F ScaleVector(const D2D1_POINT_2F vector, const float scalar)
+	{
+		D2D1_POINT_2F result{ .x = vector.x * scalar, .y = vector.y * scalar };
+		return result;
+	}
+
+	float GetVectorLength(const D2D1_POINT_2F vector)
 	{
 		float lenght = sqrt(vector.x * vector.x + vector.y * vector.y);
 		return lenght;
 	}
 
-	D2D1_POINT_2F GetNormalizeVector(D2D1_POINT_2F vector)
+	D2D1_POINT_2F GetNormalizeVector(const D2D1_POINT_2F vector)
 	{
 		float lenght = GetVectorLength(vector);
-		vector.x /= lenght;
-		vector.y /= lenght;
-
-		return vector;
+		D2D1_POINT_2F result{ .x = vector.x / lenght, .y = vector.y / lenght };
+		return result;
 	}
 }
