@@ -21,7 +21,7 @@ private:
 
 	Camera mMainCamera{};
 
-	std::vector<Sprite*> mSprites{};
+	std::vector<Sprite*> mSpriteLayer{};
 	Sprite mHero{};
 	Sprite mMonster{};
 	Sprite mZoom{};

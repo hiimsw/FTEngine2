@@ -9,8 +9,8 @@ constexpr float SCALE = 0.5f;
 void MainScene::Initialize()
 {
 	{
-		mSprites.reserve(128);
-		SetSprites(&mSprites);
+		mSpriteLayer.reserve(128);
+		SetSpriteLayers(&mSpriteLayer, 1);
 
 		SetCamera(&mMainCamera);
 		
@@ -21,7 +21,7 @@ void MainScene::Initialize()
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 
 	mHero.SetTexture(&mRectangleTexture);
-	mSprites.push_back(&mHero);
+	mSpriteLayer.push_back(&mHero);
 
 	// 몬스터를 초기화한다.
 	{
@@ -33,14 +33,14 @@ void MainScene::Initialize()
 		constexpr float MONSTER_SCALE = 0.5f;
 		mMonster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 
-		mSprites.push_back(&mMonster);
+		mSpriteLayer.push_back(&mMonster);
 	}
 
 	// 줌을 초기화 한다.
 	mZoom.SetAngle(45.0f);
 	mZoom.SetUI(true);
 	mZoom.SetTexture(&mRectangleTexture);
-	mSprites.push_back(&mZoom);
+	mSpriteLayer.push_back(&mZoom);
 
 	// 카메라를 초기화한다.
 	{
@@ -52,7 +52,7 @@ void MainScene::Initialize()
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
 	{
-		for (Sprite* sprite : mSprites)
+		for (Sprite* sprite : mSpriteLayer)
 		{
 			D2D1_SIZE_F scale = sprite->GetScale();
 			scale.width *= SCALE;

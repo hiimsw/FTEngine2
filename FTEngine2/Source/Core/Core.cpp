@@ -69,10 +69,11 @@ bool Core::Update(const float deltaTime)
 			viewForUI.Invert();
 		}
 
-		const std::vector<Sprite*>* sprites = mScene->GetSpritesOrNull();
-		if (sprites != nullptr)
+		const uint32_t spriteLayerCount = mScene->GetSpriteLayerCount();
+		for (uint32_t i = 0; i < spriteLayerCount; ++i)
 		{
-			for (const Sprite* sprite : *sprites)
+			const std::vector<Sprite*>* spriteLayer = mScene->GetSpriteLayer(i);
+			for (const Sprite* sprite : *spriteLayer)
 			{
 				if (not sprite->IsActive())
 				{

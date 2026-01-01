@@ -19,8 +19,9 @@ public:
 
 	[[nodiscard]] Helper* GetHelper() const;
 
-	[[nodiscard]] const std::vector<Sprite*>* GetSpritesOrNull() const;
-	void SetSprites(std::vector<Sprite*>* sprites);
+	[[nodiscard]] const std::vector<Sprite*>* GetSpriteLayer(const uint32_t layerIndex) const;
+	[[nodiscard]] uint32_t GetSpriteLayerCount() const;
+	void SetSpriteLayers(const std::vector<Sprite*>* layers, const uint32_t layerCount);
 
 	[[nodiscard]] const std::vector<Label*>* GetLabelsOrNull() const;
 	void SetLabels(std::vector<Label*>* labels);
@@ -32,8 +33,13 @@ public:
 	void _Preinitialize(Helper* helper);
 
 private:
+	static constexpr uint32_t MAX_LAYER_COUNT = 8;
+
 	Helper* mHelper = nullptr;
-	const std::vector<Sprite*>* mSprites = nullptr;
+
+	const std::vector<Sprite*>* mSpriteLayers[MAX_LAYER_COUNT]{};
+	uint32_t mSpriteLayerCount = 0;
+
 	const std::vector<Label*>* mLabels = nullptr;
 	const Camera* mCamera = nullptr;
 };
