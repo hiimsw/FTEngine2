@@ -121,7 +121,7 @@ bool MainScene::Update(const float deltaTime)
 		{
 			float spped = 180.0f * deltaTime;
 			D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
-			D2D1_POINT_2F velocity{ direction.x * spped, direction.y * spped };
+			D2D1_POINT_2F velocity = Math::ScaleVector(direction, spped);
 
 			D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 			mHero.SetPosition(position);
