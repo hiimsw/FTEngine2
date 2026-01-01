@@ -7,6 +7,15 @@
 
 class MainScene final : public Scene
 {
+	enum class Layer
+	{
+		Background,
+		Monster,
+		Player,
+		UI,
+		Count
+	};
+
 public:
 	MainScene() = default;
 	MainScene(const MainScene&) = delete;
@@ -18,10 +27,11 @@ public:
 
 private:
 	Texture mRectangleTexture{};
+	Texture mRedRectangleTexture{};
 
 	Camera mMainCamera{};
 
-	std::vector<Sprite*> mSpriteLayer{};
+	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	Sprite mHero{};
 	Sprite mMonster{};
 	Sprite mZoom{};

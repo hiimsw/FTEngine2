@@ -9,8 +9,11 @@ constexpr float SCALE = 0.5f;
 void MainScene::Initialize()
 {
 	{
-		mSpriteLayer.reserve(128);
-		SetSpriteLayers(&mSpriteLayer, 1);
+		for (std::vector<Sprite*>& layer : mSpriteLayers)
+		{
+			layer.reserve(128);
+		}
+		SetSpriteLayers(mSpriteLayers.data(), uint32_t(mSpriteLayers.size()));
 
 		SetCamera(&mMainCamera);
 		
@@ -19,9 +22,10 @@ void MainScene::Initialize()
 	}	
 
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
+	mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
 
 	mHero.SetTexture(&mRectangleTexture);
-	mSpriteLayer.push_back(&mHero);
+	mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
 	// 몬스터를 초기화한다.
 	{
@@ -33,7 +37,7 @@ void MainScene::Initialize()
 		constexpr float MONSTER_SCALE = 0.5f;
 		mMonster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 
-		mSpriteLayer.push_back(&mMonster);
+		mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mMonster);
 	}
 
 	// 바운더리를 초기화한다.
@@ -50,33 +54,33 @@ void MainScene::Initialize()
 		mBars[0].SetCenter({ .x = 0.0f, .y = 0.5f });
 		mBars[0].SetPosition({ .x = -offset.x, .y = offset.y });
 		mBars[0].SetTexture(&mRectangleTexture);
-		mSpriteLayer.push_back(&mBars[0]);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[0]);
 
 		mBars[1].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
 		mBars[1].SetCenter({ .x = -0.5f, .y = 0.0f });
 		mBars[1].SetPosition({ .x = -offset.x, .y = offset.y });
 		mBars[1].SetTexture(&mRectangleTexture);
-		mSpriteLayer.push_back(&mBars[1]);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[1]);
 
 		mBars[2].SetScale({ .width = 0.2f, .height = BOUNDARY_SIZE.height });
 		mBars[2].SetCenter({ .x = 0.0f, .y = -0.5f });
 		mBars[2].SetPosition({ .x = offset.x, .y = -offset.y });
 		mBars[2].SetTexture(&mRectangleTexture);
-		mSpriteLayer.push_back(&mBars[2]);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[2]);
 
 		mBars[3].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
 		mBars[3].SetCenter({ .x = 0.5f, .y = 0.0f });
 		mBars[3].SetPosition({ .x = offset.x, .y = -offset.y });
 		mBars[3].SetTexture(&mRectangleTexture);
-		mSpriteLayer.push_back(&mBars[3]);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[3]);
 	}
 
 	// 줌을 초기화한다.
 	{
 		mZoom.SetAngle(45.0f);
 		mZoom.SetUI(true);
-		mZoom.SetTexture(&mRectangleTexture);
-		mSpriteLayer.push_back(&mZoom);
+		mZoom.SetTexture(&mRedRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mZoom);
 	}
 
 	// 카메라를 초기화한다.
