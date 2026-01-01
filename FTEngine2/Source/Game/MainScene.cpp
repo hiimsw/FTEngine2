@@ -96,9 +96,7 @@ bool MainScene::Update(const float deltaTime)
 		};
 
 		D2D1_POINT_2F mousePos = Input::Get().GetMousePosition();
-		mZoom.SetPosition(Math::MinusVector(mousePos, centerOffset));
-		
-		DEBUG_LOG("%f, %f", mousePos.x, mousePos.y);
+		mZoom.SetPosition(Math::MinusVector(mousePos, centerOffset));		
 	}
 
 	// 카메라를 업데이트한다.
