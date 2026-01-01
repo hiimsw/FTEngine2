@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "MainScene.h"
 
+#include "Core/Constant.h"
 #include "Core/Input.h"
 
 constexpr float SCALE = 0.5f;
@@ -12,6 +13,9 @@ void MainScene::Initialize()
 		SetSprites(&mSprites);
 
 		SetCamera(&mMainCamera);
+		
+		Input::Get().SetCursorVisible(false);
+		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
 	}	
 
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
@@ -31,6 +35,12 @@ void MainScene::Initialize()
 
 		mSprites.push_back(&mMonster);
 	}
+
+	// 줌을 초기화 한다.
+	mZoom.SetAngle(45.0f);
+	mZoom.SetUI(true);
+	mZoom.SetTexture(&mRectangleTexture);
+	mSprites.push_back(&mZoom);
 
 	// 카메라를 초기화한다.
 	{
@@ -54,8 +64,15 @@ void MainScene::Initialize()
 
 bool MainScene::Update(const float deltaTime)
 {
+	// 게임을 종료한다.
+	if (Input::Get().GetKeyDown(VK_ESCAPE))
+	{
+		return false;
+	}
+
 	// 플레이어를 업데이트한다.
 	{
+		// 누르면 1, 안 누르면 0
 		int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
 		int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
 
@@ -68,6 +85,20 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 			mHero.SetPosition(position);
 		}
+	}
+
+	// 줌을 업데이트한다.
+	{
+		D2D1_POINT_2F centerOffset =
+		{
+			.x = (Constant::Get().GetWidth() - 1.0f) * 0.5f,
+			.y = (Constant::Get().GetHeight() - 1.0f) * 0.5f
+		};
+
+		D2D1_POINT_2F mousePos = Input::Get().GetMousePosition();
+		mZoom.SetPosition(Math::MinusVector(mousePos, centerOffset));
+		
+		DEBUG_LOG("%f, %f", mousePos.x, mousePos.y);
 	}
 
 	// 카메라를 업데이트한다.

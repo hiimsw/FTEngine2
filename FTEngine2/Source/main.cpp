@@ -87,6 +87,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 		if (not gCore.Update(deltaTime))
 		{
+			break;
 		}
 
 		Input::Get()._Clear();

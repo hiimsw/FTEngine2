@@ -133,6 +133,7 @@ void(0)
 namespace Math
 {
 	inline D2D1_POINT_2F AddVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs);
+	inline D2D1_POINT_2F MinusVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs);
 	inline float GetVectorLength(D2D1_POINT_2F vector);
 	inline D2D1_POINT_2F GetNormalizeVector(D2D1_POINT_2F vector);
 
@@ -140,6 +141,13 @@ namespace Math
 	{
 		D2D1_POINT_2F sumVector{ .x = lhs.x + rhs.x, .y = lhs.y + rhs.y };
 		return sumVector;
+	}
+
+	D2D1_POINT_2F MinusVector(D2D1_POINT_2F lhs, D2D1_POINT_2F rhs)
+	{
+		// TODO: 변수명 수정이 필요하다.
+		D2D1_POINT_2F minusVector{ .x = lhs.x - rhs.x, .y = lhs.y - rhs.y };
+		return minusVector;
 	}
 
 	float GetVectorLength(D2D1_POINT_2F vector)

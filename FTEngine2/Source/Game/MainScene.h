@@ -24,4 +24,5 @@ private:
 	std::vector<Sprite*> mSprites{};
 	Sprite mHero{};
 	Sprite mMonster{};
+	Sprite mZoom{};
 };
