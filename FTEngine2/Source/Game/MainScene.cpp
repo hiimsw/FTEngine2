@@ -156,4 +156,5 @@ bool MainScene::Update(const float deltaTime)
 void MainScene::Finalize()
 {
 	mRectangleTexture.Finalize();
+	mRedRectangleTexture.Finalize();
 }
