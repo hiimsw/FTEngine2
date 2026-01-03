@@ -130,6 +130,12 @@ void(0)
 
 #endif
 
+struct Line
+{
+	D2D1_POINT_2F Point0;
+	D2D1_POINT_2F Point1;
+};
+
 namespace Math
 {
 	inline D2D1_POINT_2F AddVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
@@ -137,6 +143,7 @@ namespace Math
 	inline D2D1_POINT_2F ScaleVector(const D2D1_POINT_2F vector, const float scalar);
 	inline float GetVectorLength(const D2D1_POINT_2F vector);
 	inline D2D1_POINT_2F GetNormalizeVector(const D2D1_POINT_2F vector);
+	inline float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2);
 
 	D2D1_POINT_2F AddVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
 	{
@@ -167,5 +174,11 @@ namespace Math
 		float lenght = GetVectorLength(vector);
 		D2D1_POINT_2F result{ .x = vector.x / lenght, .y = vector.y / lenght };
 		return result;
+	}
+
+	float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2)
+	{
+		float ccw = (point1.x - point0.x) * (point2.y - point0.y) - (point2.x - point0.x) * (point1.y - point0.y);
+		return ccw;
 	}
 }
