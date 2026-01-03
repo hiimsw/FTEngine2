@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Camera.cpp" />
+    <ClCompile Include="Source\Core\Collision.cpp" />
     <ClCompile Include="Source\Core\Constant.cpp" />
     <ClCompile Include="Source\Core\Core.cpp" />
     <ClCompile Include="Source\Core\Font.cpp" />
@@ -164,6 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\Camera.h" />
+    <ClInclude Include="Source\Core\Collision.h" />
     <ClInclude Include="Source\Core\Constant.h" />
     <ClInclude Include="Source\Core\Core.h" />
     <ClInclude Include="Source\Core\Font.h" />
