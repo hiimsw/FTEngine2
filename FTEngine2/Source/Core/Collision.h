@@ -27,8 +27,7 @@ namespace Collision
 	{
 		float ccwProductFromLine0 = Math::CrossProduct2D(line0.Point0, line0.Point1, line1.Point0) * Math::CrossProduct2D(line0.Point0, line0.Point1, line1.Point1);
 		float ccwProductFromLine1 = Math::CrossProduct2D(line1.Point0, line1.Point1, line0.Point0) * Math::CrossProduct2D(line1.Point0, line1.Point1, line0.Point1);
-
-		bool isCollision = false;
+		bool bIntersecting = false;
 
 		if (std::abs(ccwProductFromLine0) < FLT_EPSILON and std::abs(ccwProductFromLine1) < FLT_EPSILON)
 		{
@@ -42,12 +41,14 @@ namespace Collision
 				std::swap(line1.Point0, line1.Point1);
 			}
 
-			isCollision = std::make_pair(line1.Point0.x, line1.Point0.y) <= std::make_pair(line0.Point1.x, line0.Point1.y)
+			bIntersecting = std::make_pair(line1.Point0.x, line1.Point0.y) <= std::make_pair(line0.Point1.x, line0.Point1.y)
 				and std::make_pair(line0.Point0.x, line0.Point0.y) <= std::make_pair(line1.Point1.x, line1.Point1.y);
 		}
 		else
 		{
-			isCollision = ccwProductFromLine0 <= FLT_EPSILON && ccwProductFromLine1 <= FLT_EPSILON;
+			bIntersecting = ccwProductFromLine0 <= FLT_EPSILON && ccwProductFromLine1 <= FLT_EPSILON;
 		}
+
+		return bIntersecting;
 	}
 }
