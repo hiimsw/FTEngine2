@@ -167,6 +167,8 @@ bool Core::Update(const float deltaTime)
 			}
 		}
 
+		mScene->PostDraw(view, viewForUI);
+
 		HR(mRenderTarget->EndDraw());
 	}
 

@@ -15,6 +15,7 @@ public:
 
 	virtual void Initialize() = 0;
 	virtual bool Update(const float deltaTime) = 0;
+	virtual void PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI) = 0;
 	virtual void Finalize() = 0;
 
 	[[nodiscard]] Helper* GetHelper() const;
