@@ -35,7 +35,7 @@ bool Core::Update(const float deltaTime)
 		return false;
 	}
 
-	// Render sprites
+	// Draw
 	{
 		mRenderTarget->BeginDraw();
 		mRenderTarget->Clear(ColorF(ColorF::LightPink));
@@ -69,6 +69,8 @@ bool Core::Update(const float deltaTime)
 			viewForUI = Matrix3x2F::Translation(-centerOffset.x, centerOffset.y);
 			viewForUI.Invert();
 		}
+
+		mScene->PreDraw(view, viewForUI);
 
 		const uint32_t spriteLayerCount = mScene->GetSpriteLayerCount();
 		for (uint32_t i = 0; i < spriteLayerCount; ++i)

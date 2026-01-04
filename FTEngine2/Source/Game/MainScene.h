@@ -22,6 +22,7 @@ public:
 	MainScene& operator=(const MainScene&) = delete;
 
 	void Initialize() override;
+	void PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI) override;
 	bool Update(const float deltaTime) override;
 	void PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI) override;
 	void Finalize() override;

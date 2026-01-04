@@ -88,6 +88,20 @@ void MainScene::Initialize()
 	}
 }
 
+void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
+{
+	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
+
+	// 바운더리를 그린다.
+	{
+		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
+		renderTarget->SetTransform(worldView);
+
+		D2D1_ELLIPSE ellipse{ .radiusX = 400.0f, .radiusY = 400.0f };
+		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
+	}
+}
+
 bool MainScene::Update(const float deltaTime)
 {
 	// 게임을 종료한다.
@@ -220,16 +234,6 @@ bool MainScene::Update(const float deltaTime)
 
 void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
 {
-	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
-
-	// 바운더리를 그린다.
-	{
-		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
-		renderTarget->SetTransform(worldView);
-
-		D2D1_ELLIPSE ellipse{ .radiusX = 400.0f, .radiusY = 400.0f };
-		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
-	}
 }
 
 void MainScene::Finalize()
