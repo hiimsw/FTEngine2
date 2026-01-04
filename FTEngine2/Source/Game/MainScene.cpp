@@ -2,7 +2,11 @@
 #include "MainScene.h"
 
 #include "Core/Constant.h"
+#include "Core/Helper.h"
 #include "Core/Input.h"
+#include "Core/Collision.h"
+
+using namespace D2D1;
 
 constexpr float SCALE = 0.5f;
 
@@ -24,8 +28,18 @@ void MainScene::Initialize()
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 	mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
 
-	mHero.SetTexture(&mRectangleTexture);
-	mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+	// 플레이어
+	{
+		// 네모
+		mHero.SetScale({ .width = 5.0f, .height = 5.0f });
+		mHero.SetTexture(&mRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+
+		// 동그라미
+		//mHero.SetScale({ .width = 5.0f, .height = 5.0f });
+		//mHero.SetTexture(&mCircleTexture);
+		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+	}
 
 	// 몬스터를 초기화한다.
 	{
@@ -77,7 +91,7 @@ void MainScene::Initialize()
 
 	// 줌을 초기화한다.
 	{
-		mZoom.SetAngle(45.0f);
+		mZoom.SetAngle(0.0f);
 		mZoom.SetUI(true);
 		mZoom.SetTexture(&mRedRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mZoom);
@@ -109,6 +123,13 @@ bool MainScene::Update(const float deltaTime)
 	if (Input::Get().GetKeyDown(VK_ESCAPE))
 	{
 		return false;
+	}
+
+	if (Input::Get().GetKeyDown(VK_CONTROL))
+	{
+		mIsCursorConfined = !mIsCursorConfined;
+		Input::Get().SetCursorLockState(mIsCursorConfined ? Input::eCursorLockState::Confined : Input::eCursorLockState::None);
+		Input::Get().SetCursorVisible(not mIsCursorConfined);
 	}
 
 	// 플레이어를 업데이트한다.
@@ -150,7 +171,84 @@ bool MainScene::Update(const float deltaTime)
 		mMainCamera.SetPosition(position);
 	}
 
+	// 충돌	처리를 업데이트한다.
+	{
+		//D2D1_POINT_2F heroPos = mHero.GetPosition();
+		//D2D1_SIZE_F heroScale = mHero.GetScale();
+		//D2D1_SIZE_F offset =
+		//{
+		//	.width = heroScale.width * mRectangleTexture.GetWidth() * 0.5f,
+		//	.height = heroScale.height * mRectangleTexture.GetHeight() * 0.5f
+		//};
+
+		//RECT rect =
+		//{
+		//	.left = LONG(heroPos.x - offset.width),
+		//	.top = LONG(heroPos.y + offset.height),
+		//	.right = LONG(heroPos.x + offset.width),
+		//	.bottom = LONG(heroPos.y - offset.height)
+		//};
+
+		//D2D1_POINT_2F zoomPos = mZoom.GetPosition();
+
+		//if (Collision::IsCollidedSqureWithPoint(rect, zoomPos))
+		//{
+		//	mHero.SetTexture(&mRedRectangleTexture);
+		//}
+		//else
+		//{
+		//	mHero.SetTexture(&mRectangleTexture);
+		//}
+
+		//if (Collision::IsCollidedCircleWithPoint(heroPos, float(rect.right - heroPos.x), zoomPos))
+		//{
+		//	mHero.SetTexture(&mRedCircleTexture);
+		//	DEBUG_LOG("ㅇㅇ");
+		//}
+		//else
+		//{
+		//	mHero.SetTexture(&mCircleTexture);
+		//	DEBUG_LOG("ㄴㄴ");
+		//}
+
+		D2D1_POINT_2F heroPos = mHero.GetPosition();
+		D2D1_SIZE_F heroScale = mHero.GetScale();
+		D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
+
+		RECT heroRect =
+		{
+			.left = LONG(heroPos.x - heroScale.width * half.width),
+			.top = LONG(heroPos.y + heroScale.height * half.height),
+			.right = LONG(heroPos.x + heroScale.width * half.width),
+			.bottom = LONG(heroPos.y - heroScale.height * half.height)
+		};
+
+		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
+		D2D1_SIZE_F zoomScale = mZoom.GetScale();
+
+		RECT zoomRect =
+		{
+			.left = LONG(zoomPos.x - zoomScale.width * half.width),
+			.top = LONG(zoomPos.y + zoomScale.height * half.height),
+			.right = LONG(zoomPos.x + zoomScale.width * half.width),
+			.bottom = LONG(zoomPos.y - zoomScale.height * half.height)
+		};
+
+		if (Collision::IsCollidedSqureWithSqure(heroRect, zoomRect))
+		{
+			DEBUG_LOG("dd");
+		}
+		else
+		{
+			DEBUG_LOG("ss");
+		}
+	}
+
 	return true;
+}
+
+void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
+{
 }
 
 void MainScene::Finalize()

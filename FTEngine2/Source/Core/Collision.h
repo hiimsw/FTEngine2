@@ -3,6 +3,7 @@
 namespace Collision
 {
 	inline bool IsCollidedSqureWithPoint(const RECT rect, const D2D1_POINT_2F point);
+	inline bool IsCollidedSqureWithSqure(const RECT lhs, const RECT rhs);
 	inline bool IsCollidedCircleWithPoint(const D2D1_POINT_2F center, const float radius, const D2D1_POINT_2F point);
 	inline bool DoLinesIntersect(Line line0, Line line1);
 
@@ -11,6 +12,16 @@ namespace Collision
 		bool result = rect.left <= point.x and point.x <= rect.right
 			and rect.bottom <= point.y and point.y <= rect.top;
 
+		return result;
+	}
+
+	bool IsCollidedSqureWithSqure(const RECT lhs, const RECT rhs)
+	{
+		bool result = IsCollidedSqureWithPoint(lhs, { .x = float(rhs.left), .y = float(rhs.top) })
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.left), .y = float(rhs.bottom) })
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.top) })
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.bottom) });
+		
 		return result;
 	}
 

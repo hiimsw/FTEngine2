@@ -23,11 +23,18 @@ public:
 
 	void Initialize() override;
 	bool Update(const float deltaTime) override;
+	void PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI) override;
 	void Finalize() override;
+
+private:
+
 
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
+
+	Texture mCircleTexture{};
+	Texture mRedCircleTexture{};
 
 	Camera mMainCamera{};
 
@@ -37,4 +44,6 @@ private:
 	Sprite mZoom{};
 	
 	std::array<Sprite, 4> mBars{};
+
+	bool mIsCursorConfined = false;
 };
