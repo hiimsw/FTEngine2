@@ -215,23 +215,23 @@ bool MainScene::Update(const float deltaTime)
 		D2D1_SIZE_F heroScale = mHero.GetScale();
 		D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
 
-		RECT heroRect =
+		D2D1_RECT_F heroRect =
 		{
-			.left = LONG(heroPos.x - heroScale.width * half.width),
-			.top = LONG(heroPos.y + heroScale.height * half.height),
-			.right = LONG(heroPos.x + heroScale.width * half.width),
-			.bottom = LONG(heroPos.y - heroScale.height * half.height)
+			.left = heroPos.x - heroScale.width * half.width,
+			.top = heroPos.y + heroScale.height * half.height,
+			.right = heroPos.x + heroScale.width * half.width,
+			.bottom = heroPos.y - heroScale.height * half.height
 		};
 
 		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
 		D2D1_SIZE_F zoomScale = mZoom.GetScale();
 
-		RECT zoomRect =
+		D2D1_RECT_F zoomRect =
 		{
-			.left = LONG(zoomPos.x - zoomScale.width * half.width),
-			.top = LONG(zoomPos.y + zoomScale.height * half.height),
-			.right = LONG(zoomPos.x + zoomScale.width * half.width),
-			.bottom = LONG(zoomPos.y - zoomScale.height * half.height)
+			.left = zoomPos.x - zoomScale.width * half.width,
+			.top = zoomPos.y + zoomScale.height * half.height,
+			.right = zoomPos.x + zoomScale.width * half.width,
+			.bottom = zoomPos.y - zoomScale.height * half.height
 		};
 
 		if (Collision::IsCollidedSqureWithSqure(heroRect, zoomRect))
