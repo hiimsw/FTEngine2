@@ -37,7 +37,6 @@ void MainScene::Initialize()
 	// 플레이어
 	{
 		// 네모
-		mHero.SetScale({ .width = 5.0f, .height = 5.0f });
 		mHero.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
@@ -62,7 +61,7 @@ void MainScene::Initialize()
 
 	// 줌을 초기화한다.
 	{
-		mZoom.SetAngle(0.0f);
+		mZoom.SetAngle(45.0f);
 		mZoom.SetUI(true);
 		mZoom.SetTexture(&mRedRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mZoom);
@@ -119,18 +118,115 @@ bool MainScene::Update(const float deltaTime)
 
 	// 플레이어를 업데이트한다.
 	{
-		// 누르면 1, 안 누르면 0
-		int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
-		int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
+		// Case 0) 가속도 없는 단순한 이동
+		/*{
+			// 누르면 1, 안 누르면 0
+			int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
+			int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
 
-		if (moveX != 0 or moveY != 0)
+			if (moveX != 0 or moveY != 0)
+			{
+				float speed = 180.0f * deltaTime;
+				D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
+				D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
+
+				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
+				mHero.SetPosition(position);
+			}
+		}*/
+
+		//  Case 1) X축만 가속도 반영하여 이동 구현
 		{
-			float spped = 180.0f * deltaTime;
-			D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
-			D2D1_POINT_2F velocity = Math::ScaleVector(direction, spped);
+			//int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
+			//D2D1_POINT_2F position = mHero.GetPosition();
 
-			D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-			mHero.SetPosition(position);
+			//constexpr float MAX_VELOCITY = 250.0f;
+			//constexpr float ACC = 4.0f;
+
+			//static int32_t previousMoveX;
+			//static float velocity = 0.0f;
+
+			//if (moveX != 0)
+			//{
+			//	velocity += ACC * moveX;
+			//	velocity = std::clamp(velocity, -MAX_VELOCITY, MAX_VELOCITY);
+
+			//	previousMoveX = moveX;
+			//}
+			//else
+			//{
+			//	if (previousMoveX > 0)
+			//	{
+			//		velocity = max(velocity - ACC, 0.0f);
+			//	}
+			//	else
+			//	{
+			//		velocity = min(velocity + ACC, 0.0f);
+			//	}
+			//}
+
+			//DEBUG_LOG("%f", velocity);
+
+			//position.x += velocity * deltaTime;
+			//mHero.SetPosition(position);
+		}
+
+		// Case 2) 최종 이동 구현
+		{
+			constexpr float MAX_SPEED = 300.0f;
+			constexpr float ACC = 8.0f; // 가속도
+
+			int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
+			int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
+
+			static int32_t previousMoveX;
+			static int32_t previousMoveY;
+			static D2D1_POINT_2F velocity;
+
+			if (moveX != 0)
+			{
+				velocity.x = std::clamp(velocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
+				previousMoveX = moveX;
+			}
+			else
+			{
+				if (previousMoveX > 0)
+				{
+					velocity.x = max(velocity.x - ACC, 0.0f);
+				}
+				else
+				{
+					velocity.x = min(velocity.x + ACC, 0.0f);
+				}
+			}
+
+			if (moveY != 0)
+			{
+				velocity.y = std::clamp(velocity.y + ACC * moveY, -MAX_SPEED, MAX_SPEED);
+				previousMoveY = moveY;
+			}
+			else
+			{
+				if (previousMoveY > 0)
+				{
+					velocity.y = max(velocity.y - ACC, 0.0f);
+				}
+				else
+				{
+					velocity.y = min(velocity.y + ACC, 0.0f);
+				}
+			}
+
+			if (Math::GetVectorLength(velocity) != 0.0f)
+			{
+				float speed = min(Math::GetVectorLength(velocity), MAX_SPEED);
+				D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
+				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+
+				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
+				mHero.SetPosition(position);
+			}
 		}
 	}
 
@@ -196,7 +292,40 @@ bool MainScene::Update(const float deltaTime)
 		//	DEBUG_LOG("ㄴㄴ");
 		//}
 
-		D2D1_POINT_2F heroPos = mHero.GetPosition();
+	//	D2D1_POINT_2F heroPos = mHero.GetPosition();
+	//	D2D1_SIZE_F heroScale = mHero.GetScale();
+	//	D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
+
+	//	D2D1_RECT_F heroRect =
+	//	{
+	//		.left = heroPos.x - heroScale.width * half.width,
+	//		.top = heroPos.y + heroScale.height * half.height,
+	//		.right = heroPos.x + heroScale.width * half.width,
+	//		.bottom = heroPos.y - heroScale.height * half.height
+	//	};
+
+	//	D2D1_POINT_2F zoomPos = mZoom.GetPosition();
+	//	D2D1_SIZE_F zoomScale = mZoom.GetScale();
+
+	//	D2D1_RECT_F zoomRect =
+	//	{
+	//		.left = zoomPos.x - zoomScale.width * half.width,
+	//		.top = zoomPos.y + zoomScale.height * half.height,
+	//		.right = zoomPos.x + zoomScale.width * half.width,
+	//		.bottom = zoomPos.y - zoomScale.height * half.height
+	//	};
+
+	//	if (Collision::IsCollidedSqureWithSqure(heroRect, zoomRect))
+	//	{
+	//		DEBUG_LOG("dd");
+	//	}
+	//	else
+	//	{
+	//		DEBUG_LOG("ss");
+	//	}
+	//}
+
+		/*D2D1_POINT_2F heroPos = mHero.GetPosition();
 		D2D1_SIZE_F heroScale = mHero.GetScale();
 		D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
 
@@ -208,25 +337,20 @@ bool MainScene::Update(const float deltaTime)
 			.bottom = heroPos.y - heroScale.height * half.height
 		};
 
-		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
-		D2D1_SIZE_F zoomScale = mZoom.GetScale();
-
-		D2D1_RECT_F zoomRect =
+		Line line =
 		{
-			.left = zoomPos.x - zoomScale.width * half.width,
-			.top = zoomPos.y + zoomScale.height * half.height,
-			.right = zoomPos.x + zoomScale.width * half.width,
-			.bottom = zoomPos.y - zoomScale.height * half.height
+			.Point0 = mLine.Point0,
+			.Point1 = mLine.Point1
 		};
 
-		if (Collision::IsCollidedSqureWithSqure(heroRect, zoomRect))
+		if (Collision::IsCollidedSqureWithLine(heroRect, line))
 		{
 			DEBUG_LOG("dd");
 		}
 		else
 		{
 			DEBUG_LOG("ss");
-		}
+		}*/
 	}
 
 	return true;
@@ -234,6 +358,35 @@ bool MainScene::Update(const float deltaTime)
 
 void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
 {
+	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
+
+	// 라인을 그린다.
+	{
+		D2D1_ELLIPSE CIRCLE{ .radiusX = 5.0f, .radiusY = 5.0f };
+
+		mLine.Point0 = { .x = -200.0f, .y = 200.0f };
+		mLine.Point1 = { .x = 150.0f, .y = 100.0f };
+
+		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
+		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
+
+		// 두 점을 그린다.
+		{
+			renderTarget->SetTransform(point0WorldView);
+			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+
+			renderTarget->SetTransform(point1WorldView);
+			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		}
+
+		// 라인을 그린다.
+		{
+			D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
+			D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
+			renderTarget->SetTransform(Matrix3x2F::Identity());
+			renderTarget->DrawLine(point0, point1, mDefaultBrush);
+		}
+	}
 }
 
 void MainScene::Finalize()

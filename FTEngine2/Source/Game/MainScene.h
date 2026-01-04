@@ -5,6 +5,12 @@
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
 
+struct GizmoLine
+{
+	D2D1_POINT_2F Point0;
+	D2D1_POINT_2F Point1;
+};
+
 class MainScene final : public Scene
 {
 	enum class Layer
@@ -28,9 +34,6 @@ public:
 	void Finalize() override;
 
 private:
-
-
-private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
 
@@ -43,6 +46,7 @@ private:
 	Sprite mHero{};
 	Sprite mMonster{};
 	Sprite mZoom{};
+	GizmoLine mLine{};
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	bool mIsCursorConfined = false;
