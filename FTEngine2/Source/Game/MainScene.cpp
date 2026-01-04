@@ -103,6 +103,8 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 bool MainScene::Update(const float deltaTime)
 {
+	mDeltaTime = deltaTime;
+
 	// 게임을 종료한다.
 	if (Input::Get().GetKeyDown(VK_ESCAPE))
 	{
@@ -386,6 +388,44 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			renderTarget->SetTransform(Matrix3x2F::Identity());
 			renderTarget->DrawLine(point0, point1, mDefaultBrush);
 		}
+	}
+
+	// TODO: 몬스터 스폰 임시 코드 구현 -> 업데이트로 이동할 예정.
+	{
+		static float elapsedTime = 0.0f;
+		elapsedTime += mDeltaTime;
+
+		static D2D1_POINT_2F spawnPosition;
+
+		// 몬스터를 그린다.
+		if (elapsedTime >= 1.0f)
+		{
+			spawnPosition =
+			{
+				.x = rand() % 999 + 20.0f,
+				.y = rand() % 999 + 20.0f
+			};
+
+			if (rand() % 2 == 0)
+			{
+				spawnPosition.x *= -1.0f;
+			}
+
+			if (rand() % 2 == 0)
+			{
+				spawnPosition.y *= -1.0f;
+			}
+
+			elapsedTime = 0.0f;
+		}
+
+		D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
+		D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
+		Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
+		renderTarget->SetTransform(worldView);
+
+		D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
+		renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
 	}
 }
 

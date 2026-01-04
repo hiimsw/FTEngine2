@@ -50,4 +50,6 @@ private:
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	bool mIsCursorConfined = false;
+
+	float mDeltaTime = 0.0f;
 };
