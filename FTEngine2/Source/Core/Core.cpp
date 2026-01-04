@@ -7,6 +7,7 @@
 #include "Label.h"
 #include "Sprite.h"
 #include "Texture.h"
+#include "Transformation.h"
 
 using namespace D2D1;
 
@@ -93,17 +94,11 @@ bool Core::Update(const float deltaTime)
 				center.y = (center.y - 0.5f) * texture->GetHeight();
 
 				D2D1_POINT_2F position = sprite->GetPosition();
-				position.y = Constant::Get().GetHeight() - position.y - 1.0f;
-
 				D2D1_SIZE_F scale = sprite->GetScale();
 				float angle = sprite->GetAngle();
 				float opacity = sprite->GetOpacity();
 
-				Matrix3x2F worldView = Matrix3x2F::Translation(center.x, center.y)
-					* Matrix3x2F::Scale(scale)
-					* Matrix3x2F::Rotation(angle)
-					* Matrix3x2F::Translation(position.x, position.y);
-
+				Matrix3x2F worldView = Matrix3x2F::Translation(center.x, center.y) * Transformation::getWorldMatrix(position, angle, scale);
 				worldView = worldView * (sprite->IsUI() == false ? view : viewForUI);
 				mRenderTarget->SetTransform(worldView);
 
@@ -147,18 +142,11 @@ bool Core::Update(const float deltaTime)
 					center.y = (center.y - 0.5f) * (textSize.height - 1.0f);
 
 					D2D1_POINT_2F position = label->GetPosition();
-					position.y = Constant::Get().GetHeight() - position.y - 1.0f;
-
 					D2D1_SIZE_F scale = label->GetScale();
 					float angle = label->GetAngle();
 					float opacity = label->GetOpacity();
 
-					Matrix3x2F worldView = Matrix3x2F::Translation(center.x, center.y)
-						* Matrix3x2F::Scale(scale)
-						* Matrix3x2F::Rotation(angle)
-						* Matrix3x2F::Translation(position.x, position.y);
-					mRenderTarget->SetTransform(worldView);
-
+					Matrix3x2F worldView = Matrix3x2F::Translation(center.x, center.y) * Transformation::getWorldMatrix(position, angle, scale);
 					worldView = worldView * (label->IsUI() == false ? view : viewForUI);
 					mRenderTarget->SetTransform(worldView);
 

@@ -55,6 +55,9 @@
     <ClCompile Include="Source\Core\Collision.cpp">
       <Filter>Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\Transformation.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\pch.h">
@@ -94,6 +97,9 @@
       <Filter>Source\Game</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Collision.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Transformation.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
   </ItemGroup>

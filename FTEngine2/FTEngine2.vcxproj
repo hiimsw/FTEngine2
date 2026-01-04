@@ -154,6 +154,7 @@
     <ClCompile Include="Source\Core\Scene.cpp" />
     <ClCompile Include="Source\Core\Sprite.cpp" />
     <ClCompile Include="Source\Core\Texture.cpp" />
+    <ClCompile Include="Source\Core\Transformation.cpp" />
     <ClCompile Include="Source\Game\MainScene.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\pch.cpp">
@@ -175,6 +176,7 @@
     <ClInclude Include="Source\Core\Scene.h" />
     <ClInclude Include="Source\Core\Sprite.h" />
     <ClInclude Include="Source\Core\Texture.h" />
+    <ClInclude Include="Source\Core\Transformation.h" />
     <ClInclude Include="Source\Game\MainScene.h" />
     <ClInclude Include="Source\pch.h" />
   </ItemGroup>
