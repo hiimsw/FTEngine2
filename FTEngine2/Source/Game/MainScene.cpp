@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "MainScene.h"
 
+#include "Core/Collision.h"
 #include "Core/Constant.h"
 #include "Core/Helper.h"
 #include "Core/Input.h"
-#include "Core/Collision.h"
+#include "Core/Transformation.h"
 
 using namespace D2D1;
 
@@ -20,12 +21,15 @@ void MainScene::Initialize()
 		SetSpriteLayers(mSpriteLayers.data(), uint32_t(mSpriteLayers.size()));
 
 		SetCamera(&mMainCamera);
-		
+
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
 
+		ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
+		HR(renderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &mDefaultBrush));
+
 		mIsCursorConfined = (Input::Get().GetCursorLockState() == Input::eCursorLockState::Confined);
-	}	
+	}
 
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 	mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
@@ -54,41 +58,6 @@ void MainScene::Initialize()
 		mMonster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 
 		mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mMonster);
-	}
-
-	// 바운더리를 초기화한다.
-	{
-		constexpr D2D1_SIZE_F BOUNDARY_SIZE = { .width = 30.0f, .height = 20.0f };
-
-		D2D1_POINT_2F offset =
-		{
-			.x = mRectangleTexture.GetWidth() * BOUNDARY_SIZE.width * 0.5f,
-			.y = mRectangleTexture.GetHeight() * BOUNDARY_SIZE.height * 0.5f
-		};
-
-		mBars[0].SetScale({ .width = 0.2f, .height = BOUNDARY_SIZE.height });
-		mBars[0].SetCenter({ .x = 0.0f, .y = 0.5f });
-		mBars[0].SetPosition({ .x = -offset.x, .y = offset.y });
-		mBars[0].SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[0]);
-
-		mBars[1].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
-		mBars[1].SetCenter({ .x = -0.5f, .y = 0.0f });
-		mBars[1].SetPosition({ .x = -offset.x, .y = offset.y });
-		mBars[1].SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[1]);
-
-		mBars[2].SetScale({ .width = 0.2f, .height = BOUNDARY_SIZE.height });
-		mBars[2].SetCenter({ .x = 0.0f, .y = -0.5f });
-		mBars[2].SetPosition({ .x = offset.x, .y = -offset.y });
-		mBars[2].SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[2]);
-
-		mBars[3].SetScale({ .width = BOUNDARY_SIZE.width, .height = 0.2f });
-		mBars[3].SetCenter({ .x = 0.5f, .y = 0.0f });
-		mBars[3].SetPosition({ .x = offset.x, .y = -offset.y });
-		mBars[3].SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mBars[3]);
 	}
 
 	// 줌을 초기화한다.
@@ -160,7 +129,7 @@ bool MainScene::Update(const float deltaTime)
 		};
 
 		D2D1_POINT_2F mousePos = Input::Get().GetMousePosition();
-		mZoom.SetPosition(Math::SubtractVector(mousePos, centerOffset));		
+		mZoom.SetPosition(Math::SubtractVector(mousePos, centerOffset));
 	}
 
 	// 카메라를 업데이트한다.
@@ -251,10 +220,22 @@ bool MainScene::Update(const float deltaTime)
 
 void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
 {
+	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
+
+	// 바운더리를 그린다.
+	{
+		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
+		renderTarget->SetTransform(worldView);
+
+		D2D1_ELLIPSE ellipse{ .radiusX = 400.0f, .radiusY = 400.0f };
+		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
+	}
 }
 
 void MainScene::Finalize()
 {
+	RELEASE_D2D1(mDefaultBrush);
+
 	mRectangleTexture.Finalize();
 	mRedRectangleTexture.Finalize();
 }
