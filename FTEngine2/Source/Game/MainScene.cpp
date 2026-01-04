@@ -23,6 +23,8 @@ void MainScene::Initialize()
 		
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
+
+		mIsCursorConfined = (Input::Get().GetCursorLockState() == Input::eCursorLockState::Confined);
 	}	
 
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
