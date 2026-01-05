@@ -32,16 +32,19 @@ void MainScene::Initialize()
 	mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 	mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
 
+	mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
+	mRedCircleTexture.Initialize(GetHelper(), L"Resource/RedCircle.png");
+
 	// 플레이어
 	{
 		// 네모
-		mHero.SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+		//mHero.SetTexture(&mRectangleTexture);
+		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
 		// 동그라미
-		//mHero.SetScale({ .width = 5.0f, .height = 5.0f });
-		//mHero.SetTexture(&mCircleTexture);
-		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+		mHero.SetScale({ .width = 5.0f, .height = 5.0f });
+		mHero.SetTexture(&mCircleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 	}
 
 	// 몬스터를 초기화한다.
@@ -317,49 +320,40 @@ bool MainScene::Update(const float deltaTime)
 	{
 		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
 
-		if (Collision::IsCollidedSqureWithPoint(GetRectagnleFromSprite(mHero), zoomPos))
+		if (Collision::IsCollidedCircleWithPoint(GetCricleFromSprite(mHero).point, GetCricleFromSprite(mHero).radiusX, zoomPos))
 		{
-			mHero.SetTexture(&mRedRectangleTexture);
+			mHero.SetTexture(&mRedCircleTexture);
+			DEBUG_LOG("ㅇㅇ");
 		}
 		else
 		{
-			mHero.SetTexture(&mRectangleTexture);
+			mHero.SetTexture(&mCircleTexture);
+			DEBUG_LOG("ㄴㄴ");
 		}
 
-		//if (Collision::IsCollidedCircleWithPoint(heroPos, float(rect.right - heroPos.x), zoomPos))
+		//if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(mZoom)))
 		//{
-		//	mHero.SetTexture(&mRedCircleTexture);
-		//	DEBUG_LOG("ㅇㅇ");
+		//	mHero.SetTexture(&mRedRectangleTexture);
 		//}
 		//else
 		//{
-		//	mHero.SetTexture(&mCircleTexture);
-		//	DEBUG_LOG("ㄴㄴ");
+		//	mHero.SetTexture(&mRectangleTexture);
 		//}
 
-		if (Collision::IsCollidedSqureWithSqure(GetRectagnleFromSprite(mHero), GetRectagnleFromSprite(mZoom)))
-		{
-			DEBUG_LOG("dd");
-		}
-		else
-		{
-			DEBUG_LOG("ss");
-		}
+		//Line line =
+		//{
+		//	.Point0 = mLine.Point0,
+		//	.Point1 = mLine.Point1
+		//};
 
-		Line line =
-		{
-			.Point0 = mLine.Point0,
-			.Point1 = mLine.Point1
-		};
-
-		if (Collision::IsCollidedSqureWithLine(GetRectagnleFromSprite(mHero), line))
-		{
-			DEBUG_LOG("dd");
-		}
-		else
-		{
-			DEBUG_LOG("ss");
-		}
+		//if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(mHero), line))
+		//{
+		//	DEBUG_LOG("dd");
+		//}
+		//else
+		//{
+		//	DEBUG_LOG("ss");
+		//}
 	}
 
 	return true;
@@ -424,7 +418,7 @@ void MainScene::Finalize()
 	mRedRectangleTexture.Finalize();
 }
 
-D2D1_RECT_F MainScene::GetRectagnleFromSprite(const Sprite& sprite)
+D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 {		
 	D2D1_POINT_2F position = sprite.GetPosition();
 	D2D1_SIZE_F scale = sprite.GetScale();
@@ -444,4 +438,19 @@ D2D1_RECT_F MainScene::GetRectagnleFromSprite(const Sprite& sprite)
 	};
 
 	return rect;
+}
+
+D2D1_ELLIPSE MainScene::GetCricleFromSprite(const Sprite& sprite)
+{
+	D2D1_RECT_F rect = GetRectangleFromSprite(sprite);
+	D2D1_POINT_2F position = sprite.GetPosition();
+	
+	D2D1_ELLIPSE circle =
+	{
+		.point = position, 
+		.radiusX = fabs(rect.right - position.x),
+		.radiusY = fabs(rect.top - position.y)
+	};
+
+	return circle;
 }
