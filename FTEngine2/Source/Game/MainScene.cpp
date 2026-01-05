@@ -315,32 +315,16 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌	처리를 업데이트한다.
 	{
-		//D2D1_POINT_2F heroPos = mHero.GetPosition();
-		//D2D1_SIZE_F heroScale = mHero.GetScale();
-		//D2D1_SIZE_F offset =
-		//{
-		//	.width = heroScale.width * mRectangleTexture.GetWidth() * 0.5f,
-		//	.height = heroScale.height * mRectangleTexture.GetHeight() * 0.5f
-		//};
+		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
 
-		//RECT rect =
-		//{
-		//	.left = LONG(heroPos.x - offset.width),
-		//	.top = LONG(heroPos.y + offset.height),
-		//	.right = LONG(heroPos.x + offset.width),
-		//	.bottom = LONG(heroPos.y - offset.height)
-		//};
-
-		//D2D1_POINT_2F zoomPos = mZoom.GetPosition();
-
-		//if (Collision::IsCollidedSqureWithPoint(rect, zoomPos))
-		//{
-		//	mHero.SetTexture(&mRedRectangleTexture);
-		//}
-		//else
-		//{
-		//	mHero.SetTexture(&mRectangleTexture);
-		//}
+		if (Collision::IsCollidedSqureWithPoint(GetRectagnleFromSprite(mHero), zoomPos))
+		{
+			mHero.SetTexture(&mRedRectangleTexture);
+		}
+		else
+		{
+			mHero.SetTexture(&mRectangleTexture);
+		}
 
 		//if (Collision::IsCollidedCircleWithPoint(heroPos, float(rect.right - heroPos.x), zoomPos))
 		//{
@@ -353,50 +337,14 @@ bool MainScene::Update(const float deltaTime)
 		//	DEBUG_LOG("ㄴㄴ");
 		//}
 
-	//	D2D1_POINT_2F heroPos = mHero.GetPosition();
-	//	D2D1_SIZE_F heroScale = mHero.GetScale();
-	//	D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
-
-	//	D2D1_RECT_F heroRect =
-	//	{
-	//		.left = heroPos.x - heroScale.width * half.width,
-	//		.top = heroPos.y + heroScale.height * half.height,
-	//		.right = heroPos.x + heroScale.width * half.width,
-	//		.bottom = heroPos.y - heroScale.height * half.height
-	//	};
-
-	//	D2D1_POINT_2F zoomPos = mZoom.GetPosition();
-	//	D2D1_SIZE_F zoomScale = mZoom.GetScale();
-
-	//	D2D1_RECT_F zoomRect =
-	//	{
-	//		.left = zoomPos.x - zoomScale.width * half.width,
-	//		.top = zoomPos.y + zoomScale.height * half.height,
-	//		.right = zoomPos.x + zoomScale.width * half.width,
-	//		.bottom = zoomPos.y - zoomScale.height * half.height
-	//	};
-
-	//	if (Collision::IsCollidedSqureWithSqure(heroRect, zoomRect))
-	//	{
-	//		DEBUG_LOG("dd");
-	//	}
-	//	else
-	//	{
-	//		DEBUG_LOG("ss");
-	//	}
-	//}
-
-		/*D2D1_POINT_2F heroPos = mHero.GetPosition();
-		D2D1_SIZE_F heroScale = mHero.GetScale();
-		D2D1_SIZE_F half = { .width = mRectangleTexture.GetWidth() * 0.5f, .height = mRectangleTexture.GetHeight() * 0.5f };
-
-		D2D1_RECT_F heroRect =
+		if (Collision::IsCollidedSqureWithSqure(GetRectagnleFromSprite(mHero), GetRectagnleFromSprite(mZoom)))
 		{
-			.left = heroPos.x - heroScale.width * half.width,
-			.top = heroPos.y + heroScale.height * half.height,
-			.right = heroPos.x + heroScale.width * half.width,
-			.bottom = heroPos.y - heroScale.height * half.height
-		};
+			DEBUG_LOG("dd");
+		}
+		else
+		{
+			DEBUG_LOG("ss");
+		}
 
 		Line line =
 		{
@@ -404,14 +352,14 @@ bool MainScene::Update(const float deltaTime)
 			.Point1 = mLine.Point1
 		};
 
-		if (Collision::IsCollidedSqureWithLine(heroRect, line))
+		if (Collision::IsCollidedSqureWithLine(GetRectagnleFromSprite(mHero), line))
 		{
 			DEBUG_LOG("dd");
 		}
 		else
 		{
 			DEBUG_LOG("ss");
-		}*/
+		}
 	}
 
 	return true;
@@ -474,4 +422,26 @@ void MainScene::Finalize()
 
 	mRectangleTexture.Finalize();
 	mRedRectangleTexture.Finalize();
+}
+
+D2D1_RECT_F MainScene::GetRectagnleFromSprite(const Sprite& sprite)
+{		
+	D2D1_POINT_2F position = sprite.GetPosition();
+	D2D1_SIZE_F scale = sprite.GetScale();
+
+	D2D1_SIZE_F offset =
+	{
+		.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
+		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
+	};
+
+	D2D1_RECT_F rect =
+	{
+		.left = position.x - offset.width,
+		.top = position.y + offset.height,
+		.right = position.x + offset.width,
+		.bottom = position.y - offset.height
+	};
+
+	return rect;
 }

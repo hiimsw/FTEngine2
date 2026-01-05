@@ -34,6 +34,9 @@ public:
 	void Finalize() override;
 
 private:
+	D2D1_RECT_F GetRectagnleFromSprite(const Sprite& sprite);
+
+private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
 
