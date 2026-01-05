@@ -11,6 +11,7 @@
 #include <iostream>
 #include <tchar.h>
 #include <unordered_map>
+#include <random>
 #include <wincodec.h>
 
 #define WIN32_LEAN_AND_MEAN

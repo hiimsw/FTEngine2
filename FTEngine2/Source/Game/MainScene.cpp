@@ -9,8 +9,6 @@
 
 using namespace D2D1;
 
-constexpr float SCALE = 0.5f;
-
 void MainScene::Initialize()
 {
 	{
@@ -48,15 +46,59 @@ void MainScene::Initialize()
 
 	// 몬스터를 초기화한다.
 	{
-		mMonster.SetTexture(&mRectangleTexture);
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<int32_t> dist(20, 999);
 
-		constexpr D2D1_POINT_2F POSITION{ .x = 100.0f, .y = 0.0f };
-		mMonster.SetPosition(POSITION);
+		static uint32_t cnt;
+		static D2D1_POINT_2F spawnDirection[MONSTER_COUNT]{};
+		static D2D1_POINT_2F spawnPositionInRect[MONSTER_COUNT]{};
+
+		// 랜덤 좌표를 생성한다.
+		while (cnt != MONSTER_COUNT)
+		{
+			D2D1_SIZE_F UNIT = 
+			{ 
+				.width = mRectangleTexture.GetWidth() * 0.5f * mMonsters[0].GetScale().width, 
+				.height = mRectangleTexture.GetHeight() * 0.5f * mMonsters[0].GetScale().height
+			};
+
+			
+			mMonsterSpawnPositions[cnt] =
+			{
+				.x = float(dist(gen)),
+				.y = float(dist(gen))
+			};
+
+			if (rand() % 2 == 0)
+			{
+				mMonsterSpawnPositions[cnt].x *= -1.0f;
+			}
+
+			if (rand() % 2 == 0)
+			{
+				mMonsterSpawnPositions[cnt].y *= -1.0f;
+			}
+
+			spawnDirection[cnt] = Math::GetNormalizeVector(mMonsterSpawnPositions[cnt]);
+
+			constexpr float OUTLINE_OFFSET = 350.0f;
+			spawnPositionInRect[cnt] = Math::ScaleVector(spawnDirection[cnt], OUTLINE_OFFSET);
+
+			cnt++;
+		}
 
 		constexpr float MONSTER_SCALE = 0.5f;
-		mMonster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 
-		mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mMonster);
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			mMonsters[i].SetTexture(&mRectangleTexture);
+			mMonsters[i].SetPosition(spawnPositionInRect[i]);
+			mMonsters[i].SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
+			mMonsters[i].SetActive(false);
+
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mMonsters[i]);
+		}
 	}
 
 	// 줌을 초기화한다.
@@ -103,8 +145,6 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 bool MainScene::Update(const float deltaTime)
 {
-	mDeltaTime = deltaTime;
-
 	// 게임을 종료한다.
 	if (Input::Get().GetKeyDown(VK_ESCAPE))
 	{
@@ -254,6 +294,25 @@ bool MainScene::Update(const float deltaTime)
 		mMainCamera.SetPosition(position);
 	}
 
+	// 몬스터를 업데이트한다.
+	{
+		static float spawnTimer;
+
+		spawnTimer += deltaTime;
+
+		static uint32_t spawnIndex;
+		if (spawnTimer >= 0.5f and spawnIndex < MONSTER_COUNT)
+		{
+			if (spawnTimer >= 0.1f)
+			{
+				mMonsters[spawnIndex].SetActive(true);
+
+				spawnIndex++;
+				spawnTimer = 0.0f;
+			}
+		}
+	}
+
 	// 충돌	처리를 업데이트한다.
 	{
 		//D2D1_POINT_2F heroPos = mHero.GetPosition();
@@ -390,42 +449,22 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
-	// TODO: 몬스터 스폰 임시 코드 구현 -> 업데이트로 이동할 예정.
+	// 몬스터를 그린다.
 	{
-		static float elapsedTime = 0.0f;
-		elapsedTime += mDeltaTime;
+		//D2D1_POINT_2F spawnDirection[MONSTER_COUNT]{};
+		//D2D1_POINT_2F spawnPositionInCircle[MONSTER_COUNT]{};
 
-		static D2D1_POINT_2F spawnPosition;
+		//for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		//{
+		//	spawnDirection[i] = Math::GetNormalizeVector(mMonsterSpawnPositions[i]);
+		//	spawnPositionInCircle[i] = Math::ScaleVector(spawnDirection[i], 350.0f);
 
-		// 몬스터를 그린다.
-		if (elapsedTime >= 1.0f)
-		{
-			spawnPosition =
-			{
-				.x = rand() % 999 + 20.0f,
-				.y = rand() % 999 + 20.0f
-			};
+		//	Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle[i]) * view;
+		//	renderTarget->SetTransform(worldView);
 
-			if (rand() % 2 == 0)
-			{
-				spawnPosition.x *= -1.0f;
-			}
-
-			if (rand() % 2 == 0)
-			{
-				spawnPosition.y *= -1.0f;
-			}
-
-			elapsedTime = 0.0f;
-		}
-
-		D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
-		D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
-		Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
-		renderTarget->SetTransform(worldView);
-
-		D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
-		renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		//	D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
+		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		//}
 	}
 }
 
