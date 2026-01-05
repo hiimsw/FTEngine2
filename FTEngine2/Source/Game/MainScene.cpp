@@ -38,69 +38,46 @@ void MainScene::Initialize()
 	// 플레이어
 	{
 		// 네모
-		//mHero.SetTexture(&mRectangleTexture);
-		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+		mHero.SetTexture(&mRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
 		// 동그라미
-		mHero.SetScale({ .width = 5.0f, .height = 5.0f });
-		mHero.SetTexture(&mCircleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+		//mHero.SetScale({ .width = 5.0f, .height = 5.0f });
+		//mHero.SetTexture(&mCircleTexture);
+		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 	}
 
 	// 몬스터를 초기화한다.
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_int_distribution<int32_t> dist(20, 999);
+		std::uniform_int_distribution<uint32_t> distPosition(20, 380);
+		std::uniform_int_distribution<uint32_t> distDir(0, 3);
 
-		static uint32_t cnt;
-		static D2D1_POINT_2F spawnDirection[MONSTER_COUNT]{};
-		static D2D1_POINT_2F spawnPositionInRect[MONSTER_COUNT]{};
+		uint32_t cnt{};
+
+		constexpr float MONSTER_SCALE = 0.5f;
+		constexpr float OUTLINE_OFFSET = 380.0f;
 
 		// 랜덤 좌표를 생성한다.
 		while (cnt != MONSTER_COUNT)
-		{
-			D2D1_SIZE_F UNIT = 
-			{ 
-				.width = mRectangleTexture.GetWidth() * 0.5f * mMonsters[0].GetScale().width, 
-				.height = mRectangleTexture.GetHeight() * 0.5f * mMonsters[0].GetScale().height
-			};
-
+		{	
+			Sprite& monster = mMonsters[cnt];
+			D2D1_POINT_2F spawnPosition = monster.GetPosition();
 			
-			mMonsterSpawnPositions[cnt] =
+			spawnPosition =
 			{
-				.x = float(dist(gen)),
-				.y = float(dist(gen))
+				.x = float(distPosition(gen)),
+				.y = float(distPosition(gen))
 			};
 
-			if (rand() % 2 == 0)
-			{
-				mMonsterSpawnPositions[cnt].x *= -1.0f;
-			}
+			monster.SetTexture(&mRectangleTexture);
+			monster.SetPosition(spawnPosition);
+			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
+			monster.SetActive(false);
 
-			if (rand() % 2 == 0)
-			{
-				mMonsterSpawnPositions[cnt].y *= -1.0f;
-			}
-
-			spawnDirection[cnt] = Math::GetNormalizeVector(mMonsterSpawnPositions[cnt]);
-
-			constexpr float OUTLINE_OFFSET = 350.0f;
-			spawnPositionInRect[cnt] = Math::ScaleVector(spawnDirection[cnt], OUTLINE_OFFSET);
-
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 			cnt++;
-		}
-
-		constexpr float MONSTER_SCALE = 0.5f;
-
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		{
-			mMonsters[i].SetTexture(&mRectangleTexture);
-			mMonsters[i].SetPosition(spawnPositionInRect[i]);
-			mMonsters[i].SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
-			mMonsters[i].SetActive(false);
-
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mMonsters[i]);
 		}
 	}
 
@@ -300,60 +277,77 @@ bool MainScene::Update(const float deltaTime)
 	// 몬스터를 업데이트한다.
 	{
 		static float spawnTimer;
+		static uint32_t spawnIndex;
 
 		spawnTimer += deltaTime;
 
-		static uint32_t spawnIndex;
-		if (spawnTimer >= 0.5f and spawnIndex < MONSTER_COUNT)
+		if (spawnTimer >= 0.1f and spawnIndex < MONSTER_COUNT)
 		{
+			Sprite& monster = mMonsters[spawnIndex];
+
 			if (spawnTimer >= 0.1f)
 			{
-				mMonsters[spawnIndex].SetActive(true);
+				monster.SetActive(true);
 
 				spawnIndex++;
 				spawnTimer = 0.0f;
 			}
 		}
+
+		constexpr int32_t MAX_SPEED = -70;
+
+		for (auto& monster : mMonsters)
+		{
+			D2D1_POINT_2F velocity = monster.GetPosition();
+			D2D1_POINT_2F position{};
+			float speed = -180.0f * deltaTime;
+
+			velocity.x += speed;
+			velocity.y += speed;
+
+			if (Math::GetVectorLength(velocity) != 0.0f)
+			{
+				D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
+				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+
+				position = Math::AddVector(monster.GetPosition(), adjustVelocity);
+			}
+
+			if (monster.GetPosition().x <= 0.0f and monster.GetPosition().y <= 0.0f)
+			{
+				position = { .x = 0.0f, .y = 0.0f };
+			}
+
+			monster.SetPosition(position);
+		}
 	}
 
 	// 충돌	처리를 업데이트한다.
 	{
-		D2D1_POINT_2F zoomPos = mZoom.GetPosition();
-
-		if (Collision::IsCollidedCircleWithPoint(GetCricleFromSprite(mHero).point, GetCricleFromSprite(mHero).radiusX, zoomPos))
+		if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(mZoom)))
 		{
-			mHero.SetTexture(&mRedCircleTexture);
-			DEBUG_LOG("ㅇㅇ");
+			mHero.SetTexture(&mRedRectangleTexture);
 		}
 		else
 		{
-			mHero.SetTexture(&mCircleTexture);
-			DEBUG_LOG("ㄴㄴ");
+			mHero.SetTexture(&mRectangleTexture);
 		}
 
-		//if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(mZoom)))
-		//{
-		//	mHero.SetTexture(&mRedRectangleTexture);
-		//}
-		//else
-		//{
-		//	mHero.SetTexture(&mRectangleTexture);
-		//}
+		Line line =
+		{
+			.Point0 = mLine.Point0,
+			.Point1 = mLine.Point1
+		};
 
-		//Line line =
-		//{
-		//	.Point0 = mLine.Point0,
-		//	.Point1 = mLine.Point1
-		//};
-
-		//if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(mHero), line))
-		//{
-		//	DEBUG_LOG("dd");
-		//}
-		//else
-		//{
-		//	DEBUG_LOG("ss");
-		//}
+		if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(mHero), line))
+		{
+			//DEBUG_LOG("dd");
+		}
+		else
+		{
+			//DEBUG_LOG("ss");
+		}
 	}
 
 	return true;
@@ -393,20 +387,20 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 몬스터를 그린다.
 	{
-		//D2D1_POINT_2F spawnDirection[MONSTER_COUNT]{};
-		//D2D1_POINT_2F spawnPositionInCircle[MONSTER_COUNT]{};
+		static D2D1_POINT_2F spawnDirection;
+		static D2D1_POINT_2F spawnPositionInCircle;
 
-		//for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		//{
-		//	spawnDirection[i] = Math::GetNormalizeVector(mMonsterSpawnPositions[i]);
-		//	spawnPositionInCircle[i] = Math::ScaleVector(spawnDirection[i], 350.0f);
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			spawnDirection = Math::GetNormalizeVector(mMonsters[i].GetPosition());
+			spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
 
-		//	Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle[i]) * view;
-		//	renderTarget->SetTransform(worldView);
+			Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
+			renderTarget->SetTransform(worldView);
 
-		//	D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
-		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-		//}
+			D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
+			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		}
 	}
 }
 
@@ -416,11 +410,13 @@ void MainScene::Finalize()
 
 	mRectangleTexture.Finalize();
 	mRedRectangleTexture.Finalize();
+
+	mCircleTexture.Finalize();
+	mRedCircleTexture.Finalize();
 }
 
 D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 {		
-	D2D1_POINT_2F position = sprite.GetPosition();
 	D2D1_SIZE_F scale = sprite.GetScale();
 
 	D2D1_SIZE_F offset =
@@ -428,6 +424,8 @@ D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 		.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
 		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
 	};
+
+	D2D1_POINT_2F position = sprite.GetPosition();
 
 	D2D1_RECT_F rect =
 	{

@@ -48,13 +48,11 @@ private:
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	Sprite mHero{};
-	constexpr static uint32_t MONSTER_COUNT = 20;
+	constexpr static uint32_t MONSTER_COUNT = 10;
 	Sprite mMonsters[MONSTER_COUNT]{};
 	Sprite mZoom{};
 	GizmoLine mLine{};
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	bool mIsCursorConfined = false;
-
-	D2D1_POINT_2F mMonsterSpawnPositions[MONSTER_COUNT]{};
 };
