@@ -52,7 +52,7 @@ void MainScene::Initialize()
 		mBullet.SetPosition(mHero.GetPosition());
 		mBullet.SetScale({ .width = 0.7f, .height = 0.7f });
 		mBullet.SetActive(false);
-		mBullet.SetTexture(&mRedCircleTexture);
+		mBullet.SetTexture(&mCircleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullet);
 	}
 
@@ -530,36 +530,48 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			if (monster.IsActive())
 			{
-				D2D1_POINT_2F position = monster.GetPosition();
-				D2D1_SIZE_F scale = monster.GetScale();
-
-				D2D1_SIZE_F offset =
-				{
-					.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
-					.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
-				};
-
-				D2D1_RECT_F spawnRectPosition =
-				{
-					.left = position.x - offset.width,
-					.top = position.y + offset.height,
-					.right = position.x + offset.width,
-					.bottom = position.y - offset.height
-				};
-
-				Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = spawnRectPosition.left, .y = spawnRectPosition.top }) * view;
+				Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top}) * view;
 				renderTarget->SetTransform(worldView);
-
 
 				ID2D1SolidColorBrush* cyanBrush = nullptr;
 				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Cyan), &cyanBrush);
 
-				D2D1_SIZE_F offsetSize = { .width = offset.width * 2.0f, .height = offset.height * 2.0f };
-				D2D1_RECT_F colliderSize{ .left = 0.0f, .top = 0.0f, .right = offsetSize.width, .bottom = offsetSize.height };
+				D2D1_SIZE_F scale = monster.GetScale();
+
+				D2D1_RECT_F colliderSize = 
+				{ 
+					.left = 0.0f,
+					.top = 0.0f, 
+					.right = scale.width * mRectangleTexture.GetWidth(), 
+					.bottom = scale.width * mRectangleTexture.GetWidth()
+				};
+
 				renderTarget->DrawRectangle(colliderSize, cyanBrush);
-				
 				RELEASE_D2D1(cyanBrush);
 			}
+		}
+	}
+
+	// 총알 충돌박스를 그린다.
+	{
+		if (mBullet.IsActive())
+		{
+			Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(mBullet).point) * view;
+			renderTarget->SetTransform(worldView);
+
+			ID2D1SolidColorBrush* yellowBrush = nullptr;
+			renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &yellowBrush);
+
+			D2D1_SIZE_F scale = mBullet.GetScale();
+
+			D2D1_ELLIPSE circleSize =
+			{
+				.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
+				.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
+			};
+
+			renderTarget->DrawEllipse(circleSize, yellowBrush);
+			RELEASE_D2D1(yellowBrush);
 		}
 	}
 }
@@ -598,7 +610,7 @@ D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 	return rect;
 }
 
-D2D1_ELLIPSE MainScene::GetCricleFromSprite(const Sprite& sprite)
+D2D1_ELLIPSE MainScene::GetCircleFromSprite(const Sprite& sprite)
 {
 	D2D1_RECT_F rect = GetRectangleFromSprite(sprite);
 	D2D1_POINT_2F position = sprite.GetPosition();
