@@ -66,18 +66,13 @@ void MainScene::Initialize()
 		uint32_t cnt{};
 
 		constexpr float MONSTER_SCALE = 0.5f;
-		constexpr float OUTLINE_OFFSET = 380.0f;
 
 		// ·£´ý ÁÂÇ¥¸¦ »ý¼ºÇÑ´Ù.
 		while (cnt != MONSTER_COUNT)
 		{
 			Sprite& monster = mMonsters[cnt];
 
-			D2D1_POINT_2F spawnPosition =
-			{
-				.x = dist(gen),
-				.y = dist(gen)
-			};
+			D2D1_POINT_2F spawnPosition = { .x = dist(gen), .y = dist(gen) };
 
 			if (distDir(gen))
 			{
@@ -394,35 +389,49 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		constexpr int32_t MAX_SPEED = -70;
-
 		for (auto& monster : mMonsters)
 		{
 			if (monster.IsActive())
 			{
-				D2D1_POINT_2F velocity = monster.GetPosition();
-				D2D1_POINT_2F position{};
-				float speed = -180.0f * deltaTime;
+				D2D1_POINT_2F position = monster.GetPosition();
+				D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
 
-				velocity.x += speed;
-				velocity.y += speed;
-
-				if (Math::GetVectorLength(velocity) != 0.0f)
+				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
-					D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
+
+					constexpr int32_t MAX_SPEED = 70;
 					D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
 					adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
-					position = Math::AddVector(monster.GetPosition(), adjustVelocity);
+					position = Math::AddVector(position, adjustVelocity);
 				}
-
-				monster.SetPosition(position);
 
 				if (monster.GetPosition().x >= -IN_BOUNDARY_RADIUS and monster.GetPosition().x <= IN_BOUNDARY_RADIUS
 					and monster.GetPosition().y >= -IN_BOUNDARY_RADIUS and monster.GetPosition().y <= IN_BOUNDARY_RADIUS)
 				{
-					continue;
+					std::random_device rd;
+					std::mt19937 gen(rd());
+					std::uniform_real_distribution<float> dist(20, 999);
+					std::uniform_int_distribution<uint32_t> distDir(0, 1);
+
+					position = { .x = dist(gen), .y = dist(gen) };
+
+					if (distDir(gen))
+					{
+						position.x *= -1.0f;
+					}
+					if (distDir(gen))
+					{
+						position.y *= -1.0f;
+					}
+
+					const D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(position);
+					const D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
+					position = spawnPositionInCircle;
 				}
+
+				monster.SetPosition(position);
 			}
 		}
 	}
