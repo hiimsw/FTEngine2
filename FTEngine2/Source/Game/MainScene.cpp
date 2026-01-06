@@ -47,6 +47,15 @@ void MainScene::Initialize()
 		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 	}
 
+	// 총알
+	{
+		mBullet.SetPosition(mHero.GetPosition());
+		mBullet.SetScale({ .width = 0.7f, .height = 0.7f });
+		mBullet.SetActive(false);
+		mBullet.SetTexture(&mRedCircleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullet);
+	}
+
 	// 몬스터를 초기화한다.
 	{
 		std::random_device rd;
@@ -79,8 +88,8 @@ void MainScene::Initialize()
 				spawnPosition.y *= -1.0f;
 			}
 
-			D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
-			D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
+			const D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
+			const D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
 
 			monster.SetTexture(&mRectangleTexture);
 			monster.SetPosition(spawnPositionInCircle);
@@ -94,6 +103,7 @@ void MainScene::Initialize()
 
 	// 줌을 초기화한다.
 	{
+		mZoom.SetScale({ .width = 0.7f, .height = 0.7f });
 		mZoom.SetAngle(45.0f);
 		mZoom.SetUI(true);
 		mZoom.SetTexture(&mRedRectangleTexture);
@@ -102,8 +112,8 @@ void MainScene::Initialize()
 
 	// 카메라를 초기화한다.
 	{
-		D2D1_POINT_2F heroPosition = mHero.GetPosition();
-		D2D1_POINT_2F cameraPosition{ .x = heroPosition.x * 0.5f, .y = heroPosition.y * 0.5f };
+		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F cameraPosition{ .x = heroPosition.x * 0.5f, .y = heroPosition.y * 0.5f };
 
 		mMainCamera.SetPosition(cameraPosition);
 	}
@@ -126,7 +136,7 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 	// 바운더리를 그린다.
 	{
-		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
+		const Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
 		renderTarget->SetTransform(worldView);
 
 		D2D1_ELLIPSE ellipse{ .radiusX = BOUNDARY_RADIUS, .radiusY = BOUNDARY_RADIUS };
@@ -135,31 +145,66 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 	// 내부 바운더리를 그린다.
 	{
-		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
+		const Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
 		renderTarget->SetTransform(worldView);
 
-		D2D1_ELLIPSE ellipse{ .radiusX = IN_BOUNDARY_RADIUS, .radiusY = IN_BOUNDARY_RADIUS };
+		const D2D1_ELLIPSE ellipse{ .radiusX = IN_BOUNDARY_RADIUS, .radiusY = IN_BOUNDARY_RADIUS };
 		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
 	}
 }
 
 bool MainScene::Update(const float deltaTime)
 {
-	// 게임을 종료한다.
-	if (Input::Get().GetKeyDown(VK_ESCAPE))
+	// 키를 업데이트한다.
 	{
-		return false;
+		// 게임을 종료한다.
+		if (Input::Get().GetKeyDown(VK_ESCAPE))
+		{
+			return false;
+		}
+
+		// 마우스 커서를 설정한다.
+		if (Input::Get().GetKeyDown(VK_CONTROL))
+		{
+			mIsCursorConfined = !mIsCursorConfined;
+			Input::Get().SetCursorLockState(mIsCursorConfined ? Input::eCursorLockState::Confined : Input::eCursorLockState::None);
+			Input::Get().SetCursorVisible(not mIsCursorConfined);
+		}
 	}
 
-	if (Input::Get().GetKeyDown(VK_CONTROL))
+	// 카메라를 업데이트한다.
 	{
-		mIsCursorConfined = !mIsCursorConfined;
-		Input::Get().SetCursorLockState(mIsCursorConfined ? Input::eCursorLockState::Confined : Input::eCursorLockState::None);
-		Input::Get().SetCursorVisible(not mIsCursorConfined);
+		D2D1_POINT_2F position = mMainCamera.GetPosition();
+		position = mHero.GetPosition();
+
+		//std::lerp()
+
+		mMainCamera.SetPosition(position);
+	}
+
+	// 줌을 업데이트한다.
+	{
+		// 세팅되어 있는 좌표(0, 0)으로 맞춰준다.
+		const D2D1_POINT_2F centerOffset =
+		{
+			.x = (Constant::Get().GetWidth() - 1.0f) * 0.5f,
+			.y = (Constant::Get().GetHeight() - 1.0f) * 0.5f
+		};
+
+		const D2D1_POINT_2F mousePosition = Input::Get().GetMousePosition();
+
+		// 마우스 좌표를 좌표계에 맞춘다.
+		const D2D1_POINT_2F screenPosition = Math::SubtractVector(mousePosition, centerOffset);
+		mZoom.SetPosition(screenPosition);
 	}
 
 	// 플레이어를 업데이트한다.
 	{
+		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+		{
+			mIsBulletActive = true;
+		}
+
 		// Case 0) 가속도 없는 단순한 이동
 		/*{
 			// 누르면 1, 안 누르면 0
@@ -270,28 +315,63 @@ bool MainScene::Update(const float deltaTime)
 				mHero.SetPosition(position);
 			}
 		}
-	}
 
-	// 줌을 업데이트한다.
-	{
-		D2D1_POINT_2F centerOffset =
+		// 총알을 업데이트한다.
 		{
-			.x = (Constant::Get().GetWidth() - 1.0f) * 0.5f,
-			.y = (Constant::Get().GetHeight() - 1.0f) * 0.5f
-		};
+			static bool isMove;
+			static D2D1_POINT_2F bulletPosition;
+			static D2D1_POINT_2F toTarget;
 
-		D2D1_POINT_2F mousePos = Input::Get().GetMousePosition();
-		mZoom.SetPosition(Math::SubtractVector(mousePos, centerOffset));
-	}
+			// 키를 눌렀을 때마다 총알 좌표를 플레이어 좌표로 바꾼다.
+			// 그에 맞게 계산을 한다.
+			if (mIsBulletActive and not isMove)
+			{
+				mBullet.SetActive(true);
 
-	// 카메라를 업데이트한다.
-	{
-		D2D1_POINT_2F position = mMainCamera.GetPosition();
-		position = mHero.GetPosition();
+				bulletPosition = mHero.GetPosition();
 
-		//std::lerp()
+				D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
+				D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
 
-		mMainCamera.SetPosition(position);
+				// 줌 좌표를 월드 좌표로 바꾼다.
+				D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
+
+				// 총알과 줌의 벡터를 구한다.
+				toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition);
+
+				isMove = true;
+			}
+
+			if (isMove)
+			{
+				static float elapsedTime;
+				elapsedTime += deltaTime;
+
+				constexpr uint32_t MAX_SPEED = 600;
+
+				if (Math::GetVectorLength(toTarget) != 0.0f)
+				{
+					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
+					D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
+					adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+
+					bulletPosition = Math::AddVector(bulletPosition, adjustVelocity);
+				}
+
+				mBullet.SetPosition(bulletPosition);
+
+				if (elapsedTime >= 1.0f)
+				{
+					isMove = false;
+
+					mBullet.SetActive(false);
+					mIsBulletActive = false;
+					elapsedTime = 0.0f;
+				}
+			}
+
+			DEBUG_LOG("%d", mIsBulletActive);
+		}
 	}
 
 	// 몬스터를 업데이트한다.

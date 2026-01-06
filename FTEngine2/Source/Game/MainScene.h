@@ -52,9 +52,12 @@ private:
 	Sprite mMonsters[MONSTER_COUNT]{};
 	Sprite mZoom{};
 	GizmoLine mLine{};
+	Sprite mBullet{};
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
+
 	bool mIsCursorConfined = false;
+	bool mIsBulletActive = false;
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
