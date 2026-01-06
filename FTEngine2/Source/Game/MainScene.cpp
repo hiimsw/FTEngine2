@@ -51,8 +51,8 @@ void MainScene::Initialize()
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_int_distribution<uint32_t> distPosition(20, 380);
-		std::uniform_int_distribution<uint32_t> distDir(0, 3);
+		std::uniform_real_distribution<float> dist(20, 999);
+		std::uniform_int_distribution<uint32_t> distDir(0, 1);
 
 		uint32_t cnt{};
 
@@ -61,18 +61,29 @@ void MainScene::Initialize()
 
 		// 랜덤 좌표를 생성한다.
 		while (cnt != MONSTER_COUNT)
-		{	
+		{
 			Sprite& monster = mMonsters[cnt];
-			D2D1_POINT_2F spawnPosition = monster.GetPosition();
-			
-			spawnPosition =
+
+			D2D1_POINT_2F spawnPosition =
 			{
-				.x = float(distPosition(gen)),
-				.y = float(distPosition(gen))
+				.x = dist(gen),
+				.y = dist(gen)
 			};
 
+			if (distDir(gen))
+			{
+				spawnPosition.x *= -1.0f;
+			}
+			if (distDir(gen))
+			{
+				spawnPosition.y *= -1.0f;
+			}
+
+			D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
+			D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
+
 			monster.SetTexture(&mRectangleTexture);
-			monster.SetPosition(spawnPosition);
+			monster.SetPosition(spawnPositionInCircle);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(false);
 
@@ -118,7 +129,7 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
 		renderTarget->SetTransform(worldView);
 
-		D2D1_ELLIPSE ellipse{ .radiusX = 400.0f, .radiusY = 400.0f };
+		D2D1_ELLIPSE ellipse{ .radiusX = BOUNDARY_RADIUS, .radiusY = BOUNDARY_RADIUS };
 		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
 	}
 }
@@ -298,40 +309,47 @@ bool MainScene::Update(const float deltaTime)
 
 		for (auto& monster : mMonsters)
 		{
-			D2D1_POINT_2F velocity = monster.GetPosition();
-			D2D1_POINT_2F position{};
-			float speed = -180.0f * deltaTime;
-
-			velocity.x += speed;
-			velocity.y += speed;
-
-			if (Math::GetVectorLength(velocity) != 0.0f)
+			if (monster.IsActive())
 			{
-				D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
-				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
-				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+				D2D1_POINT_2F velocity = monster.GetPosition();
+				D2D1_POINT_2F position{};
+				float speed = -180.0f * deltaTime;
 
-				position = Math::AddVector(monster.GetPosition(), adjustVelocity);
+				velocity.x += speed;
+				velocity.y += speed;
+
+				if (Math::GetVectorLength(velocity) != 0.0f)
+				{
+					D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+					D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
+					adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+
+					position = Math::AddVector(monster.GetPosition(), adjustVelocity);
+				}
+
+				monster.SetPosition(position);
+
+				if (monster.GetPosition().x >= -50.0f and monster.GetPosition().x <= 50.0f
+					and monster.GetPosition().y >= -50.0f and monster.GetPosition().y <= 50.0f)
+				{
+					break;
+				}
 			}
-
-			if (monster.GetPosition().x <= 0.0f and monster.GetPosition().y <= 0.0f)
-			{
-				position = { .x = 0.0f, .y = 0.0f };
-			}
-
-			monster.SetPosition(position);
 		}
 	}
 
 	// 충돌	처리를 업데이트한다.
 	{
-		if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(mZoom)))
+		// 플레이어 - 몬스터 충돌시 삭제한다.
+		for (auto& monster : mMonsters)
 		{
-			mHero.SetTexture(&mRedRectangleTexture);
-		}
-		else
-		{
-			mHero.SetTexture(&mRectangleTexture);
+			if (mHero.IsActive() and monster.IsActive())
+			{
+				if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(monster)))
+				{
+					monster.SetActive(false);
+				}
+			}
 		}
 
 		Line line =
@@ -416,7 +434,7 @@ void MainScene::Finalize()
 }
 
 D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
-{		
+{
 	D2D1_SIZE_F scale = sprite.GetScale();
 
 	D2D1_SIZE_F offset =
@@ -442,10 +460,10 @@ D2D1_ELLIPSE MainScene::GetCricleFromSprite(const Sprite& sprite)
 {
 	D2D1_RECT_F rect = GetRectangleFromSprite(sprite);
 	D2D1_POINT_2F position = sprite.GetPosition();
-	
+
 	D2D1_ELLIPSE circle =
 	{
-		.point = position, 
+		.point = position,
 		.radiusX = fabs(rect.right - position.x),
 		.radiusY = fabs(rect.top - position.y)
 	};

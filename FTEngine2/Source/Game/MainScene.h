@@ -55,4 +55,6 @@ private:
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	bool mIsCursorConfined = false;
+
+	static constexpr float BOUNDARY_RADIUS = 400.0f;
 };
