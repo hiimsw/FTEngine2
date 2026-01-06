@@ -480,48 +480,86 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
 
 	// 라인을 그린다.
-	{
-		D2D1_ELLIPSE CIRCLE{ .radiusX = 5.0f, .radiusY = 5.0f };
+	//{
+	//	D2D1_ELLIPSE CIRCLE{ .radiusX = 5.0f, .radiusY = 5.0f };
 
-		mLine.Point0 = { .x = -200.0f, .y = 200.0f };
-		mLine.Point1 = { .x = 150.0f, .y = 100.0f };
+	//	mLine.Point0 = { .x = -200.0f, .y = 200.0f };
+	//	mLine.Point1 = { .x = 150.0f, .y = 100.0f };
 
-		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
-		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
+	//	Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
+	//	Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
 
-		// 두 점을 그린다.
-		{
-			renderTarget->SetTransform(point0WorldView);
-			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+	//	// 두 점을 그린다.
+	//	{
+	//		renderTarget->SetTransform(point0WorldView);
+	//		renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
 
-			renderTarget->SetTransform(point1WorldView);
-			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-		}
+	//		renderTarget->SetTransform(point1WorldView);
+	//		renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+	//	}
 
-		// 라인을 그린다.
-		{
-			D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
-			D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
-			renderTarget->SetTransform(Matrix3x2F::Identity());
-			renderTarget->DrawLine(point0, point1, mDefaultBrush);
-		}
-	}
+	//	// 라인을 그린다.
+	//	{
+	//		D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
+	//		D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
+	//		renderTarget->SetTransform(Matrix3x2F::Identity());
+	//		renderTarget->DrawLine(point0, point1, mDefaultBrush);
+	//	}
+	//}
 
 	// 몬스터를 그린다.
-	{
-		static D2D1_POINT_2F spawnDirection;
-		static D2D1_POINT_2F spawnPositionInCircle;
+	//{
+		//for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		//{
+		//	D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(mMonsters[i].GetPosition());
+		//	D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
 
+		//	Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
+		//	renderTarget->SetTransform(worldView);
+
+		//	D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
+		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		//}
+	//}
+
+	// 몬스터 충돌박스를 그린다.
+	{
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			spawnDirection = Math::GetNormalizeVector(mMonsters[i].GetPosition());
-			spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
+			Sprite& monster = mMonsters[i];
 
-			Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
-			renderTarget->SetTransform(worldView);
+			if (monster.IsActive())
+			{
+				D2D1_POINT_2F position = monster.GetPosition();
+				D2D1_SIZE_F scale = monster.GetScale();
 
-			D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
-			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+				D2D1_SIZE_F offset =
+				{
+					.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
+					.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
+				};
+
+				D2D1_RECT_F spawnRectPosition =
+				{
+					.left = position.x - offset.width,
+					.top = position.y + offset.height,
+					.right = position.x + offset.width,
+					.bottom = position.y - offset.height
+				};
+
+				Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = spawnRectPosition.left, .y = spawnRectPosition.top }) * view;
+				renderTarget->SetTransform(worldView);
+
+
+				ID2D1SolidColorBrush* cyanBrush = nullptr;
+				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Cyan), &cyanBrush);
+
+				D2D1_SIZE_F offsetSize = { .width = offset.width * 2.0f, .height = offset.height * 2.0f };
+				D2D1_RECT_F colliderSize{ .left = 0.0f, .top = 0.0f, .right = offsetSize.width, .bottom = offsetSize.height };
+				renderTarget->DrawRectangle(colliderSize, cyanBrush);
+				
+				RELEASE_D2D1(cyanBrush);
+			}
 		}
 	}
 }
