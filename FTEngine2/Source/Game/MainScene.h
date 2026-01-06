@@ -57,4 +57,5 @@ private:
 	bool mIsCursorConfined = false;
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
+	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
 };

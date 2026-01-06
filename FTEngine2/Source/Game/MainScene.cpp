@@ -132,6 +132,15 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 		D2D1_ELLIPSE ellipse{ .radiusX = BOUNDARY_RADIUS, .radiusY = BOUNDARY_RADIUS };
 		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
 	}
+
+	// 내부 바운더리를 그린다.
+	{
+		Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
+		renderTarget->SetTransform(worldView);
+
+		D2D1_ELLIPSE ellipse{ .radiusX = IN_BOUNDARY_RADIUS, .radiusY = IN_BOUNDARY_RADIUS };
+		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
+	}
 }
 
 bool MainScene::Update(const float deltaTime)
@@ -329,10 +338,10 @@ bool MainScene::Update(const float deltaTime)
 
 				monster.SetPosition(position);
 
-				if (monster.GetPosition().x >= -50.0f and monster.GetPosition().x <= 50.0f
-					and monster.GetPosition().y >= -50.0f and monster.GetPosition().y <= 50.0f)
+				if (monster.GetPosition().x >= -IN_BOUNDARY_RADIUS and monster.GetPosition().x <= IN_BOUNDARY_RADIUS
+					and monster.GetPosition().y >= -IN_BOUNDARY_RADIUS and monster.GetPosition().y <= IN_BOUNDARY_RADIUS)
 				{
-					break;
+					continue;
 				}
 			}
 		}
@@ -346,6 +355,12 @@ bool MainScene::Update(const float deltaTime)
 			if (mHero.IsActive() and monster.IsActive())
 			{
 				if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(monster)))
+				{
+					monster.SetActive(false);
+				}
+
+				// 내부 원과 충돌하면 몬스터는 삭제된다.
+				if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 				{
 					monster.SetActive(false);
 				}
