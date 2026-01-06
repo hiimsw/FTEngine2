@@ -89,7 +89,7 @@ void MainScene::Initialize()
 			monster.SetTexture(&mRectangleTexture);
 			monster.SetPosition(spawnPositionInCircle);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
-			monster.SetActive(false);
+			monster.SetActive(true);
 
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 			cnt++;
@@ -197,7 +197,7 @@ bool MainScene::Update(const float deltaTime)
 	{
 		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 		{
-			mIsBulletActive = true;
+			mIsBulletKeyDown = true;
 		}
 
 		// Case 0) 가속도 없는 단순한 이동
@@ -313,13 +313,13 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static bool isMove;
+			static bool isMoving;
 			static D2D1_POINT_2F bulletPosition;
 			static D2D1_POINT_2F toTarget;
 
 			// 키를 눌렀을 때마다 총알 좌표를 플레이어 좌표로 바꾼다.
 			// 그에 맞게 계산을 한다.
-			if (mIsBulletActive and not isMove)
+			if (mIsBulletKeyDown and not isMoving)
 			{
 				mBullet.SetActive(true);
 
@@ -334,10 +334,10 @@ bool MainScene::Update(const float deltaTime)
 				// 총알과 줌의 벡터를 구한다.
 				toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition);
 
-				isMove = true;
+				isMoving = true;
 			}
 
-			if (isMove)
+			if (isMoving)
 			{
 				static float elapsedTime;
 				elapsedTime += deltaTime;
@@ -347,25 +347,23 @@ bool MainScene::Update(const float deltaTime)
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
-					D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
-					adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+					D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
+					D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
-					bulletPosition = Math::AddVector(bulletPosition, adjustVelocity);
+					bulletPosition = Math::AddVector(bulletPosition, movePosition);
 				}
 
 				mBullet.SetPosition(bulletPosition);
 
 				if (elapsedTime >= 1.0f)
 				{
-					isMove = false;
+					isMoving = false;
 
 					mBullet.SetActive(false);
-					mIsBulletActive = false;
+					mIsBulletKeyDown = false;
 					elapsedTime = 0.0f;
 				}
 			}
-
-			DEBUG_LOG("%d", mIsBulletActive);
 		}
 	}
 
@@ -378,11 +376,9 @@ bool MainScene::Update(const float deltaTime)
 
 		if (spawnTimer >= 0.1f and spawnIndex < MONSTER_COUNT)
 		{
-			Sprite& monster = mMonsters[spawnIndex];
-
 			if (spawnTimer >= 0.1f)
 			{
-				monster.SetActive(true);
+				mMonsters[spawnIndex].SetActive(true);
 
 				spawnIndex++;
 				spawnTimer = 0.0f;
@@ -401,10 +397,10 @@ bool MainScene::Update(const float deltaTime)
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
 
 					constexpr int32_t MAX_SPEED = 70;
-					D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, MAX_SPEED);
-					adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+					D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
+					D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
-					position = Math::AddVector(position, adjustVelocity);
+					position = Math::AddVector(position, movePosition);
 				}
 
 				if (monster.GetPosition().x >= -IN_BOUNDARY_RADIUS and monster.GetPosition().x <= IN_BOUNDARY_RADIUS
@@ -434,25 +430,61 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(position);
 			}
 		}
+
+		// 충돌하면 삭제된다.
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			if (mIsHeroMonsterColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+			}
+
+			if (mIsMonsterInBoundaryColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+			}
+
+			if (mIsMonsterBulletColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+			}
+		}
 	}
 
 	// 충돌	처리를 업데이트한다.
 	{
-		// 플레이어 - 몬스터 충돌시 삭제한다.
-		for (auto& monster : mMonsters)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (mHero.IsActive() and monster.IsActive())
-			{
-				if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(monster)))
-				{
-					monster.SetActive(false);
-				}
+			Sprite& monster = mMonsters[i];
 
-				// 내부 원과 충돌하면 몬스터는 삭제된다.
-				if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
-				{
-					monster.SetActive(false);
-				}
+			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
+			if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(monster)))
+			{
+				mIsHeroMonsterColliding[i] = true;
+			}
+			else
+			{
+				mIsHeroMonsterColliding[i] = false;
+			}
+
+			// 내부 원과 충돌하면 몬스터는 삭제된다.
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
+			{
+				mIsMonsterInBoundaryColliding[i] = true;
+			}
+			else
+			{
+				mIsMonsterInBoundaryColliding[i] = false;
+			}
+
+			// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
+			if (Collision::IsCollidedCircleWithPoint(GetCircleFromSprite(mBullet).point, GetCircleFromSprite(mBullet).radiusX, monster.GetPosition()))
+			{
+				mIsMonsterBulletColliding[i] = true;
+			}
+			else
+			{
+				mIsMonsterBulletColliding[i] = false;
 			}
 		}
 
