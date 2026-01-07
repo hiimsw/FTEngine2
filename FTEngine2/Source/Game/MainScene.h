@@ -61,6 +61,7 @@ private:
 	bool mIsHeroMonsterColliding[MONSTER_COUNT]{};
 	bool mIsMonsterInBoundaryColliding[MONSTER_COUNT]{};
 	bool mIsMonsterBulletColliding[MONSTER_COUNT]{};
+	bool mIsMonsterSpwan[MONSTER_COUNT]{};
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;

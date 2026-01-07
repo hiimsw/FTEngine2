@@ -369,27 +369,13 @@ bool MainScene::Update(const float deltaTime)
 
 	// 몬스터를 업데이트한다.
 	{
-		static float spawnTimer;
-		static uint32_t spawnIndex;
-
-		spawnTimer += deltaTime;
-
-		if (spawnTimer >= 0.1f and spawnIndex < MONSTER_COUNT)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (spawnTimer >= 0.1f)
-			{
-				mMonsters[spawnIndex].SetActive(true);
+			Sprite& monster = mMonsters[i];
+			D2D1_POINT_2F position = monster.GetPosition();
 
-				spawnIndex++;
-				spawnTimer = 0.0f;
-			}
-		}
-
-		for (auto& monster : mMonsters)
-		{
 			if (monster.IsActive())
 			{
-				D2D1_POINT_2F position = monster.GetPosition();
 				D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
 
 				if (Math::GetVectorLength(toTarget) != 0.0f)
@@ -402,10 +388,32 @@ bool MainScene::Update(const float deltaTime)
 
 					position = Math::AddVector(position, movePosition);
 				}
+			}
 
-				if (monster.GetPosition().x >= -IN_BOUNDARY_RADIUS and monster.GetPosition().x <= IN_BOUNDARY_RADIUS
-					and monster.GetPosition().y >= -IN_BOUNDARY_RADIUS and monster.GetPosition().y <= IN_BOUNDARY_RADIUS)
+			if (mIsHeroMonsterColliding[i]
+				or mIsMonsterInBoundaryColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+				mIsMonsterSpwan[i] = true;
+			}
+			if (mIsMonsterBulletColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+				mBullet.SetActive(false);
+				mIsMonsterSpwan[i] = true;
+			}
+
+			static float spawnTimer;
+			spawnTimer += deltaTime;
+
+
+			// 충돌이 되면 IsActive() = false니까 내부에서 true로 바꿔줘야 한다.
+			if (not monster.IsActive() and mIsMonsterSpwan[i])
+			{
+				if (spawnTimer >= 0.3f)
 				{
+					mMonsters[i].SetActive(true);
+
 					std::random_device rd;
 					std::mt19937 gen(rd());
 					std::uniform_real_distribution<float> dist(20, 999);
@@ -425,29 +433,14 @@ bool MainScene::Update(const float deltaTime)
 					const D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(position);
 					const D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
 					position = spawnPositionInCircle;
+
+					spawnTimer = 0.0f;
 				}
 
-				monster.SetPosition(position);
-			}
-		}
-
-		// 충돌하면 삭제된다.
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		{
-			if (mIsHeroMonsterColliding[i])
-			{
-				mMonsters[i].SetActive(false);
+				mIsMonsterSpwan[i] = false;
 			}
 
-			if (mIsMonsterInBoundaryColliding[i])
-			{
-				mMonsters[i].SetActive(false);
-			}
-
-			if (mIsMonsterBulletColliding[i])
-			{
-				mMonsters[i].SetActive(false);
-			}
+			monster.SetPosition(position);
 		}
 	}
 
