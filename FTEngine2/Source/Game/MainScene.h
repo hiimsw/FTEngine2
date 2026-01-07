@@ -4,12 +4,17 @@
 #include "Core/Scene.h"
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
+#include <Core/Label.h>
+#include <Core/Font.h>
 
 struct GizmoLine
 {
 	D2D1_POINT_2F Point0;
 	D2D1_POINT_2F Point1;
 };
+
+class Label;
+class Font;
 
 class MainScene final : public Scene
 {
@@ -58,10 +63,15 @@ private:
 
 	bool mIsCursorConfined = false;
 	bool mIsBulletKeyDown = false;
-	bool mIsHeroMonsterColliding[MONSTER_COUNT]{};
-	bool mIsMonsterInBoundaryColliding[MONSTER_COUNT]{};
-	bool mIsMonsterBulletColliding[MONSTER_COUNT]{};
-	bool mIsMonsterSpwan[MONSTER_COUNT]{};
+
+	bool mIsHeroMonsterColliding[MONSTER_COUNT]{ false };
+	bool mIsMonsterInBoundaryColliding[MONSTER_COUNT]{ false };
+	bool mIsMonsterBulletColliding[MONSTER_COUNT]{ false };
+	bool mIsMonsterSpwan[MONSTER_COUNT]{ false };
+
+	std::vector<Label*> mLabels{};
+	Font mTimerFont{};
+	Label mTimerLabel{};
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;

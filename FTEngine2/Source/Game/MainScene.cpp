@@ -21,6 +21,11 @@ void MainScene::Initialize()
 
 		SetCamera(&mMainCamera);
 
+		mLabels.reserve(1);
+		SetLabels(&mLabels);
+
+		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
+
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
 
@@ -112,6 +117,15 @@ void MainScene::Initialize()
 		const D2D1_POINT_2F cameraPosition{ .x = heroPosition.x * 0.5f, .y = heroPosition.y * 0.5f };
 
 		mMainCamera.SetPosition(cameraPosition);
+	}
+
+	// 라벨을 초기화한다.
+	{
+		mTimerLabel.SetFont(&mTimerFont);
+		mTimerLabel.SetUI(true);
+		mTimerLabel.SetPosition({ .x = 0.0f, .y = 250.0f });
+		mLabels.push_back(&mTimerLabel);
+
 	}
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
@@ -442,6 +456,18 @@ bool MainScene::Update(const float deltaTime)
 
 			monster.SetPosition(position);
 		}
+	}
+
+	// 라벨을 업데이트한다.
+	{
+		static float gameTimer;
+		gameTimer += deltaTime;
+
+		uint32_t seconds = uint32_t(gameTimer) % 60;
+		uint32_t minutes = uint32_t(gameTimer) / 60;
+
+		std::wstring name = L"Timer: " + std::to_wstring(minutes) + L":" + std::to_wstring(seconds);
+		mTimerLabel.SetText(name);
 	}
 
 	// 충돌	처리를 업데이트한다.
