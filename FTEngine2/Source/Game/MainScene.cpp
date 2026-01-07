@@ -409,8 +409,8 @@ bool MainScene::Update(const float deltaTime)
 
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
-					D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED);
-					D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED);
+					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
 					bulletPosition[i] = Math::AddVector(bulletPosition[i], movePosition);
 				}
@@ -521,8 +521,8 @@ bool MainScene::Update(const float deltaTime)
 		static float gameTimer;
 		gameTimer += deltaTime;
 
-		uint32_t seconds = uint32_t(gameTimer) % 60;
-		uint32_t minutes = uint32_t(gameTimer) / 60;
+		uint32_t seconds = uint32_t(gameTimer) % 60; // 나머지
+		uint32_t minutes = uint32_t(gameTimer) / 60; // 몫
 
 		std::wstring name = L"Timer: " + std::to_wstring(minutes) + L":" + std::to_wstring(seconds);
 		mTimerLabel.SetText(name);
@@ -570,7 +570,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
-				Line line =
+				const Line line =
 				{
 					.Point0 = mPrevBulletPosition[j],
 					.Point1 = GetCircleFromSprite(mBullets[j]).point
@@ -760,6 +760,7 @@ D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
 	};
 
+	const D2D1_POINT_2F position = sprite.GetPosition();
 	const D2D1_POINT_2F position = sprite.GetPosition();
 
 	const D2D1_RECT_F rect =

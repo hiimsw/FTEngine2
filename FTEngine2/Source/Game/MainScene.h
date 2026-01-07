@@ -54,7 +54,7 @@ private:
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	Sprite mHero{};
 
-	static constexpr uint32_t MONSTER_COUNT = 5;
+	static constexpr uint32_t MONSTER_COUNT = 10;
 	Sprite mMonsters[MONSTER_COUNT]{};
 
 	Sprite mZoom{};
