@@ -60,9 +60,11 @@ private:
 	Sprite mBullet{};
 	Sprite mHp{};
 
-	int32_t mHeroMaxHp = 100;
+	int32_t mHeroMaxHp = 200;
 	int32_t mHeroHpValue = mHeroMaxHp;
 	static constexpr int32_t mMonsterAttackValue = 10;
+
+	D2D1_POINT_2F mPrevBulletPosition{};
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 
@@ -72,6 +74,7 @@ private:
 	bool mIsHeroMonsterColliding[MONSTER_COUNT]{ false };
 	bool mIsMonsterInBoundaryColliding[MONSTER_COUNT]{ false };
 	bool mIsMonsterBulletColliding[MONSTER_COUNT]{ false };
+
 	bool mIsMonsterSpwan[MONSTER_COUNT]{ false };
 
 	std::vector<Label*> mLabels{};
