@@ -21,10 +21,11 @@ void MainScene::Initialize()
 
 		SetCamera(&mMainCamera);
 
-		mLabels.reserve(1);
+		mLabels.reserve(8);
 		SetLabels(&mLabels);
 
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
+		mHpFont.Initialize(GetHelper(), L"Arial", 20.0f);
 
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
@@ -55,11 +56,14 @@ void MainScene::Initialize()
 
 	// 총알
 	{
-		mBullet.SetPosition(mHero.GetPosition());
-		mBullet.SetScale({ .width = 0.7f, .height = 0.7f });
-		mBullet.SetActive(false);
-		mBullet.SetTexture(&mCircleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullet);
+		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+		{
+			mBullets[i].SetPosition(mHero.GetPosition());
+			mBullets[i].SetScale({ .width = 0.7f, .height = 0.7f });
+			mBullets[i].SetActive(false);
+			mBullets[i].SetTexture(&mCircleTexture);
+			mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullets[i]);
+		}
 	}
 
 	// 몬스터를 초기화한다.
@@ -71,7 +75,7 @@ void MainScene::Initialize()
 
 		uint32_t cnt{};
 
-		constexpr float MONSTER_SCALE = 0.5f;
+		constexpr float MONSTER_SCALE = 0.7f;
 
 		// 랜덤 좌표를 생성한다.
 		while (cnt != MONSTER_COUNT)
@@ -121,20 +125,33 @@ void MainScene::Initialize()
 
 	// HP바를 초기화한다.
 	{
-		mHp.SetPosition({ .x = 0.0f, .y = -UI_CENTER_POSITION_Y });
-		mHp.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
-		mHp.SetUI(true);
-		mHp.SetTexture(&mRedRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHp);
+		mHpBar.SetPosition({ .x = 0.0f, .y = -UI_CENTER_POSITION_Y });
+		mHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mHpBar.SetUI(true);
+		mHpBar.SetTexture(&mRedRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
 	}
 
 	// 라벨을 초기화한다.
 	{
+		// 타이머
 		mTimerLabel.SetFont(&mTimerFont);
 		mTimerLabel.SetUI(true);
 		mTimerLabel.SetPosition({ .x = 0.0f, .y = UI_CENTER_POSITION_Y });
 		mLabels.push_back(&mTimerLabel);
 
+		// 현재 체력
+		mHpValueLabel.SetFont(&mHpFont);
+		mHpValueLabel.SetUI(true);
+
+		const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
+		constexpr float OFFSETY = 50.0f;
+		D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSETY };
+		mHpValueLabel.SetPosition(offset);
+
+		mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
+
+		mLabels.push_back(&mHpValueLabel);
 	}
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
@@ -225,21 +242,22 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// Case 0) 가속도 없는 단순한 이동
-		/*{
-			// 누르면 1, 안 누르면 0
-			int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
-			int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
+		//{
+		//	// 누르면 1, 안 누르면 0
+		//	int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
+		//	int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
 
-			if (moveX != 0 or moveY != 0)
-			{
-				float speed = 180.0f * deltaTime;
-				D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
-				D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
+		//	if (moveX != 0 or moveY != 0)
+		//	{
+		//		float speed = 180.0f * deltaTime;
 
-				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-				mHero.SetPosition(position);
-			}
-		}*/
+		//		D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
+		//		D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
+
+		//		D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
+		//		mHero.SetPosition(position);
+		//	}
+		//}
 
 		//  Case 1) X축만 가속도 반영하여 이동 구현
 		{
@@ -337,57 +355,76 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static bool isMoving;
-			static D2D1_POINT_2F bulletPosition;
+			static D2D1_POINT_2F bulletPosition[BULLET_COUNT];
+			static float lifeTime[BULLET_COUNT];
+			static D2D1_POINT_2F direction[BULLET_COUNT];
 			static D2D1_POINT_2F toTarget;
 
 			// 키를 눌렀을 때마다 총알 좌표를 플레이어 좌표로 바꾼다.
 			// 그에 맞게 계산을 한다.
-			if (mIsBulletKeyDown and not isMoving)
+			if (mIsBulletKeyDown)
 			{
-				mBullet.SetActive(true);
+				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+				{
+					Sprite& bullet = mBullets[i];
 
-				bulletPosition = mHero.GetPosition();
-				mPrevBulletPosition = bulletPosition;
+					if (not bullet.IsActive())
+					{
+						bullet.SetActive(true);
 
-				const D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
-				const D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
+						mPrevBulletPosition[i] = bulletPosition[i];
+						bulletPosition[i] = mHero.GetPosition();
 
-				// 줌 좌표를 월드 좌표로 바꾼다.
-				const D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
+						const D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
+						const D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
 
-				// 총알과 줌의 벡터를 구한다.
-				toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition);
+						// 줌 좌표를 월드 좌표로 바꾼다.
+						const D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
 
-				isMoving = true;
+						// 총알과 줌의 벡터를 구한다.
+						toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition[i]);
+
+						// 방향을 구한다.
+						direction[i] = Math::GetNormalizeVector(toTarget);
+
+						mIsBulletKeyDown = false;
+
+						break;
+					}
+				}
 			}
 
-			if (isMoving)
-			{
-				static float elapsedTime;
-				elapsedTime += deltaTime;
+			constexpr uint32_t MAX_SPEED = 750;
 
-				constexpr uint32_t MAX_SPEED = 600;
+			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+			{
+				Sprite& bullet = mBullets[i];
+
+				if (not bullet.IsActive())
+				{
+					continue;
+				}
+
+				lifeTime[i] += deltaTime;
 
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
-					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
-					D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
+					D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED);
 					D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
-					bulletPosition = Math::AddVector(bulletPosition, movePosition);
+					bulletPosition[i] = Math::AddVector(bulletPosition[i], movePosition);
 				}
 
-				mBullet.SetPosition(bulletPosition);
-
-				if (elapsedTime >= 0.7f)
+				if (lifeTime[i] >= 1.5f)
 				{
-					isMoving = false;
+					bullet.SetActive(false);
+					lifeTime[i] = 0.0f;
 
-					mBullet.SetActive(false);
-					mIsBulletKeyDown = false;
-					elapsedTime = 0.0f;
+					bulletPosition[i] = mHero.GetPosition();
 				}
+
+				bullet.SetPosition(bulletPosition[i]);
+
 			}
 		}
 	}
@@ -407,8 +444,11 @@ bool MainScene::Update(const float deltaTime)
 				{
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
 
-					constexpr int32_t MAX_SPEED = 70;
-					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
+					std::random_device rd;
+					std::mt19937 gen(rd());
+					std::uniform_int_distribution<uint32_t> dist(25, 70);
+
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, dist(gen));
 					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
 					position = Math::AddVector(position, movePosition);
@@ -418,12 +458,11 @@ bool MainScene::Update(const float deltaTime)
 			static float spawnTimer;
 			spawnTimer += deltaTime;
 
-			// 충돌이 되면 IsActive() = false니까 내부에서 true로 바꿔줘야 한다.
+			// 몬스터가 죽었을 때 새로운 좌표를 랜덤으로 만든다.
 			if (not monster.IsActive() and mIsMonsterSpwan[i])
 			{
 				if (spawnTimer >= 0.5f)
 				{
-					// 여기 부분을 말한다.
 					mMonsters[i].SetActive(true);
 
 					std::random_device rd;
@@ -447,15 +486,15 @@ bool MainScene::Update(const float deltaTime)
 					position = spawnPositionInCircle;
 
 					spawnTimer = 0.0f;
-				}
 
-				mIsMonsterSpwan[i] = false;
+					mIsMonsterSpwan[i] = false;
+				}
 			}
 
 			monster.SetPosition(position);
 		}
 	}
-	
+
 	// 플레이어 체력바를 업데이트한다.
 	{
 		static int32_t prevHp = mHeroHpValue;
@@ -464,16 +503,17 @@ bool MainScene::Update(const float deltaTime)
 		{
 			mHeroHpValue = 0;
 		}
+
 		if (prevHp != mHeroHpValue)
 		{
-			D2D1_SIZE_F prevScale = mHp.GetScale();
-			prevScale = { .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroMaxHp, .height = 1.0f };
-			mHp.SetScale(prevScale);
+			D2D1_SIZE_F prevScale = mHpBar.GetScale();
+			prevScale = { .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, .height = 1.0f };
+			mHpBar.SetScale(prevScale);
+
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
 
 			prevHp = mHeroHpValue;
 		}
-
-		DEBUG_LOG("%d", mHeroHpValue);
 	}
 
 	// 라벨을 업데이트한다.
@@ -488,18 +528,22 @@ bool MainScene::Update(const float deltaTime)
 		mTimerLabel.SetText(name);
 	}
 
-	// 충돌	처리를 업데이트한다.
+	// 충돌 처리를 업데이트한다.
 	{
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
 
+			mIsPrevHeroMonsterColliding[i] = mIsHeroMonsterColliding[i];
+			mIsPrevMonsterInBoundaryColliding[i] = mIsMonsterInBoundaryColliding[i];
+			mIsPrevMonsterBulletColliding[i] = mIsMonsterBulletColliding[i];
+
+			mIsHeroMonsterColliding[i] = false;
+			mIsMonsterInBoundaryColliding[i] = false;
+			mIsMonsterBulletColliding[i] = false;
+
 			if (not monster.IsActive())
 			{
-				mIsHeroMonsterColliding[i] = false;
-				mIsMonsterInBoundaryColliding[i] = false;
-				mIsMonsterBulletColliding[i] = false;
-
 				continue;
 			}
 
@@ -507,85 +551,81 @@ bool MainScene::Update(const float deltaTime)
 			if (Collision::IsCollidedSqureWithSqure(GetRectangleFromSprite(mHero), GetRectangleFromSprite(monster)))
 			{
 				mIsHeroMonsterColliding[i] = true;
-			}
-			else
-			{
-				mIsHeroMonsterColliding[i] = false;
+				break;
 			}
 
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
 				mIsMonsterInBoundaryColliding[i] = true;
-			}
-			else
-			{
-				mIsMonsterInBoundaryColliding[i] = false;
+				break;
 			}
 
 			// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
-			Line line =
+			for (uint32_t j = 0; j < BULLET_COUNT; ++j)
 			{
-				.Point0 = mPrevBulletPosition,
-				.Point1 = mBullet.GetPosition()
-			};
+				if (not mBullets[j].IsActive())
+				{
+					continue;
+				}
 
-			if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(monster), line))
-			{
-				mIsMonsterBulletColliding[i] = true;
+				// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
+				Line line =
+				{
+					.Point0 = mPrevBulletPosition[j],
+					.Point1 = GetCircleFromSprite(mBullets[j]).point
+				};
+
+				if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(monster), line))
+				{
+					mIsMonsterBulletColliding[i] = true;
+					break;
+				}
 			}
-			else
-			{
-				mIsMonsterBulletColliding[i] = false;
-			}
-		}
-
-		Line line =
-		{
-			.Point0 = mLine.Point0,
-			.Point1 = mLine.Point1
-		};
-
-		if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(mHero), line))
-		{
-			//DEBUG_LOG("dd");
-		}
-		else
-		{
-			//DEBUG_LOG("ss");
 		}
 	}
 
-	// 충돌을 적용한다.
+	// 충돌을 반영한다.
 	{
+		// Enter
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			// 플레이어 - 몬스터
-			if (mIsHeroMonsterColliding[i])
-			{
-				mMonsters[i].SetActive(false);
-				mIsMonsterSpwan[i] = true;
+			Sprite& monster = mMonsters[i];
 
+			// 죽은 몬스터는 처리하지 않는다.
+			if (not monster.IsActive())
+			{
+				continue;
+			}
+
+			// 플레이어 - 몬스터
+			if (not mIsPrevHeroMonsterColliding[i]
+				and mIsHeroMonsterColliding[i])
+			{
+				monster.SetActive(false);
+				mIsMonsterSpwan[i] = true;
 				mHeroHpValue -= mMonsterAttackValue;
 			}
 
 			// 몬스터 - 가운데 원
-			if (mIsMonsterInBoundaryColliding[i])
+			if (not mIsPrevMonsterInBoundaryColliding[i] 
+				and mIsMonsterInBoundaryColliding[i])
 			{
-				mMonsters[i].SetActive(false);
+				monster.SetActive(false);
 				mIsMonsterSpwan[i] = true;
-
 				mHeroHpValue -= mMonsterAttackValue;
 			}
 
 			// 총알 - 몬스터
-			if (mBullet.IsActive() and mIsMonsterBulletColliding[i])
+			if (not mIsPrevMonsterBulletColliding[i]
+				and mIsMonsterBulletColliding[i])
 			{
-				mMonsters[i].SetActive(false);
-				mBullet.SetActive(false);
-				mIsMonsterSpwan[i] = true;
-
-				mIsMonsterBulletColliding[i] = false;
+				for (uint32_t j = 0; j < BULLET_COUNT; ++j)
+				{
+					monster.SetActive(false);
+					mBullets[j].SetActive(false);
+					mIsMonsterSpwan[i] = true;
+				}
 			}
 		}
 	}
@@ -648,7 +688,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			if (monster.IsActive())
 			{
-				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top}) * view;
+				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top }) * view;
 				renderTarget->SetTransform(worldView);
 
 				ID2D1SolidColorBrush* cyanBrush = nullptr;
@@ -657,10 +697,10 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				const D2D1_SIZE_F scale = monster.GetScale();
 
 				const D2D1_RECT_F colliderSize =
-				{ 
+				{
 					.left = 0.0f,
-					.top = 0.0f, 
-					.right = scale.width * mRectangleTexture.GetWidth(), 
+					.top = 0.0f,
+					.right = scale.width * mRectangleTexture.GetWidth(),
 					.bottom = scale.width * mRectangleTexture.GetWidth()
 				};
 
@@ -672,24 +712,29 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알 충돌박스를 그린다.
 	{
-		if (mBullet.IsActive())
+		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
-			const Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(mBullet).point) * view;
-			renderTarget->SetTransform(worldView);
+			Sprite& bullet = mBullets[i];
 
-			ID2D1SolidColorBrush* yellowBrush = nullptr;
-			renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &yellowBrush);
-
-			const D2D1_SIZE_F scale = mBullet.GetScale();
-
-			const D2D1_ELLIPSE circleSize =
+			if (bullet.IsActive())
 			{
-				.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
-				.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
-			};
+				const Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(bullet).point) * view;
+				renderTarget->SetTransform(worldView);
 
-			renderTarget->DrawEllipse(circleSize, yellowBrush);
-			RELEASE_D2D1(yellowBrush);
+				ID2D1SolidColorBrush* yellowBrush = nullptr;
+				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &yellowBrush);
+
+				const D2D1_SIZE_F scale = bullet.GetScale();
+
+				const D2D1_ELLIPSE circleSize =
+				{
+					.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
+					.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
+				};
+
+				renderTarget->DrawEllipse(circleSize, yellowBrush);
+				RELEASE_D2D1(yellowBrush);
+			}
 		}
 	}
 }
