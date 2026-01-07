@@ -16,6 +16,7 @@ void MainScene::Initialize()
 		{
 			layer.reserve(128);
 		}
+
 		SetSpriteLayers(mSpriteLayers.data(), uint32_t(mSpriteLayers.size()));
 
 		SetCamera(&mMainCamera);
@@ -134,7 +135,7 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 		const Matrix3x2F worldView = Transformation::getWorldMatrix() * view;
 		renderTarget->SetTransform(worldView);
 
-		D2D1_ELLIPSE ellipse{ .radiusX = BOUNDARY_RADIUS, .radiusY = BOUNDARY_RADIUS };
+		const D2D1_ELLIPSE ellipse{ .radiusX = BOUNDARY_RADIUS, .radiusY = BOUNDARY_RADIUS };
 		renderTarget->DrawEllipse(ellipse, mDefaultBrush, 2.0f);
 	}
 
@@ -302,7 +303,7 @@ bool MainScene::Update(const float deltaTime)
 			if (Math::GetVectorLength(velocity) != 0.0f)
 			{
 				float speed = min(Math::GetVectorLength(velocity), MAX_SPEED);
-				D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+				const D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
@@ -325,11 +326,11 @@ bool MainScene::Update(const float deltaTime)
 
 				bulletPosition = mHero.GetPosition();
 
-				D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
-				D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
+				const D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
+				const D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
 
 				// ÁÜ ÁÂÇ¥¸¦ ¿ùµå ÁÂÇ¥·Î ¹Ù²Û´Ù.
-				D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
+				const D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
 
 				// ÃÑ¾Ë°ú ÁÜÀÇ º¤ÅÍ¸¦ ±¸ÇÑ´Ù.
 				toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition);
@@ -376,15 +377,15 @@ bool MainScene::Update(const float deltaTime)
 
 			if (monster.IsActive())
 			{
-				D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
+				const D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
 
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
 
 					constexpr int32_t MAX_SPEED = 70;
-					D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
-					D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, MAX_SPEED);
+					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
 					position = Math::AddVector(position, movePosition);
 				}
@@ -406,11 +407,10 @@ bool MainScene::Update(const float deltaTime)
 			static float spawnTimer;
 			spawnTimer += deltaTime;
 
-
 			// Ãæµ¹ÀÌ µÇ¸é IsActive() = false´Ï±î ³»ºÎ¿¡¼­ true·Î ¹Ù²ãÁà¾ß ÇÑ´Ù.
 			if (not monster.IsActive() and mIsMonsterSpwan[i])
 			{
-				if (spawnTimer >= 0.3f)
+				if (spawnTimer >= 0.5f)
 				{
 					mMonsters[i].SetActive(true);
 
@@ -555,15 +555,15 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			if (monster.IsActive())
 			{
-				Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top}) * view;
+				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top}) * view;
 				renderTarget->SetTransform(worldView);
 
 				ID2D1SolidColorBrush* cyanBrush = nullptr;
 				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Cyan), &cyanBrush);
 
-				D2D1_SIZE_F scale = monster.GetScale();
+				const D2D1_SIZE_F scale = monster.GetScale();
 
-				D2D1_RECT_F colliderSize = 
+				const D2D1_RECT_F colliderSize =
 				{ 
 					.left = 0.0f,
 					.top = 0.0f, 
@@ -581,15 +581,15 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		if (mBullet.IsActive())
 		{
-			Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(mBullet).point) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(mBullet).point) * view;
 			renderTarget->SetTransform(worldView);
 
 			ID2D1SolidColorBrush* yellowBrush = nullptr;
 			renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &yellowBrush);
 
-			D2D1_SIZE_F scale = mBullet.GetScale();
+			const D2D1_SIZE_F scale = mBullet.GetScale();
 
-			D2D1_ELLIPSE circleSize =
+			const D2D1_ELLIPSE circleSize =
 			{
 				.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
 				.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
@@ -614,17 +614,17 @@ void MainScene::Finalize()
 
 D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 {
-	D2D1_SIZE_F scale = sprite.GetScale();
+	const D2D1_SIZE_F scale = sprite.GetScale();
 
-	D2D1_SIZE_F offset =
+	const D2D1_SIZE_F offset =
 	{
 		.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
 		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
 	};
 
-	D2D1_POINT_2F position = sprite.GetPosition();
+	const D2D1_POINT_2F position = sprite.GetPosition();
 
-	D2D1_RECT_F rect =
+	const D2D1_RECT_F rect =
 	{
 		.left = position.x - offset.width,
 		.top = position.y + offset.height,
@@ -637,10 +637,10 @@ D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 
 D2D1_ELLIPSE MainScene::GetCircleFromSprite(const Sprite& sprite)
 {
-	D2D1_RECT_F rect = GetRectangleFromSprite(sprite);
-	D2D1_POINT_2F position = sprite.GetPosition();
+	const D2D1_RECT_F rect = GetRectangleFromSprite(sprite);
+	const D2D1_POINT_2F position = sprite.GetPosition();
 
-	D2D1_ELLIPSE circle =
+	const D2D1_ELLIPSE circle =
 	{
 		.point = position,
 		.radiusX = fabs(rect.right - position.x),
