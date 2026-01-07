@@ -119,11 +119,20 @@ void MainScene::Initialize()
 		mMainCamera.SetPosition(cameraPosition);
 	}
 
+	// HP바를 초기화한다.
+	{
+		mHp.SetPosition({ .x = 0.0f, .y = -UI_CENTER_POSITION_Y });
+		mHp.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mHp.SetUI(true);
+		mHp.SetTexture(&mRedRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHp);
+	}
+
 	// 라벨을 초기화한다.
 	{
 		mTimerLabel.SetFont(&mTimerFont);
 		mTimerLabel.SetUI(true);
-		mTimerLabel.SetPosition({ .x = 0.0f, .y = 250.0f });
+		mTimerLabel.SetPosition({ .x = 0.0f, .y = UI_CENTER_POSITION_Y });
 		mLabels.push_back(&mTimerLabel);
 
 	}
@@ -405,11 +414,19 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			if (mIsHeroMonsterColliding[i]
-				or mIsMonsterInBoundaryColliding[i])
+			if (mIsHeroMonsterColliding[i])
 			{
 				mMonsters[i].SetActive(false);
 				mIsMonsterSpwan[i] = true;
+
+				mHeroHpValue -= mMonsterAttackValue;
+			}
+			if (mIsMonsterInBoundaryColliding[i])
+			{
+				mMonsters[i].SetActive(false);
+				mIsMonsterSpwan[i] = true;
+
+				mHeroHpValue -= mMonsterAttackValue;
 			}
 			if (mIsMonsterBulletColliding[i])
 			{
@@ -455,6 +472,26 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			monster.SetPosition(position);
+		}
+	}
+	
+	// 플레이어 체력바를 업데이트한다.
+	{
+		if (mHeroHpValue <= 0)
+		{
+			mHeroHpValue = 0;
+		}
+
+		DEBUG_LOG("%d", mHeroHpValue);
+		static int32_t prevHp = mHeroHpValue;
+
+		if (prevHp != mHeroHpValue)
+		{
+			D2D1_SIZE_F prevScale = mHp.GetScale();
+			prevScale = { .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroMaxHp, .height = 1.0f };
+			mHp.SetScale(prevScale);
+
+			prevHp = mHeroHpValue;
 		}
 	}
 

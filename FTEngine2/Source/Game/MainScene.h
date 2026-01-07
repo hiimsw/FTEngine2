@@ -53,11 +53,16 @@ private:
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	Sprite mHero{};
-	constexpr static uint32_t MONSTER_COUNT = 10;
+	static constexpr uint32_t MONSTER_COUNT = 10;
 	Sprite mMonsters[MONSTER_COUNT]{};
 	Sprite mZoom{};
 	GizmoLine mLine{};
 	Sprite mBullet{};
+	Sprite mHp{};
+
+	int32_t mHeroMaxHp = 100;
+	int32_t mHeroHpValue = mHeroMaxHp;
+	static constexpr int32_t mMonsterAttackValue = 10;
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 
@@ -76,4 +81,7 @@ private:
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
 	static constexpr float OUTLINE_OFFSET = 380.0f;
+	
+	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
+	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 };
