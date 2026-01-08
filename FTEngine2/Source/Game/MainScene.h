@@ -65,7 +65,7 @@ private:
 
 	Sprite mHpBar{};
 
-	int32_t mHeroHpMax = 200;
+	int32_t mHeroHpMax = 10;
 	int32_t mHeroHpValue = mHeroHpMax;
 	static constexpr int32_t mMonsterAttackValue = 10;
 
@@ -104,6 +104,9 @@ private:
 
 	Font mHpFont{};
 	Label mHpValueLabel{};
+
+	Font mEndingFont{};
+	Label mEndingLabel{};
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;

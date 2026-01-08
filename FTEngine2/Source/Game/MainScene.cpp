@@ -26,6 +26,7 @@ void MainScene::Initialize()
 
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
 		mHpFont.Initialize(GetHelper(), L"Arial", 20.0f);
+		mEndingFont.Initialize(GetHelper(), L"Arial", 50.0f);
 
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
@@ -143,6 +144,15 @@ void MainScene::Initialize()
 		mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
 
 		mLabels.push_back(&mHpValueLabel);
+
+		// 엔딩
+		mEndingLabel.SetFont(&mEndingFont);
+		mEndingLabel.SetUI(true);
+		mEndingLabel.SetPosition({});
+		mEndingLabel.SetActive(false);
+		mEndingLabel.SetText(L"GameOver");
+		mLabels.push_back(&mEndingLabel);
+
 	}
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
@@ -497,7 +507,11 @@ bool MainScene::Update(const float deltaTime)
 
 		if (mHeroHpValue <= 0)
 		{
+			mEndingLabel.SetActive(true);
+
 			mHeroHpValue = 0;
+			mHeroVelocity = {};
+			mHero.SetActive(false);
 		}
 
 		if (prevHp != mHeroHpValue)
@@ -512,13 +526,18 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
-	// 라벨을 업데이트한다.
+	// 타이머 라벨을 업데이트한다.
 	{
 		static float gameTimer;
-		gameTimer += deltaTime;
+
+		if (mHeroHpValue > 0)
+		{
+			gameTimer += deltaTime;
+		}
 
 		uint32_t seconds = uint32_t(gameTimer) % 60;
 		uint32_t minutes = uint32_t(gameTimer) / 60;
+
 
 		std::wstring name = L"Timer: " + std::to_wstring(minutes) + L":" + std::to_wstring(seconds);
 		mTimerLabel.SetText(name);
