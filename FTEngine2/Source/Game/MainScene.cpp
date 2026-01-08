@@ -306,46 +306,47 @@ bool MainScene::Update(const float deltaTime)
 
 			static int32_t previousMoveX;
 			static int32_t previousMoveY;
-			static D2D1_POINT_2F velocity;
+
+			mPrevHeroPosition = mHero.GetPosition();
 
 			if (moveX != 0)
 			{
-				velocity.x = std::clamp(velocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
+				mHeroVelocity.x = std::clamp(mHeroVelocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
 				previousMoveX = moveX;
 			}
 			else
 			{
 				if (previousMoveX > 0)
 				{
-					velocity.x = max(velocity.x - ACC, 0.0f);
+					mHeroVelocity.x = max(mHeroVelocity.x - ACC, 0.0f);
 				}
 				else
 				{
-					velocity.x = min(velocity.x + ACC, 0.0f);
+					mHeroVelocity.x = min(mHeroVelocity.x + ACC, 0.0f);
 				}
 			}
 
 			if (moveY != 0)
 			{
-				velocity.y = std::clamp(velocity.y + ACC * moveY, -MAX_SPEED, MAX_SPEED);
+				mHeroVelocity.y = std::clamp(mHeroVelocity.y + ACC * moveY, -MAX_SPEED, MAX_SPEED);
 				previousMoveY = moveY;
 			}
 			else
 			{
 				if (previousMoveY > 0)
 				{
-					velocity.y = max(velocity.y - ACC, 0.0f);
+					mHeroVelocity.y = max(mHeroVelocity.y - ACC, 0.0f);
 				}
 				else
 				{
-					velocity.y = min(velocity.y + ACC, 0.0f);
+					mHeroVelocity.y = min(mHeroVelocity.y + ACC, 0.0f);
 				}
 			}
 
-			if (Math::GetVectorLength(velocity) != 0.0f)
+			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
 			{
-				float speed = min(Math::GetVectorLength(velocity), MAX_SPEED);
-				const D2D1_POINT_2F direction = Math::GetNormalizeVector(velocity);
+				float speed = min(Math::GetVectorLength(mHeroVelocity), MAX_SPEED);
+				const D2D1_POINT_2F direction = Math::GetNormalizeVector(mHeroVelocity);
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
@@ -521,8 +522,8 @@ bool MainScene::Update(const float deltaTime)
 		static float gameTimer;
 		gameTimer += deltaTime;
 
-		uint32_t seconds = uint32_t(gameTimer) % 60; // 나머지
-		uint32_t minutes = uint32_t(gameTimer) / 60; // 몫
+		uint32_t seconds = uint32_t(gameTimer) % 60;
+		uint32_t minutes = uint32_t(gameTimer) / 60;
 
 		std::wstring name = L"Timer: " + std::to_wstring(minutes) + L":" + std::to_wstring(seconds);
 		mTimerLabel.SetText(name);
@@ -530,6 +531,14 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌 처리를 업데이트한다.
 	{
+		mPrevIsHeroBoundraryColliding = mIsHeroBoundraryColliding;
+		mIsHeroBoundraryColliding = false;
+
+		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
+		{
+			mIsHeroBoundraryColliding = true;
+		}
+
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
@@ -587,8 +596,25 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 충돌을 반영한다.
-	{
-		// Enter
+	{		
+		// 플레이어 Enter
+		if (not mPrevIsHeroBoundraryColliding
+			and mIsHeroBoundraryColliding)
+		{
+			mHeroVelocity = {};
+		}
+
+		// 플레이어 Stay
+		if (mPrevIsHeroBoundraryColliding
+			and mIsHeroBoundraryColliding)
+		{
+			D2D1_POINT_2F heroPosition = mHero.GetPosition();
+			heroPosition = mPrevHeroPosition;
+
+			mHero.SetPosition(heroPosition);
+		}
+
+		//  몬스터 Enter
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];

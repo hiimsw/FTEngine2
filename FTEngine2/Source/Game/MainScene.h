@@ -88,6 +88,12 @@ private:
 
 	bool mIsMonsterSpwan[MONSTER_COUNT]{ false };
 
+	bool mPrevIsHeroBoundraryColliding = false;
+	bool mIsHeroBoundraryColliding = false;
+
+	D2D1_POINT_2F mHeroVelocity{};
+	D2D1_POINT_2F mPrevHeroPosition{};
+
 	std::vector<Label*> mLabels{};
 
 	Font mTimerFont{};
