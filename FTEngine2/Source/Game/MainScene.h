@@ -91,6 +91,9 @@ private:
 	bool mPrevIsHeroBoundraryColliding = false;
 	bool mIsHeroBoundraryColliding = false;
 
+	bool mPrevIsHeroInBoundraryColliding = false;
+	bool mIsHeroInBoundraryColliding = false;
+
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevHeroPosition{};
 

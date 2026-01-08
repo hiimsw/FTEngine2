@@ -44,14 +44,9 @@ void MainScene::Initialize()
 
 	// 플레이어
 	{
-		// 네모
+		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
 		mHero.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
-
-		// 동그라미
-		//mHero.SetScale({ .width = 5.0f, .height = 5.0f });
-		//mHero.SetTexture(&mCircleTexture);
-		//mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 	}
 
 	// 총알
@@ -534,9 +529,17 @@ bool MainScene::Update(const float deltaTime)
 		mPrevIsHeroBoundraryColliding = mIsHeroBoundraryColliding;
 		mIsHeroBoundraryColliding = false;
 
+		mPrevIsHeroInBoundraryColliding = mIsHeroInBoundraryColliding;
+		mIsHeroInBoundraryColliding = false;
+
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
 			mIsHeroBoundraryColliding = true;
+		}
+
+		if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, mHero.GetPosition()))
+		{
+			mIsHeroInBoundraryColliding = true;
 		}
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
@@ -597,61 +600,87 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌을 반영한다.
 	{		
-		// 플레이어 Enter
-		if (not mPrevIsHeroBoundraryColliding
-			and mIsHeroBoundraryColliding)
+		// 플레이어 바운더리 
 		{
-			mHeroVelocity = {};
+			// Enter
+			if (not mPrevIsHeroBoundraryColliding
+				and mIsHeroBoundraryColliding)
+			{
+				mHeroVelocity = {};
+			}
+
+			// Stay
+			if (mPrevIsHeroBoundraryColliding
+				and mIsHeroBoundraryColliding)
+			{
+				D2D1_POINT_2F heroPosition = mHero.GetPosition();
+				heroPosition = mPrevHeroPosition;
+
+				mHero.SetPosition(heroPosition);
+			}
 		}
 
-		// 플레이어 Stay
-		if (mPrevIsHeroBoundraryColliding
-			and mIsHeroBoundraryColliding)
+		// 플레이어 안 바운더리
 		{
-			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			heroPosition = mPrevHeroPosition;
+			// Enter
+			if (not mPrevIsHeroInBoundraryColliding
+				and mIsHeroInBoundraryColliding)
+			{
+				mHeroVelocity = {};
+			}
 
-			mHero.SetPosition(heroPosition);
+			// Stay
+			if (mPrevIsHeroInBoundraryColliding
+				and mIsHeroInBoundraryColliding)
+			{
+				D2D1_POINT_2F heroPosition = mHero.GetPosition();
+				heroPosition = mPrevHeroPosition;
+
+				mHero.SetPosition(heroPosition);
+			}
 		}
 
-		//  몬스터 Enter
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		//  몬스터
 		{
-			Sprite& monster = mMonsters[i];
-
-			// 죽은 몬스터는 처리하지 않는다.
-			if (not monster.IsActive())
+			//  Enter
+			for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 			{
-				continue;
-			}
+				Sprite& monster = mMonsters[i];
 
-			// 플레이어 - 몬스터
-			if (not mIsPrevHeroMonsterColliding[i]
-				and mIsHeroMonsterColliding[i])
-			{
-				monster.SetActive(false);
-				mIsMonsterSpwan[i] = true;
-				mHeroHpValue -= mMonsterAttackValue;
-			}
+				// 죽은 몬스터는 처리하지 않는다.
+				if (not monster.IsActive())
+				{
+					continue;
+				}
 
-			// 몬스터 - 가운데 원
-			if (not mIsPrevMonsterInBoundaryColliding[i] 
-				and mIsMonsterInBoundaryColliding[i])
-			{
-				monster.SetActive(false);
-				mIsMonsterSpwan[i] = true;
-				mHeroHpValue -= mMonsterAttackValue;
-			}
-
-			// 총알 - 몬스터
-			if (not mIsPrevMonsterBulletColliding[i]
-				and mIsMonsterBulletColliding[i])
-			{
-				for (uint32_t j = 0; j < BULLET_COUNT; ++j)
+				// 플레이어 - 몬스터
+				if (not mIsPrevHeroMonsterColliding[i]
+					and mIsHeroMonsterColliding[i])
 				{
 					monster.SetActive(false);
-					mBullets[j].SetActive(false);
 					mIsMonsterSpwan[i] = true;
+					mHeroHpValue -= mMonsterAttackValue;
+				}
+
+				// 몬스터 - 가운데 원
+				if (not mIsPrevMonsterInBoundaryColliding[i]
+					and mIsMonsterInBoundaryColliding[i])
+				{
+					monster.SetActive(false);
+					mIsMonsterSpwan[i] = true;
+					mHeroHpValue -= mMonsterAttackValue;
+				}
+
+				// 총알 - 몬스터
+				if (not mIsPrevMonsterBulletColliding[i]
+					and mIsMonsterBulletColliding[i])
+				{
+					for (uint32_t j = 0; j < BULLET_COUNT; ++j)
+					{
+						monster.SetActive(false);
+						mBullets[j].SetActive(false);
+						mIsMonsterSpwan[i] = true;
+					}
 				}
 			}
 		}
