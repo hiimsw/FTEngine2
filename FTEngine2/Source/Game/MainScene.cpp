@@ -70,8 +70,7 @@ void MainScene::Initialize()
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> dist(20, 999);
-		std::uniform_int_distribution<uint32_t> distDir(0, 1);
+		std::uniform_real_distribution<float> dist(0.0f, 2.0f * 3.141592f);
 
 		uint32_t cnt{};
 
@@ -82,22 +81,19 @@ void MainScene::Initialize()
 		{
 			Sprite& monster = mMonsters[cnt];
 
-			D2D1_POINT_2F spawnPosition = { .x = dist(gen), .y = dist(gen) };
+			float angle = dist(gen);
 
-			if (distDir(gen))
+			const D2D1_POINT_2F spawnDirection = 
 			{
-				spawnPosition.x *= -1.0f;
-			}
-			if (distDir(gen))
-			{
-				spawnPosition.y *= -1.0f;
-			}
+				.x = cos(angle),
+				.y = sin(angle)
+			};
 
-			const D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(spawnPosition);
-			const D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
+			const float offset = BOUNDARY_RADIUS - 30.0f;
+			const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 
 			monster.SetTexture(&mRectangleTexture);
-			monster.SetPosition(spawnPositionInCircle);
+			monster.SetPosition(spawnPositionCircle);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(true);
 
@@ -205,6 +201,11 @@ bool MainScene::Update(const float deltaTime)
 			mIsCursorConfined = !mIsCursorConfined;
 			Input::Get().SetCursorLockState(mIsCursorConfined ? Input::eCursorLockState::Confined : Input::eCursorLockState::None);
 			Input::Get().SetCursorVisible(not mIsCursorConfined);
+		}
+
+		if (Input::Get().GetKeyDown('T'))
+		{
+			mIsColliderKeyDown = !mIsColliderKeyDown;
 		}
 	}
 
@@ -448,7 +449,9 @@ bool MainScene::Update(const float deltaTime)
 					std::mt19937 gen(rd());
 					std::uniform_int_distribution<uint32_t> dist(25, 70);
 
-					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, dist(gen));
+					float speed = dist(gen);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
+
 					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
 
 					position = Math::AddVector(position, movePosition);
@@ -467,23 +470,20 @@ bool MainScene::Update(const float deltaTime)
 
 					std::random_device rd;
 					std::mt19937 gen(rd());
-					std::uniform_real_distribution<float> dist(20, 999);
-					std::uniform_int_distribution<uint32_t> distDir(0, 1);
+					std::uniform_real_distribution<float> dist(0.0f, 2.0f * 3.141592f);
 
-					position = { .x = dist(gen), .y = dist(gen) };
+					float angle = dist(gen);
 
-					if (distDir(gen))
+					const D2D1_POINT_2F spawnDirection =
 					{
-						position.x *= -1.0f;
-					}
-					if (distDir(gen))
-					{
-						position.y *= -1.0f;
-					}
+						.x = cos(angle),
+						.y = sin(angle)
+					};
 
-					const D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(position);
-					const D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, OUTLINE_OFFSET);
-					position = spawnPositionInCircle;
+					const float offset = BOUNDARY_RADIUS - 30.0f;
+					const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+
+					position = spawnPositionCircle;
 
 					spawnTimer = 0.0f;
 
@@ -576,6 +576,7 @@ bool MainScene::Update(const float deltaTime)
 					.Point1 = GetCircleFromSprite(mBullets[j]).point
 				};
 
+				// HACK: 몬스터가 일자로 있을 때 총알과 충돌하면, 같이 충돌되는 현상이 발생한다.
 				if (Collision::IsCollidedSqureWithLine(GetRectangleFromSprite(monster), line))
 				{
 					mIsMonsterBulletColliding[i] = true;
@@ -686,7 +687,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		{
 			Sprite& monster = mMonsters[i];
 
-			if (monster.IsActive())
+			if (mIsColliderKeyDown and monster.IsActive())
 			{
 				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = GetRectangleFromSprite(monster).left, .y = GetRectangleFromSprite(monster).top }) * view;
 				renderTarget->SetTransform(worldView);
@@ -716,7 +717,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		{
 			Sprite& bullet = mBullets[i];
 
-			if (bullet.IsActive())
+			if (mIsColliderKeyDown and bullet.IsActive())
 			{
 				const Matrix3x2F worldView = Transformation::getWorldMatrix(GetCircleFromSprite(bullet).point) * view;
 				renderTarget->SetTransform(worldView);
@@ -760,7 +761,6 @@ D2D1_RECT_F MainScene::GetRectangleFromSprite(const Sprite& sprite)
 		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
 	};
 
-	const D2D1_POINT_2F position = sprite.GetPosition();
 	const D2D1_POINT_2F position = sprite.GetPosition();
 
 	const D2D1_RECT_F rect =

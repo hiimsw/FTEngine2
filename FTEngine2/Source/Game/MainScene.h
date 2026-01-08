@@ -75,6 +75,7 @@ private:
 
 	bool mIsCursorConfined = false;
 	bool mIsBulletKeyDown = false;
+	bool mIsColliderKeyDown = false;
 
 	bool mIsHeroMonsterColliding[MONSTER_COUNT]{ false };
 	bool mIsPrevHeroMonsterColliding[MONSTER_COUNT]{ false };
@@ -97,7 +98,6 @@ private:
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
-	static constexpr float OUTLINE_OFFSET = 380.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
