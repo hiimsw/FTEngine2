@@ -39,6 +39,9 @@ private:
 	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite);
 	D2D1_ELLIPSE getCircleFromSprite(const Sprite& sprite);
 
+	float GetRandom(const float min, const float max);
+	uint32_t GetRandom(const uint32_t min, const uint32_t max);
+
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};

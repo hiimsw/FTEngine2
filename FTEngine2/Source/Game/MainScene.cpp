@@ -70,12 +70,13 @@ void MainScene::Initialize()
 	{
 		constexpr float MONSTER_SCALE = 0.7f;
 
+		constexpr float MIN_ANGLE = 0.0f;
+		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
+
 		// 랜덤 좌표를 생성한다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			float angle = rand() % 3;
-			angle *= 3.141592f;
-
+			float angle = GetRandom(MIN_ANGLE, MAX_ANGLE);
 			const D2D1_POINT_2F spawnDirection = 
 			{
 				.x = cos(angle),
@@ -114,8 +115,9 @@ void MainScene::Initialize()
 
 	// HP바를 초기화한다.
 	{
-		mHpBar.SetPosition({ .x = 0.0f, .y = -UI_CENTER_POSITION_Y });
+		mHpBar.SetPosition({ .x = -UI_HP_SCALE_WIDTH * 0.5f * mRedRectangleTexture.GetWidth(), .y = -UI_CENTER_POSITION_Y });
 		mHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpBar.SetUI(true);
 		mHpBar.SetTexture(&mRedRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
@@ -134,12 +136,12 @@ void MainScene::Initialize()
 		mHpValueLabel.SetUI(true);
 
 		const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
-		constexpr float OFFSETY = 50.0f;
-		D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSETY };
+		constexpr float OFFSET_Y = 50.0f;
+		D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSET_Y };
 		mHpValueLabel.SetPosition(offset);
 
+		mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
-
 		mLabels.push_back(&mHpValueLabel);
 
 		// 엔딩
@@ -428,13 +430,15 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				bullet.SetPosition(bulletPosition[i]);
-
 			}
 		}
 	}
 
 	// 몬스터를 업데이트한다.
-	{
+	{		
+		constexpr float MIN_ANGLE = 0.0f;
+		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
+
 		mSpawnTimer += deltaTime;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
@@ -452,7 +456,7 @@ bool MainScene::Update(const float deltaTime)
 
 					constexpr uint32_t minSpeed = 25;
 					constexpr uint32_t maxSpeed = 70;
-					float speed = float(rand() % (maxSpeed - minSpeed + 1) + minSpeed);
+					float speed = GetRandom(minSpeed, maxSpeed);
 
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
 
@@ -469,10 +473,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mMonsters[i].SetActive(true);
 
-
-					float angle = rand() % 3;
-					angle *= 3.141592f;
-
+					float angle = GetRandom(MIN_ANGLE, MAX_ANGLE);
 					const D2D1_POINT_2F spawnDirection =
 					{
 						.x = cos(angle),
@@ -490,7 +491,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			//monster.SetPosition(position);
+			monster.SetPosition(position);
 		}
 	}
 
@@ -773,4 +774,16 @@ D2D1_ELLIPSE MainScene::getCircleFromSprite(const Sprite& sprite)
 	};
 
 	return circle;
+}
+
+float MainScene::GetRandom(const float min, const float max)
+{
+	float result = float(rand()) / RAND_MAX * (max - min) + min;
+	return result;
+}
+
+uint32_t MainScene::GetRandom(const uint32_t min, const uint32_t max)
+{
+	uint32_t result = rand() % (max - min + 1) + min;
+	return result;
 }
