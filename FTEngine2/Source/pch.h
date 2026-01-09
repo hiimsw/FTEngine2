@@ -142,6 +142,7 @@ namespace Math
 	inline D2D1_POINT_2F SubtractVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
 	inline D2D1_POINT_2F ScaleVector(const D2D1_POINT_2F vector, const float scalar);
 	inline float GetVectorLength(const D2D1_POINT_2F vector);
+	inline D2D1_POINT_2F LerpVector(const D2D1_POINT_2F from, const D2D1_POINT_2F to, const float t);
 	inline D2D1_POINT_2F GetNormalizeVector(const D2D1_POINT_2F vector);
 	inline float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2);
 
@@ -167,6 +168,13 @@ namespace Math
 	{
 		float lenght = sqrt(vector.x * vector.x + vector.y * vector.y);
 		return lenght;
+	}
+
+	D2D1_POINT_2F LerpVector(const D2D1_POINT_2F a, const D2D1_POINT_2F b, const float t)
+	{
+		D2D1_POINT_2F ab = SubtractVector(b, a);
+		D2D1_POINT_2F result = AddVector(a, ScaleVector(ab, t));
+		return result;
 	}
 
 	D2D1_POINT_2F GetNormalizeVector(const D2D1_POINT_2F vector)
