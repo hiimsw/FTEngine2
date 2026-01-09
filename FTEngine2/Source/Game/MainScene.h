@@ -4,17 +4,14 @@
 #include "Core/Scene.h"
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
-#include <Core/Label.h>
-#include <Core/Font.h>
+#include "Core/Label.h"
+#include "Core/Font.h"
 
 struct GizmoLine
 {
 	D2D1_POINT_2F Point0;
 	D2D1_POINT_2F Point1;
 };
-
-class Label;
-class Font;
 
 class MainScene final : public Scene
 {
@@ -39,8 +36,8 @@ public:
 	void Finalize() override;
 
 private:
-	D2D1_RECT_F GetRectangleFromSprite(const Sprite& sprite);
-	D2D1_ELLIPSE GetCircleFromSprite(const Sprite& sprite);
+	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite);
+	D2D1_ELLIPSE getCircleFromSprite(const Sprite& sprite);
 
 private:
 	Texture mRectangleTexture{};
@@ -65,10 +62,10 @@ private:
 
 	Sprite mHpBar{};
 
-	int32_t mHeroHpMax = 10;
+	int32_t mHeroHpMax = 1500;
 	int32_t mHeroHpValue = mHeroHpMax;
 	static constexpr int32_t mMonsterAttackValue = 10;
-
+	
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
@@ -77,22 +74,7 @@ private:
 	bool mIsBulletKeyDown = false;
 	bool mIsColliderKeyDown = false;
 
-	bool mIsHeroMonsterColliding[MONSTER_COUNT]{ false };
-	bool mIsPrevHeroMonsterColliding[MONSTER_COUNT]{ false };
-
-	bool mIsMonsterInBoundaryColliding[MONSTER_COUNT]{ false };
-	bool mIsPrevMonsterInBoundaryColliding[MONSTER_COUNT]{ false };
-
-	bool mIsMonsterBulletColliding[MONSTER_COUNT]{ false };
-	bool mIsPrevMonsterBulletColliding[MONSTER_COUNT]{ false };
-
-	bool mIsMonsterSpwan[MONSTER_COUNT]{ false };
-
-	bool mPrevIsHeroBoundraryColliding = false;
-	bool mIsHeroBoundraryColliding = false;
-
-	bool mPrevIsHeroInBoundraryColliding = false;
-	bool mIsHeroInBoundraryColliding = false;
+	bool mIsMonsterSpwan[MONSTER_COUNT]{};
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevHeroPosition{};
@@ -113,4 +95,7 @@ private:
 
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
+
+	float mSpawnTimer{};
+	float mGameTimer{};
 };
