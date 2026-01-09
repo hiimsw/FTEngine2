@@ -76,7 +76,7 @@ void MainScene::Initialize()
 		// 랜덤 좌표를 생성한다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			float angle = GetRandom(MIN_ANGLE, MAX_ANGLE);
+			float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 			const D2D1_POINT_2F spawnDirection = 
 			{
 				.x = cos(angle),
@@ -151,8 +151,10 @@ void MainScene::Initialize()
 		mEndingLabel.SetActive(false);
 		mEndingLabel.SetText(L"GameOver");
 		mLabels.push_back(&mEndingLabel);
-
 	}
+
+	mLine.Point0 = { .x = -200.0f, .y = 200.0f };
+	mLine.Point1 = { .x = 150.0f, .y = 100.0f };
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
 	{
@@ -379,14 +381,8 @@ bool MainScene::Update(const float deltaTime)
 					bulletPosition[i] = mHero.GetPosition();
 					mPrevBulletPosition[i] = bulletPosition[i];
 
-					const D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
-					const D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
-
-					// 줌 좌표를 월드 좌표로 바꾼다.
-					const D2D1_POINT_2F zoomWorldPosition = Math::AddVector(zoomPosition, cameraPosition);
-
 					// 총알과 줌의 벡터를 구한다.
-					toTarget = Math::SubtractVector(zoomWorldPosition, bulletPosition[i]);
+					toTarget = Math::SubtractVector(getMouseWorldPosition(), bulletPosition[i]);
 
 					// 방향을 구한다.
 					direction[i] = Math::GetNormalizeVector(toTarget);
@@ -454,7 +450,7 @@ bool MainScene::Update(const float deltaTime)
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
-					float speed = GetRandom(MIN_SPEED, MAX_SPEED);
+					float speed = getRandom(MIN_SPEED, MAX_SPEED);
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
 
 					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
@@ -469,7 +465,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mMonsters[i].SetActive(true);
 
-					float angle = GetRandom(MIN_ANGLE, MAX_ANGLE);
+					float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 					const D2D1_POINT_2F spawnDirection =
 					{
 						.x = cos(angle),
@@ -531,6 +527,22 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌 처리를 업데이트한다.
 	{
+		// 선과 마우스 커서의 충돌체크를 한다.
+		if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS, getMouseWorldPosition()))
+		{
+			if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
+			{
+				mLine.Point0 = getMouseWorldPosition();
+			}
+		}
+		else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS, getMouseWorldPosition()))
+		{
+			if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
+			{
+				mLine.Point1 = getMouseWorldPosition();
+			}
+		}
+
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
 			mHeroVelocity = {};
@@ -645,11 +657,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 라인을 그린다.
 	{
-		D2D1_ELLIPSE CIRCLE{ .radiusX = 5.0f, .radiusY = 5.0f };
-
-		// update에 따로 둔 다음 컨트롤
-		mLine.Point0 = { .x = -200.0f, .y = 200.0f };
-		mLine.Point1 = { .x = 150.0f, .y = 100.0f };
+		D2D1_ELLIPSE CIRCLE{ .radiusX = RADIUS, .radiusY = RADIUS };
 
 		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
 		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
@@ -795,14 +803,24 @@ D2D1_ELLIPSE MainScene::getCircleFromSprite(const Sprite& sprite)
 	return circle;
 }
 
-float MainScene::GetRandom(const float min, const float max)
+float MainScene::getRandom(const float min, const float max)
 {
 	float result = float(rand()) / RAND_MAX * (max - min) + min;
 	return result;
 }
 
-uint32_t MainScene::GetRandom(const uint32_t min, const uint32_t max)
+uint32_t MainScene::getRandom(const uint32_t min, const uint32_t max)
 {
 	uint32_t result = rand() % (max - min + 1) + min;
+	return result;
+}
+
+D2D1_POINT_2F MainScene::getMouseWorldPosition() const
+{
+	const D2D1_POINT_2F zoomPosition = mZoom.GetPosition();
+	const D2D1_POINT_2F cameraPosition = mMainCamera.GetPosition();
+
+	const D2D1_POINT_2F result = Math::AddVector(zoomPosition, cameraPosition);
+
 	return result;
 }

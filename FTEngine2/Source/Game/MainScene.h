@@ -39,8 +39,10 @@ private:
 	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite);
 	D2D1_ELLIPSE getCircleFromSprite(const Sprite& sprite);
 
-	float GetRandom(const float min, const float max);
-	uint32_t GetRandom(const uint32_t min, const uint32_t max);
+	float getRandom(const float min, const float max);
+	uint32_t getRandom(const uint32_t min, const uint32_t max);
+
+	D2D1_POINT_2F getMouseWorldPosition() const;
 
 private:
 	Texture mRectangleTexture{};
@@ -62,6 +64,8 @@ private:
 
 	static constexpr int32_t mMonsterAttackValue = 10;
 	static constexpr int32_t mHeroHpMax = 1500;
+
+	static constexpr float RADIUS = 5.0f;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
