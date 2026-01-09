@@ -547,11 +547,13 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 
 			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			const D2D1_POINT_2F direction = Math::GetNormalizeVector(Math::SubtractVector({}, heroPosition));
+			const D2D1_POINT_2F direction = Math::GetNormalizeVector(heroPosition);
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, 2.0f));
 			mHero.SetPosition(heroPosition);
 		}
+
+		constexpr float DAMAGE_COOL_TIMER = 0.5f;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -562,12 +564,20 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
+			mDamageTimer += deltaTime;
+			mBulletTimer += deltaTime;
+
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
 			{
-				monster.SetActive(false);
-				mIsMonsterSpwan[i] = true;
-				mHeroHpValue -= mMonsterAttackValue;
+				if (mDamageTimer >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= mMonsterAttackValue;
+					monster.SetActive(false);
+					mIsMonsterSpwan[i] = true;
+
+					mDamageTimer = 0.0f;
+				}
 
 				break;
 			}
@@ -575,9 +585,14 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
-				monster.SetActive(false);
-				mIsMonsterSpwan[i] = true;
-				mHeroHpValue -= mMonsterAttackValue;
+				if (mDamageTimer >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= mMonsterAttackValue;
+					monster.SetActive(false);
+					mIsMonsterSpwan[i] = true;
+
+					mDamageTimer = 0.0f;
+				}
 
 				break;
 			}
@@ -602,10 +617,15 @@ bool MainScene::Update(const float deltaTime)
 				{
 					for (uint32_t j = 0; j < BULLET_COUNT; ++j)
 					{
-						monster.SetActive(false);
-						mIsMonsterSpwan[i] = true;
+						if (mBulletTimer >= 0.3f)
+						{
+							monster.SetActive(false);
+							mIsMonsterSpwan[i] = true;
 
-						mBullets[j].SetActive(false);
+							mBullets[j].SetActive(false);
+
+							mBulletTimer = 0.0f;
+						}
 					}
 
 					break;

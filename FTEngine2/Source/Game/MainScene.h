@@ -100,4 +100,7 @@ private:
 
 	float mSpawnTimer{};
 	float mGameTimer{};
+
+	float mDamageTimer{};
+	float mBulletTimer{};
 };
