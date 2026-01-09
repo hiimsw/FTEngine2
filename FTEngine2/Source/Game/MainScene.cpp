@@ -317,7 +317,7 @@ bool MainScene::Update(const float deltaTime)
 		// Case 2) 최종 이동 구현
 		{
 			constexpr float MAX_SPEED = 280.0f;
-			constexpr float ACC = 16.0f; // 가속도
+			constexpr float ACC = 20.0f; // 가속도
 
 			int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
 			int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
