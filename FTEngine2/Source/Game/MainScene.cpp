@@ -527,7 +527,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌 처리를 업데이트한다.
 	{
-		// 선과 마우스 커서의 충돌체크를 한다.
+		// 선과 마우스 커서의 충돌체크를 하고 좌표 이동을 한다.
 		if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS, getMouseWorldPosition()))
 		{
 			if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
@@ -629,16 +629,22 @@ bool MainScene::Update(const float deltaTime)
 				{
 					for (uint32_t j = 0; j < BULLET_COUNT; ++j)
 					{
-						const D2D1_POINT_2F toTarget = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition());
-						const D2D1_POINT_2F nextTarget = Math::SubtractVector(bullet.GetPosition(), monster.GetPosition());
+						mTargetMonsterDistances[i] = Math::SubtractVector(bullet.GetPosition(), monster.GetPosition());
+						const D2D1_POINT_2F nearTarget = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition());
 
-						if (Math::GetVectorLength(toTarget) >= Math::GetVectorLength(nextTarget))
+						if (Math::GetVectorLength(mTargetMonsterDistances[i]) >= Math::GetVectorLength(nearTarget))
+						{
+							mTargetMonsterDistances[i] = nearTarget;
+							mTargetMonster = &monster;
+						}
+
+						if (mTargetMonster)
 						{
 							monster.SetActive(false);
 							mIsMonsterSpwan[i] = true;
 
 							bullet.SetActive(false);
-							mPrevBulletPosition[j] = toTarget;
+							mPrevBulletPosition[j] = mTargetMonsterDistances[i];
 						}
 					}
 

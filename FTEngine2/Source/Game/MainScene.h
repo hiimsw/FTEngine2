@@ -82,7 +82,10 @@ private:
 	
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+	D2D1_POINT_2F mTargetMonsterDistances[MONSTER_COUNT]{};
 	
+	Sprite* mTargetMonster = nullptr;
+
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 
 	bool mIsCursorConfined = false;
