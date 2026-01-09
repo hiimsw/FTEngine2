@@ -80,7 +80,6 @@ private:
 	bool mIsMonsterSpwan[MONSTER_COUNT]{};
 
 	D2D1_POINT_2F mHeroVelocity{};
-	D2D1_POINT_2F mPrevHeroPosition{};
 
 	std::vector<Label*> mLabels{};
 

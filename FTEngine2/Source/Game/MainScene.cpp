@@ -311,8 +311,6 @@ bool MainScene::Update(const float deltaTime)
 			static int32_t previousMoveX;
 			static int32_t previousMoveY;
 
-			mPrevHeroPosition = mHero.GetPosition();
-
 			if (moveX != 0)
 			{
 				mHeroVelocity.x = std::clamp(mHeroVelocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
@@ -439,6 +437,9 @@ bool MainScene::Update(const float deltaTime)
 		constexpr float MIN_ANGLE = 0.0f;
 		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
 
+		constexpr uint32_t MIN_SPEED = 25;
+		constexpr uint32_t MAX_SPEED = 70;
+
 		mSpawnTimer += deltaTime;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
@@ -453,15 +454,10 @@ bool MainScene::Update(const float deltaTime)
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
 					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
-
-					constexpr uint32_t minSpeed = 25;
-					constexpr uint32_t maxSpeed = 70;
-					float speed = GetRandom(minSpeed, maxSpeed);
-
+					float speed = GetRandom(MIN_SPEED, MAX_SPEED);
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
 
 					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
-
 					position = Math::AddVector(position, movePosition);
 				}
 			}
@@ -529,7 +525,6 @@ bool MainScene::Update(const float deltaTime)
 		uint32_t seconds = uint32_t(mGameTimer) % 60;
 		uint32_t minutes = uint32_t(mGameTimer) / 60;
 
-
 		std::wstring name = L"Timer: " + std::to_wstring(minutes) + L":" + std::to_wstring(seconds);
 		mTimerLabel.SetText(name);
 	}
@@ -541,8 +536,9 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 
 			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			heroPosition = mPrevHeroPosition;
+			const D2D1_POINT_2F direction = Math::GetNormalizeVector(heroPosition);
 
+			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, -2.0f));
 			mHero.SetPosition(heroPosition);
 		}
 
@@ -551,8 +547,9 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 
 			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			heroPosition = mPrevHeroPosition;
+			const D2D1_POINT_2F direction = Math::GetNormalizeVector(Math::SubtractVector({}, heroPosition));
 
+			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, 2.0f));
 			mHero.SetPosition(heroPosition);
 		}
 
