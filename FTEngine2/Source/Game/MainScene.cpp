@@ -565,7 +565,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			mDamageTimer += deltaTime;
-			mBulletTimer += deltaTime;
 
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
@@ -600,7 +599,8 @@ bool MainScene::Update(const float deltaTime)
 			// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
 			for (uint32_t j = 0; j < BULLET_COUNT; ++j)
 			{
-				if (not mBullets[j].IsActive())
+				Sprite& bullet = mBullets[j];
+				if (not bullet.IsActive())
 				{
 					continue;
 				}
@@ -609,7 +609,7 @@ bool MainScene::Update(const float deltaTime)
 				const Line line =
 				{
 					.Point0 = mPrevBulletPosition[j],
-					.Point1 = mBullets[j].GetPosition()
+					.Point1 = bullet.GetPosition()
 				};
 
 				// HACK: 몬스터가 일자로 있을 때 총알과 충돌하면, 같이 충돌되는 현상이 발생한다.
@@ -617,14 +617,16 @@ bool MainScene::Update(const float deltaTime)
 				{
 					for (uint32_t j = 0; j < BULLET_COUNT; ++j)
 					{
-						if (mBulletTimer >= 0.3f)
+						const D2D1_POINT_2F toTarget = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition());
+						const D2D1_POINT_2F nextTarget = Math::SubtractVector(bullet.GetPosition(), monster.GetPosition());
+
+						if (Math::GetVectorLength(toTarget) >= Math::GetVectorLength(nextTarget))
 						{
 							monster.SetActive(false);
 							mIsMonsterSpwan[i] = true;
 
-							mBullets[j].SetActive(false);
-
-							mBulletTimer = 0.0f;
+							bullet.SetActive(false);
+							mPrevBulletPosition[j] = toTarget;
 						}
 					}
 

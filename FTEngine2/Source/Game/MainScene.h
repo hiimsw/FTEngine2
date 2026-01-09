@@ -51,26 +51,34 @@ private:
 
 	Camera mMainCamera{};
 
-	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
-	Sprite mHero{};
+	static constexpr float BOUNDARY_RADIUS = 400.0f;
+	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
 
-	static constexpr uint32_t MONSTER_COUNT = 10;
-	Sprite mMonsters[MONSTER_COUNT]{};
+	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
+	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 
-	Sprite mZoom{};
-	GizmoLine mLine{};
-
+	static constexpr uint32_t MONSTER_COUNT = 20;
 	static constexpr uint32_t BULLET_COUNT = 6;
-	Sprite mBullets[BULLET_COUNT]{};
 
+	static constexpr int32_t mMonsterAttackValue = 10;
+	static constexpr int32_t mHeroHpMax = 1500;
+
+	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
+	std::vector<Label*> mLabels{};
+
+	Sprite mHero{};
+	Sprite mMonsters[MONSTER_COUNT]{};
+	Sprite mZoom{};
+	Sprite mBullets[BULLET_COUNT]{};
 	Sprite mHpBar{};
 
-	int32_t mHeroHpMax = 1500;
-	int32_t mHeroHpValue = mHeroHpMax;
-	static constexpr int32_t mMonsterAttackValue = 10;
-	
-	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+	GizmoLine mLine{};
 
+	int32_t mHeroHpValue = mHeroHpMax;
+	
+	D2D1_POINT_2F mHeroVelocity{};
+	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+	
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 
 	bool mIsCursorConfined = false;
@@ -79,28 +87,16 @@ private:
 
 	bool mIsMonsterSpwan[MONSTER_COUNT]{};
 
-	D2D1_POINT_2F mHeroVelocity{};
-
-	std::vector<Label*> mLabels{};
-
 	Font mTimerFont{};
-	Label mTimerLabel{};
-
 	Font mHpFont{};
-	Label mHpValueLabel{};
-
 	Font mEndingFont{};
+
+	Label mTimerLabel{};
+	Label mHpValueLabel{};
 	Label mEndingLabel{};
-
-	static constexpr float BOUNDARY_RADIUS = 400.0f;
-	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
-
-	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
-	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 
 	float mSpawnTimer{};
 	float mGameTimer{};
 
 	float mDamageTimer{};
-	float mBulletTimer{};
 };
