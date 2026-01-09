@@ -218,10 +218,9 @@ bool MainScene::Update(const float deltaTime)
 	// 카메라를 업데이트한다.
 	{
 		D2D1_POINT_2F position = mMainCamera.GetPosition();
-		position = mHero.GetPosition();
+		D2D1_POINT_2F heroPosition = mHero.GetPosition();
 
-		//std::lerp()
-
+		position = Math::LerpVector(position, heroPosition, 8.0f * deltaTime);
 		mMainCamera.SetPosition(position);
 	}
 
