@@ -239,6 +239,24 @@ bool MainScene::Update(const float deltaTime)
 		// 마우스 좌표를 좌표계에 맞춘다.
 		const D2D1_POINT_2F screenPosition = Math::SubtractVector(mousePosition, centerOffset);
 		mZoom.SetPosition(screenPosition);
+
+		constexpr float MIN_LENGTH = 100.0f;
+		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
+
+		const float heroLength = Math::GetVectorLength(heroPosition);
+		const float zoomLength = Math::GetVectorLength(zoomPosition);
+
+		const D2D1_SIZE_F zoomScale = mZoom.GetScale();
+
+		if (fabs(zoomLength - heroLength) <= MIN_LENGTH)
+		{
+			DEBUG_LOG("가까움");
+		}
+		else
+		{
+			DEBUG_LOG("멀어");
+		}
 	}
 
 	// 플레이어를 업데이트한다.
@@ -627,30 +645,46 @@ bool MainScene::Update(const float deltaTime)
 				// HACK: 몬스터가 일자로 있을 때 총알과 충돌하면, 같이 충돌되는 현상이 발생한다.
 				if (Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monster), line))
 				{
-					for (uint32_t j = 0; j < BULLET_COUNT; ++j)
-					{
-						mTargetMonsterDistances[i] = Math::SubtractVector(bullet.GetPosition(), monster.GetPosition());
-						const D2D1_POINT_2F nearTarget = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition());
-
-						if (Math::GetVectorLength(mTargetMonsterDistances[i]) >= Math::GetVectorLength(nearTarget))
+					mTargetMonsterDistances.push_back
+					(
 						{
-							mTargetMonsterDistances[i] = nearTarget;
-							mTargetMonster = &monster;
+							.monsterIndex = i,
+							.bulletIndex = j,
+							.distance = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition())
 						}
-
-						if (mTargetMonster)
-						{
-							monster.SetActive(false);
-							mIsMonsterSpwan[i] = true;
-
-							bullet.SetActive(false);
-							mPrevBulletPosition[j] = mTargetMonsterDistances[i];
-						}
-					}
+					);
 
 					break;
 				}
 			}
+		}
+
+		for (uint32_t i = 0; i < mTargetMonsterDistances.size(); ++i)
+		{
+			TargetMonster& targetData = mTargetMonsterDistances[i];
+
+			const D2D1_POINT_2F nearTarget = Math::SubtractVector(mPrevBulletPosition[targetData.bulletIndex], targetData.distance);
+			if (Math::GetVectorLength(targetData.distance) <= Math::GetVectorLength(nearTarget))
+			{
+				mTargetMonsterDistances.clear();
+
+				mTargetMonsterDistances.push_back({ targetData.monsterIndex, targetData.bulletIndex, nearTarget });
+				mTargetMonster = &mMonsters[targetData.monsterIndex];
+			}
+		}
+
+		if (mTargetMonster 
+			and not mTargetMonsterDistances.empty())
+		{
+			TargetMonster& targetData = mTargetMonsterDistances.back();
+
+			mMonsters[targetData.monsterIndex].SetActive(false);
+			mIsMonsterSpwan[targetData.monsterIndex] = true;
+
+			mBullets[targetData.bulletIndex].SetActive(false);
+			mPrevBulletPosition[targetData.bulletIndex] = targetData.distance;
+
+			mTargetMonsterDistances.clear();
 		}
 	}
 
