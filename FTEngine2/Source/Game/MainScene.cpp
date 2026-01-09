@@ -260,11 +260,6 @@ bool MainScene::Update(const float deltaTime)
 
 	// 플레이어를 업데이트한다.
 	{
-		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
-		{
-			mIsBulletKeyDown = true;
-		}
-
 		// Case 0) 가속도 없는 단순한 이동
 		//{
 		//	// 누르면 1, 안 누르면 0
@@ -378,14 +373,12 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static D2D1_POINT_2F bulletPosition[BULLET_COUNT];
-			static float lifeTime[BULLET_COUNT];
+			static float lifetime[BULLET_COUNT];
 			static D2D1_POINT_2F direction[BULLET_COUNT];
 			static D2D1_POINT_2F toTarget;
 
-			// 키를 눌렀을 때마다 총알 좌표를 플레이어 좌표로 바꾼다.
-			// 그에 맞게 계산을 한다.
-			if (mIsBulletKeyDown)
+			// 총알 좌표를 플레이어 좌표로 바꾼다.
+			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{					
@@ -395,16 +388,17 @@ bool MainScene::Update(const float deltaTime)
 						continue;
 					}
 
-					bulletPosition[i] = mHero.GetPosition();
-					mPrevBulletPosition[i] = bulletPosition[i];
+					D2D1_POINT_2F spawnPosition = mHero.GetPosition();
+					bullet.SetPosition(spawnPosition);
+					mPrevBulletPosition[i] = spawnPosition;
 
 					// 총알과 줌의 벡터를 구한다.
-					toTarget = Math::SubtractVector(getMouseWorldPosition(), bulletPosition[i]);
+					toTarget = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
 
 					// 방향을 구한다.
 					direction[i] = Math::GetNormalizeVector(toTarget);
 
-					mIsBulletKeyDown = false;
+					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
 
 					break;
@@ -413,34 +407,30 @@ bool MainScene::Update(const float deltaTime)
 
 			constexpr uint32_t MAX_SPEED = 750;
 
+			// 총알을 이동시킨다.
 			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 			{
 				Sprite& bullet = mBullets[i];
-
 				if (not bullet.IsActive())
 				{
 					continue;
 				}
 
-				lifeTime[i] += deltaTime;
-
+				D2D1_POINT_2F position = bullet.GetPosition();
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
-					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED);
-					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
-
-					bulletPosition[i] = Math::AddVector(bulletPosition[i], movePosition);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED * deltaTime);
+					position = Math::AddVector(position, velocity);
 				}
 
-				if (lifeTime[i] >= 1.5f)
+				lifetime[i] += deltaTime;
+				if (lifetime[i] >= 1.5f)
 				{
 					bullet.SetActive(false);
-					lifeTime[i] = 0.0f;
-
-					bulletPosition[i] = mHero.GetPosition();
 				}
 
-				bullet.SetPosition(bulletPosition[i]);
+				mPrevBulletPosition[i] = bullet.GetPosition();
+				bullet.SetPosition(position);
 			}
 		}
 	}
@@ -624,66 +614,53 @@ bool MainScene::Update(const float deltaTime)
 
 				break;
 			}
+		}
 
-			// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
-			for (uint32_t j = 0; j < BULLET_COUNT; ++j)
+		// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
+		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+		{
+			Sprite& bullet = mBullets[i];
+			if (not bullet.IsActive())
 			{
-				Sprite& bullet = mBullets[j];
-				if (not bullet.IsActive())
+				continue;
+			}
+
+			// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
+			const Line line =
+			{
+				.Point0 = mPrevBulletPosition[i],
+				.Point1 = bullet.GetPosition()
+			};
+
+			Sprite* targetMonster = nullptr;
+			float targetMonsterDistance = 999.9f;
+
+			for (Sprite& monster : mMonsters)
+			{
+				if (not monster.IsActive())
 				{
 					continue;
 				}
 
-				// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
-				const Line line =
+				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monster), line))
 				{
-					.Point0 = mPrevBulletPosition[j],
-					.Point1 = bullet.GetPosition()
-				};
+					continue;
+				}
 
-				// HACK: 몬스터가 일자로 있을 때 총알과 충돌하면, 같이 충돌되는 현상이 발생한다.
-				if (Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monster), line))
+				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], monster.GetPosition()));
+				if (distance < targetMonsterDistance)
 				{
-					mTargetMonsterDistances.push_back
-					(
-						{
-							.monsterIndex = i,
-							.bulletIndex = j,
-							.distance = Math::SubtractVector(mPrevBulletPosition[j], monster.GetPosition())
-						}
-					);
-
-					break;
+					targetMonster = &monster;
+					targetMonsterDistance = distance;
 				}
 			}
-		}
 
-		for (uint32_t i = 0; i < mTargetMonsterDistances.size(); ++i)
-		{
-			TargetMonster& targetData = mTargetMonsterDistances[i];
-
-			const D2D1_POINT_2F nearTarget = Math::SubtractVector(mPrevBulletPosition[targetData.bulletIndex], targetData.distance);
-			if (Math::GetVectorLength(targetData.distance) <= Math::GetVectorLength(nearTarget))
+			if (targetMonster != nullptr)
 			{
-				mTargetMonsterDistances.clear();
-
-				mTargetMonsterDistances.push_back({ targetData.monsterIndex, targetData.bulletIndex, nearTarget });
-				mTargetMonster = &mMonsters[targetData.monsterIndex];
+				bullet.SetActive(false);
+				targetMonster->SetActive(false);
+				mIsMonsterSpwan[i] = true;
 			}
-		}
-
-		if (mTargetMonster 
-			and not mTargetMonsterDistances.empty())
-		{
-			TargetMonster& targetData = mTargetMonsterDistances.back();
-
-			mMonsters[targetData.monsterIndex].SetActive(false);
-			mIsMonsterSpwan[targetData.monsterIndex] = true;
-
-			mBullets[targetData.bulletIndex].SetActive(false);
-			mPrevBulletPosition[targetData.bulletIndex] = targetData.distance;
-
-			mTargetMonsterDistances.clear();
 		}
 	}
 

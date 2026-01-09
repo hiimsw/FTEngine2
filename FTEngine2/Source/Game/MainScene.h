@@ -13,13 +13,6 @@ struct GizmoLine
 	D2D1_POINT_2F Point1;
 };
 
-struct TargetMonster
-{
-	uint32_t monsterIndex;
-	uint32_t bulletIndex;
-	D2D1_POINT_2F distance;
-};
-
 class MainScene final : public Scene
 {
 	enum class Layer
@@ -89,8 +82,6 @@ private:
 	
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
-	//D2D1_POINT_2F mTargetMonsterDistances[MONSTER_COUNT]{};
-	std::vector<TargetMonster>mTargetMonsterDistances{};
 	
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
@@ -98,7 +89,6 @@ private:
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 
 	bool mIsCursorConfined = false;
-	bool mIsBulletKeyDown = false;
 	bool mIsColliderKeyDown = false;
 
 	bool mIsMonsterSpwan[MONSTER_COUNT]{};
