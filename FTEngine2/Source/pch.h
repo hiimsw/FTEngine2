@@ -145,6 +145,10 @@ namespace Math
 	inline D2D1_POINT_2F LerpVector(const D2D1_POINT_2F from, const D2D1_POINT_2F to, const float t);
 	inline D2D1_POINT_2F NormalizeVector(const D2D1_POINT_2F vector);
 	inline float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2);
+	inline float ConvertDegreeToRadian(const float degree);
+	inline float ConvertRadianToDegree(const float radian);
+
+	constexpr float PI = 3.141592f;
 
 	D2D1_POINT_2F AddVector(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
 	{
@@ -188,5 +192,15 @@ namespace Math
 	{
 		float ccw = (point1.x - point0.x) * (point2.y - point0.y) - (point2.x - point0.x) * (point1.y - point0.y);
 		return ccw;
+	}
+
+	float ConvertDegreeToRadian(const float degree)
+	{
+		return PI / 180.0f;
+	}
+
+	float ConvertRadianToDegree(const float radian)
+	{
+		return 180.0f / PI;
 	}
 }

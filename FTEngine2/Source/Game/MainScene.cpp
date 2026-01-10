@@ -73,7 +73,7 @@ void MainScene::Initialize()
 		constexpr float MONSTER_SCALE = 0.7f;
 
 		constexpr float MIN_ANGLE = 0.0f;
-		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
+		constexpr float MAX_ANGLE = 2.0f * Math::PI;
 
 		// ·£´ý ÁÂÇ¥¸¦ »ý¼ºÇÑ´Ù.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
