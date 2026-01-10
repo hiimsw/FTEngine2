@@ -144,6 +144,7 @@ namespace Math
 	inline float GetVectorLength(const D2D1_POINT_2F vector);
 	inline D2D1_POINT_2F LerpVector(const D2D1_POINT_2F from, const D2D1_POINT_2F to, const float t);
 	inline D2D1_POINT_2F NormalizeVector(const D2D1_POINT_2F vector);
+	inline D2D1_POINT_2F RotateVector(const D2D1_POINT_2F vector, const float degree);
 	inline float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2);
 	inline float ConvertDegreeToRadian(const float degree);
 	inline float ConvertRadianToDegree(const float radian);
@@ -185,6 +186,21 @@ namespace Math
 	{
 		float lenght = GetVectorLength(vector);
 		D2D1_POINT_2F result{ .x = vector.x / lenght, .y = vector.y / lenght };
+		return result;
+	}
+
+	D2D1_POINT_2F RotateVector(const D2D1_POINT_2F vector, const float degree)
+	{
+		const float radian = ConvertDegreeToRadian(degree);
+		const float cosTheta = cos(radian);
+		const float sinTheta = sin(radian);
+
+		D2D1_POINT_2F result
+		{
+			.x = cosTheta * vector.x - sinTheta * vector.y,
+			.y = sinTheta * vector.x + cosTheta * vector.y
+		};
+
 		return result;
 	}
 
