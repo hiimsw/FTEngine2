@@ -364,7 +364,7 @@ bool MainScene::Update(const float deltaTime)
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
 			{
 				float speed = min(Math::GetVectorLength(mHeroVelocity), MAX_SPEED);
-				const D2D1_POINT_2F direction = Math::GetNormalizeVector(mHeroVelocity);
+				const D2D1_POINT_2F direction = Math::NormalizeVector(mHeroVelocity);
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
@@ -398,7 +398,7 @@ bool MainScene::Update(const float deltaTime)
 					toTarget = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
 
 					// 방향을 구한다.
-					direction[i] = Math::GetNormalizeVector(toTarget);
+					direction[i] = Math::NormalizeVector(toTarget);
 
 					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
@@ -458,7 +458,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (Math::GetVectorLength(toTarget) != 0.0f)
 				{
-					const D2D1_POINT_2F direction = Math::GetNormalizeVector(toTarget);
+					const D2D1_POINT_2F direction = Math::NormalizeVector(toTarget);
 					float speed = getRandom(MIN_SPEED, MAX_SPEED);
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
 
@@ -557,7 +557,7 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 
 			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			const D2D1_POINT_2F direction = Math::GetNormalizeVector(heroPosition);
+			const D2D1_POINT_2F direction = Math::NormalizeVector(heroPosition);
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, -2.0f));
 			mHero.SetPosition(heroPosition);
@@ -568,7 +568,7 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 
 			D2D1_POINT_2F heroPosition = mHero.GetPosition();
-			const D2D1_POINT_2F direction = Math::GetNormalizeVector(heroPosition);
+			const D2D1_POINT_2F direction = Math::NormalizeVector(heroPosition);
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, 2.0f));
 			mHero.SetPosition(heroPosition);
