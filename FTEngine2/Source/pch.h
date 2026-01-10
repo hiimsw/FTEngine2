@@ -196,11 +196,11 @@ namespace Math
 
 	float ConvertDegreeToRadian(const float degree)
 	{
-		return PI / 180.0f;
+		return degree * (PI / 180.0f);
 	}
 
 	float ConvertRadianToDegree(const float radian)
 	{
-		return 180.0f / PI;
+		return radian * (180.0f / PI);
 	}
 }
