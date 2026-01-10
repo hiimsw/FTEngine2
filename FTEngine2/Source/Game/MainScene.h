@@ -87,6 +87,8 @@ private:
 	Sprite* mTargetBullet = nullptr;
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
+	ID2D1SolidColorBrush* mYellowBrush = nullptr;
+	ID2D1SolidColorBrush* mCyanBrush = nullptr;
 
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;
