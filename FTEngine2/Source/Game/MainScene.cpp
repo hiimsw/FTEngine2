@@ -34,6 +34,8 @@ void MainScene::Initialize()
 
 		ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
 		HR(renderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &mDefaultBrush));
+		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Yellow), &mYellowBrush));
+		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Cyan), &mCyanBrush));
 
 		mIsCursorConfined = (Input::Get().GetCursorLockState() == Input::eCursorLockState::Confined);
 	}
@@ -722,9 +724,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = getRectangleFromSprite(monster).left, .y = getRectangleFromSprite(monster).top }) * view;
 				renderTarget->SetTransform(worldView);
 
-				ID2D1SolidColorBrush* cyanBrush = nullptr;
-				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Cyan), &cyanBrush);
-
 				const D2D1_SIZE_F scale = monster.GetScale();
 
 				const D2D1_RECT_F colliderSize =
@@ -735,8 +734,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 					.bottom = scale.width * mRectangleTexture.GetWidth()
 				};
 
-				renderTarget->DrawRectangle(colliderSize, cyanBrush);
-				RELEASE_D2D1(cyanBrush);
+				renderTarget->DrawRectangle(colliderSize, mCyanBrush);
 			}
 		}
 	}
@@ -752,9 +750,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				const Matrix3x2F worldView = Transformation::getWorldMatrix(getCircleFromSprite(bullet).point) * view;
 				renderTarget->SetTransform(worldView);
 
-				ID2D1SolidColorBrush* yellowBrush = nullptr;
-				renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &yellowBrush);
-
 				const D2D1_SIZE_F scale = bullet.GetScale();
 
 				const D2D1_ELLIPSE circleSize =
@@ -763,8 +758,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 					.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
 				};
 
-				renderTarget->DrawEllipse(circleSize, yellowBrush);
-				RELEASE_D2D1(yellowBrush);
+				renderTarget->DrawEllipse(circleSize, mYellowBrush);
 			}
 		}
 	}
@@ -772,6 +766,8 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 void MainScene::Finalize()
 {
+	RELEASE_D2D1(mCyanBrush);
+	RELEASE_D2D1(mYellowBrush);
 	RELEASE_D2D1(mDefaultBrush);
 
 	mRectangleTexture.Finalize();
