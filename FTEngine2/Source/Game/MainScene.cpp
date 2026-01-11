@@ -38,6 +38,8 @@ void MainScene::Initialize()
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Cyan), &mCyanBrush));
 
 		mIsCursorConfined = (Input::Get().GetCursorLockState() == Input::eCursorLockState::Confined);
+
+		srand(unsigned int(time(nullptr)));
 	}
 
 	// 사용되는 이미지를 초기화한다.
