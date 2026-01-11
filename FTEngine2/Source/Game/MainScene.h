@@ -93,8 +93,6 @@ private:
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;
 
-	bool mIsMonsterSpwan[MONSTER_COUNT]{};
-
 	Font mTimerFont{};
 	Font mHpFont{};
 	Font mEndingFont{};

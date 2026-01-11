@@ -80,22 +80,21 @@ void MainScene::Initialize()
 		// 랜덤 좌표를 생성한다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
-			const D2D1_POINT_2F spawnDirection = 
-			{
-				.x = cos(angle),
-				.y = sin(angle)
-			};
+			//float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
+			//const D2D1_POINT_2F spawnDirection = 
+			//{
+			//	.x = cos(angle),
+			//	.y = sin(angle)
+			//};
 
-			constexpr float OFFSET = BOUNDARY_RADIUS - 30.0f;
-			const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, OFFSET);
+			//constexpr float OFFSET = BOUNDARY_RADIUS - 30.0f;
+			//const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, OFFSET);
+			//monster.SetPosition(spawnPositionCircle);
 
 			Sprite& monster = mMonsters[i];
 			monster.SetTexture(&mRectangleTexture);
-			monster.SetPosition(spawnPositionCircle);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
-			monster.SetActive(true);
-
+			monster.SetActive(false);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 		}
 	}
@@ -443,55 +442,56 @@ bool MainScene::Update(const float deltaTime)
 	{		
 		constexpr float MIN_ANGLE = 0.0f;
 		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
+		constexpr uint32_t SPEED = 30;
 
-		constexpr uint32_t MIN_SPEED = 25;
-		constexpr uint32_t MAX_SPEED = 70;
-
+		// 몬스터를 일정 시간마다 스폰한다.
 		mSpawnTimer += deltaTime;
+		if (mSpawnTimer >= 2.0f)
+		{
+			for (Sprite& monster : mMonsters)
+			{
+				if (monster.IsActive())
+				{
+					continue;
+				}
 
+				float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
+				const D2D1_POINT_2F spawnDirection =
+				{
+					.x = cos(angle),
+					.y = sin(angle)
+				};
+
+				const float offset = BOUNDARY_RADIUS - 30.0f;
+				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+				monster.SetPosition(spawnPositionCircle);
+				monster.SetActive(true);
+
+				mSpawnTimer = 0.0f;
+
+				break;
+			}
+		}
+
+		// 몬스터를 이동시킨다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
-			D2D1_POINT_2F position = monster.GetPosition();
-
-			if (monster.IsActive())
+			if (not monster.IsActive())
 			{
-				const D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
-
-				if (Math::GetVectorLength(toTarget) != 0.0f)
-				{
-					const D2D1_POINT_2F direction = Math::NormalizeVector(toTarget);
-					float speed = getRandom(MIN_SPEED, MAX_SPEED);
-					const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
-
-					const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
-					position = Math::AddVector(position, movePosition);
-				}
+				continue;
 			}
 
-			// 몬스터가 죽었을 때 새로운 좌표를 랜덤으로 만든다.
-			if (not monster.IsActive() and mIsMonsterSpwan[i])
+			D2D1_POINT_2F position = monster.GetPosition();
+			const D2D1_POINT_2F toTarget = Math::SubtractVector({}, position);
+
+			if (Math::GetVectorLength(toTarget) != 0.0f)
 			{
-				if (mSpawnTimer >= 0.5f)
-				{
-					mMonsters[i].SetActive(true);
+				const D2D1_POINT_2F direction = Math::NormalizeVector(toTarget);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction, SPEED);
 
-					float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
-					const D2D1_POINT_2F spawnDirection =
-					{
-						.x = cos(angle),
-						.y = sin(angle)
-					};
-
-					const float offset = BOUNDARY_RADIUS - 30.0f;
-					const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
-
-					position = spawnPositionCircle;
-
-					mSpawnTimer = 0.0f;
-
-					mIsMonsterSpwan[i] = false;
-				}
+				const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
+				position = Math::AddVector(position, movePosition);
 			}
 
 			monster.SetPosition(position);
@@ -596,8 +596,6 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
 					monster.SetActive(false);
-					mIsMonsterSpwan[i] = true;
-
 					mDamageTimer = 0.0f;
 				}
 
@@ -611,8 +609,6 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
 					monster.SetActive(false);
-					mIsMonsterSpwan[i] = true;
-
 					mDamageTimer = 0.0f;
 				}
 
@@ -663,7 +659,6 @@ bool MainScene::Update(const float deltaTime)
 			{
 				bullet.SetActive(false);
 				targetMonster->SetActive(false);
-				mIsMonsterSpwan[i] = true;
 			}
 		}
 	}
