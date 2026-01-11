@@ -358,6 +358,7 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float DASH_ACC = 30.0f;
 			static float dashSpeed = 0.0f;
 			static bool bDashing = false;
+			static D2D1_POINT_2F dashDirection{};
 
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
 			{
@@ -366,24 +367,28 @@ bool MainScene::Update(const float deltaTime)
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
-				if (bDashing)
-				{
-					dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
-					D2D1_POINT_2F dashVelocity = Math::ScaleVector(direction, dashSpeed * deltaTime);
-					adjustVelocity = Math::AddVector(adjustVelocity, dashVelocity);
-
-					if (dashSpeed >= MAX_DASH_SPEED)
-					{
-						dashSpeed = 0.0f;
-						bDashing = false;
-					}
-				}
-				else if (Input::Get().GetKeyDown(VK_SPACE))
+				if (not bDashing and Input::Get().GetKeyDown(VK_SPACE))
 				{
 					bDashing = true;
+					dashDirection = direction;
 				}
 
 				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
+				mHero.SetPosition(position);
+			}
+
+			if (bDashing)
+			{
+				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
+				D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
+
+				if (dashSpeed >= MAX_DASH_SPEED)
+				{
+					dashSpeed = 0.0f;
+					bDashing = false;
+				}
+
+				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
 			}
 		}
