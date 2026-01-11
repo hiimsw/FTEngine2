@@ -406,7 +406,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			constexpr uint32_t MAX_SPEED = 750;
+			constexpr float MOVE_SPEED = 1200.0f;
 
 			// 총알을 이동시킨다.
 			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
@@ -417,7 +417,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED * deltaTime);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MOVE_SPEED * deltaTime);
 				D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
 				lifetime[i] += deltaTime;
