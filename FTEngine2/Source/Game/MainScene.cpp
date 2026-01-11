@@ -353,12 +353,35 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
+			// TODO(이수원): 코드 정리가 필요하다.
+			constexpr float MAX_DASH_SPEED = 400.0f;
+			constexpr float DASH_ACC = 30.0f;
+			static float dashSpeed = 0.0f;
+			static bool bDashing = false;
+
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
 			{
 				float speed = min(Math::GetVectorLength(mHeroVelocity), MAX_SPEED);
 				const D2D1_POINT_2F direction = Math::NormalizeVector(mHeroVelocity);
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
+
+				if (bDashing)
+				{
+					dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
+					D2D1_POINT_2F dashVelocity = Math::ScaleVector(direction, dashSpeed * deltaTime);
+					adjustVelocity = Math::AddVector(adjustVelocity, dashVelocity);
+
+					if (dashSpeed >= MAX_DASH_SPEED)
+					{
+						dashSpeed = 0.0f;
+						bDashing = false;
+					}
+				}
+				else if (Input::Get().GetKeyDown(VK_SPACE))
+				{
+					bDashing = true;
+				}
 
 				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
 				mHero.SetPosition(position);
