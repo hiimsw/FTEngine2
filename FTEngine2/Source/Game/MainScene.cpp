@@ -218,15 +218,6 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
-	// 카메라를 업데이트한다.
-	{
-		D2D1_POINT_2F position = mMainCamera.GetPosition();
-		D2D1_POINT_2F heroPosition = mHero.GetPosition();
-
-		position = Math::LerpVector(position, heroPosition, 8.0f * deltaTime);
-		mMainCamera.SetPosition(position);
-	}
-
 	// 줌을 업데이트한다.
 	{
 		// 세팅되어 있는 좌표(0, 0)으로 맞춰준다.
@@ -251,14 +242,14 @@ bool MainScene::Update(const float deltaTime)
 
 		const D2D1_SIZE_F zoomScale = mZoom.GetScale();
 
-		if (fabs(zoomLength - heroLength) <= MIN_LENGTH)
+		/*if (fabs(zoomLength - heroLength) <= MIN_LENGTH)
 		{
 			DEBUG_LOG("가까움");
 		}
 		else
 		{
 			DEBUG_LOG("멀어");
-		}
+		}*/
 	}
 
 	// 플레이어를 업데이트한다.
@@ -403,6 +394,14 @@ bool MainScene::Update(const float deltaTime)
 
 					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
+
+					// 카메라 흔들기를 시작합니다.
+					{
+						const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
+						const float duration = getRandom(0.05f, 0.08f);
+						const float frequency = getRandom(50.0f, 60.0f);
+						initializeCameraShake(amplitude, duration, frequency);
+					}
 
 					break;
 				}
@@ -663,6 +662,21 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
+	// 카메라를 업데이트한다.
+	{
+		D2D1_POINT_2F position = mMainCamera.GetPosition();
+		D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		position = Math::LerpVector(position, heroPosition, 8.0f * deltaTime);
+
+		if (mCameraShakeAmplitude > 0.0f)
+		{
+			D2D1_POINT_2F offset = updateCameraShake(deltaTime);
+			position = Math::AddVector(position, offset);
+		}
+
+		mMainCamera.SetPosition(position);
+	}
+
 	return true;
 }
 
@@ -832,4 +846,43 @@ D2D1_POINT_2F MainScene::getMouseWorldPosition() const
 	const D2D1_POINT_2F result = Math::AddVector(zoomPosition, cameraPosition);
 
 	return result;
+}
+
+void MainScene::initializeCameraShake(const float amplitude, const float duration, const float frequency)
+{
+	mCameraShakeTime = 0.0f;
+	mCameraShakeTimer = 0.0f;
+	mCameraShakeAmplitude = amplitude;
+	mCameraShakeDuration = duration;
+	mCameraShakeFrequency = frequency;
+}
+
+D2D1_POINT_2F MainScene::updateCameraShake(const float deltaTime)
+{
+	mCameraShakeTime += deltaTime;
+	if (mCameraShakeTime >= mCameraShakeDuration)
+	{
+		initializeCameraShake(0.0f, 0.0f, 0.0f);
+
+		return D2D1_POINT_2F{};
+	}
+
+	mCameraShakeTimer += deltaTime;
+
+	if (const float period = (1.0f / mCameraShakeFrequency);
+		mCameraShakeTimer >= period)
+	{
+		float progress = mCameraShakeTime / mCameraShakeDuration;
+		float strength = std::pow(1.0f - progress, 2.0f) * mCameraShakeAmplitude;
+
+		const float radian = getRandom(0.0f, 2.0f * Math::PI);
+		D2D1_POINT_2F direction = { .x = cos(radian) * 1.2f, .y = sin(radian) * 0.8f };
+
+		mCameraShakeTimer = 0.0f;
+
+		D2D1_POINT_2F offset = Math::ScaleVector(direction, strength);
+		return offset;
+	}
+
+	return D2D1_POINT_2F{};
 }

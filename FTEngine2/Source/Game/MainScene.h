@@ -44,6 +44,9 @@ private:
 
 	D2D1_POINT_2F getMouseWorldPosition() const;
 
+	void initializeCameraShake(const float amplitude, const float duration, const float frequency);
+	D2D1_POINT_2F updateCameraShake(const float deltaTime);
+
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
@@ -52,6 +55,11 @@ private:
 	Texture mRedCircleTexture{};
 
 	Camera mMainCamera{};
+	float mCameraShakeTime = 0.0f;
+	float mCameraShakeTimer = 0.0f;
+	float mCameraShakeAmplitude = 0.0f;
+	float mCameraShakeDuration = 0.0f;
+	float mCameraShakeFrequency = 0.0f;
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
