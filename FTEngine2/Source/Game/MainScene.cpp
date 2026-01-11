@@ -369,9 +369,8 @@ bool MainScene::Update(const float deltaTime)
 		{
 			static float lifetime[BULLET_COUNT];
 			static D2D1_POINT_2F direction[BULLET_COUNT];
-			static D2D1_POINT_2F toTarget;
 
-			// 총알 좌표를 플레이어 좌표로 바꾼다.
+			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
@@ -386,11 +385,11 @@ bool MainScene::Update(const float deltaTime)
 					bullet.SetPosition(spawnPosition);
 					mPrevBulletPosition[i] = spawnPosition;
 
-					// 총알과 줌의 벡터를 구한다.
-					toTarget = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
-
-					// 방향을 구한다.
-					direction[i] = Math::NormalizeVector(toTarget);
+					// 이동 방향을 구한다.
+					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
+					direction[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
+					direction[i] = Math::RotateVector(direction[i], getRandom(-5.0f, 5.0f));
+					direction[i] = Math::NormalizeVector(direction[i]);
 
 					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
@@ -418,12 +417,8 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				D2D1_POINT_2F position = bullet.GetPosition();
-				if (Math::GetVectorLength(toTarget) != 0.0f)
-				{
-					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED * deltaTime);
-					position = Math::AddVector(position, velocity);
-				}
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MAX_SPEED * deltaTime);
+				D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
 				lifetime[i] += deltaTime;
 				if (lifetime[i] >= 1.5f)
