@@ -77,9 +77,9 @@ void MainScene::Initialize()
 		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mMonsters)
 		{
-			monster.SetTexture(&mRectangleTexture);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(false);
+			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 		}
 	}
@@ -91,10 +91,22 @@ void MainScene::Initialize()
 		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mRunMonsters)
 		{
-			monster.SetTexture(&mRectangleTexture);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(false);
+			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
+		}
+
+		constexpr D2D1_POINT_2F BAR_SCALE = { .x = RUN_MONSTER_WIDTH, .y = 0.1f };
+
+		// 시작바를 생성한다.
+		for (Sprite& bar : mRunMonsterBars)
+		{
+			bar.SetScale({ .width = 0.0f, .height = 0.1f });
+			bar.SetCenter({ .x = -0.5f, .y = 0.0f });
+			bar.SetActive(false);
+			bar.SetTexture(&mRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&bar);
 		}
 	}
 
@@ -479,8 +491,8 @@ bool MainScene::Update(const float deltaTime)
 		static float speed[MONSTER_COUNT];
 
 		// 몬스터를 일정 시간마다 스폰한다.
-		mSpawnTimer += deltaTime;
-		if (mSpawnTimer >= 0.5f)
+		mMonsterSpawnTimer += deltaTime;
+		if (mMonsterSpawnTimer >= 0.5f)
 		{
 			for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 			{
@@ -502,7 +514,7 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetActive(true);
 
-				mSpawnTimer = 0.0f;		
+				mMonsterSpawnTimer = 0.0f;		
 
 				// 스폰할 때 속도도 같이 초기화한다.
 				speed[i] = getRandom(10.0f, 80.0f);
@@ -542,6 +554,7 @@ bool MainScene::Update(const float deltaTime)
 
 		// 몬스터를 일정 시간마다 스폰한다.
 		mRunMonsterSpawnTimer += deltaTime;
+
 		if (mRunMonsterSpawnTimer >= 0.5f)
 		{
 			for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
@@ -561,16 +574,20 @@ bool MainScene::Update(const float deltaTime)
 
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+			
+				mRunMonsterBars[i].SetPosition({ .x = spawnPositionCircle.x -10.0f, .y = spawnPositionCircle.y - 20.0f });
+				mRunMonsterBars[i].SetActive(true);
+
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetActive(true);
 
 				mRunMonsterSpawnTimer = 0.0f;
-
-				// 스폰할 때 속도와 이동방향을 세팅한다.
+				
+				// 스폰할 때 속도를 먼저 세팅한다.
 				speed[i] = getRandom(10.0f, 80.0f);
-
-				D2D1_POINT_2F monsterPosition = monster.GetPosition();
-				D2D1_POINT_2F heroPosition = mHero.GetPosition();
+				
+				const D2D1_POINT_2F monsterPosition = monster.GetPosition();
+				const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 				toTarget = Math::SubtractVector(heroPosition, monsterPosition);
 				direction[i] = Math::NormalizeVector(toTarget);
 
@@ -581,19 +598,41 @@ bool MainScene::Update(const float deltaTime)
 		// 이동한다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
+			mBarStartTimers[i] += deltaTime;
+
 			Sprite& monster = mRunMonsters[i];
 			if (not monster.IsActive())
 			{
+				mBarStartTimers[i] = 0.0f;
 				continue;
 			}
 
 			if (Math::GetVectorLength(toTarget) != 0.0f)
 			{
-				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], speed[i] * deltaTime);
+				// 출발바가 실행된다.
+				float barSpeed = RUN_MONSTER_WIDTH / 2.0f;
+				D2D1_SIZE_F scale = mRunMonsterBars[i].GetScale();
 
-				D2D1_POINT_2F position = monster.GetPosition();
-				position = Math::AddVector(position, velocity);
-				monster.SetPosition(position);
+				if (scale.width > RUN_MONSTER_WIDTH)
+				{
+					barSpeed = 0.0f;
+				}
+
+				scale.width += barSpeed * deltaTime;
+				mRunMonsterBars[i].SetScale(scale);
+
+				if (mBarStartTimers[i] >= 2.0f)
+				{
+					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], speed[i] * deltaTime);
+
+					D2D1_POINT_2F position = monster.GetPosition();
+					position = Math::AddVector(position, velocity);
+					monster.SetPosition(position);
+
+					D2D1_POINT_2F barPosition = mRunMonsterBars[i].GetPosition();
+					barPosition = Math::AddVector(barPosition, velocity);
+					mRunMonsterBars[i].SetPosition(barPosition);
+				}
 			}
 		}
 
@@ -720,16 +759,16 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mDamageTimer += deltaTime;
+			mMonsterDamageTimer += deltaTime;
 
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
 			{
-				if (mDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
 					monster.SetActive(false);
-					mDamageTimer = 0.0f;
+					mMonsterDamageTimer = 0.0f;
 				}
 
 				break;
@@ -738,11 +777,11 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
-				if (mDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
 					monster.SetActive(false);
-					mDamageTimer = 0.0f;
+					mMonsterDamageTimer = 0.0f;
 				}
 
 				break;

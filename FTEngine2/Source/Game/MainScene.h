@@ -66,6 +66,7 @@ private:
 
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
+	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
@@ -85,6 +86,7 @@ private:
 	Sprite mHero{};
 	Sprite mMonsters[MONSTER_COUNT]{};
 	Sprite mRunMonsters[RUN_MONSTER_COUNT]{};
+	Sprite mRunMonsterBars[RUN_MONSTER_COUNT]{};
 	Sprite mZoom{};
 	Sprite mBullets[BULLET_COUNT]{};
 	Sprite mHpBar{};
@@ -114,10 +116,14 @@ private:
 	Label mHpValueLabel{};
 	Label mEndingLabel{};
 
-	float mSpawnTimer{};
+	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
+	float mBarStartTimers[RUN_MONSTER_COUNT]{};
+	float mBarValues[RUN_MONSTER_COUNT]{};
+	float mBarMaxs{};
+
 	float mGameTimer{};
 
-	float mDamageTimer{};
+	float mMonsterDamageTimer{};
 	float mRunMonsterDamageTimer{};
 };
