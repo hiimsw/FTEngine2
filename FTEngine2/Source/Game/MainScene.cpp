@@ -799,7 +799,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-
 		// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
@@ -835,6 +834,26 @@ bool MainScene::Update(const float deltaTime)
 				if (distance < targetMonsterDistance)
 				{
 					targetMonster = &monster;
+					targetMonsterDistance = distance;
+				}
+			}
+
+			for (Sprite& runMonster : mRunMonsters)
+			{
+				if (not runMonster.IsActive())
+				{
+					continue;
+				}
+
+				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(runMonster), line))
+				{
+					continue;
+				}
+
+				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], runMonster.GetPosition()));
+				if (distance < targetMonsterDistance)
+				{
+					targetMonster = &runMonster;
 					targetMonsterDistance = distance;
 				}
 			}
