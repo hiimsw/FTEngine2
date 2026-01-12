@@ -772,6 +772,31 @@ bool MainScene::Update(const float deltaTime)
 
 				break;
 			}
+
+			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
+			{
+				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= mMonsterAttackValue;
+					monster.SetActive(false);
+					mRunMonsterDamageTimer = 0.0f;
+				}
+
+				break;
+			}
+
+			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, monster.GetPosition()))
+			{
+				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				{
+					monster.SetActive(false);
+					mRunMonsterDamageTimer = 0.0f;
+				}
+
+				break;
+			}
 		}
 
 
