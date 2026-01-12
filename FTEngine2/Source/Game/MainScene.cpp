@@ -233,23 +233,40 @@ bool MainScene::Update(const float deltaTime)
 		const D2D1_POINT_2F screenPosition = Math::SubtractVector(mousePosition, centerOffset);
 		mZoom.SetPosition(screenPosition);
 
-		constexpr float MIN_LENGTH = 100.0f;
+		constexpr float MIN_LENGTH = 120.0f;
 		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
 
+		D2D1_POINT_2F toTarget = Math::SubtractVector(zoomPosition, heroPosition);
 		const float heroLength = Math::GetVectorLength(heroPosition);
 		const float zoomLength = Math::GetVectorLength(zoomPosition);
+		const float length = Math::GetVectorLength(toTarget);
 
-		const D2D1_SIZE_F zoomScale = mZoom.GetScale();
+		D2D1_SIZE_F zoomScale = mZoom.GetScale();
+		float scaleSpeed = 0.8f;
 
-		/*if (fabs(zoomLength - heroLength) <= MIN_LENGTH)
+		if (fabs(length) <= MIN_LENGTH)
 		{
-			DEBUG_LOG("가까움");
+			if (zoomScale.width >= 1.3f)
+			{
+				scaleSpeed = 0.0f;
+			}
+
+			zoomScale.width += scaleSpeed * deltaTime;
+			zoomScale.height += scaleSpeed * deltaTime;
 		}
 		else
 		{
-			DEBUG_LOG("멀어");
-		}*/
+			if (zoomScale.width <= 0.7f)
+			{
+				scaleSpeed = 0.0f;
+			}
+
+			zoomScale.width -= scaleSpeed * deltaTime;
+			zoomScale.height -= scaleSpeed * deltaTime;
+		}
+
+		mZoom.SetScale(zoomScale);
 	}
 
 	// 플레이어를 업데이트한다.
