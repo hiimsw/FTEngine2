@@ -479,14 +479,15 @@ bool MainScene::Update(const float deltaTime)
 	{		
 		constexpr float MIN_ANGLE = 0.0f;
 		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
-		constexpr uint32_t SPEED = 30;
+		static float speed[MONSTER_COUNT];
 
 		// 몬스터를 일정 시간마다 스폰한다.
 		mSpawnTimer += deltaTime;
-		if (mSpawnTimer >= 2.0f)
+		//if (mSpawnTimer >= 0.5f)
 		{
-			for (Sprite& monster : mMonsters)
+			for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 			{
+				Sprite& monster = mMonsters[i];
 				if (monster.IsActive())
 				{
 					continue;
@@ -504,7 +505,10 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetActive(true);
 
-				mSpawnTimer = 0.0f;
+				mSpawnTimer = 0.0f;		
+
+				// 스폰할 때 속도도 같이 초기화한다.
+				speed[i] = getRandom(10.0f, 80.0f);
 
 				break;
 			}
@@ -525,13 +529,11 @@ bool MainScene::Update(const float deltaTime)
 			if (Math::GetVectorLength(toTarget) != 0.0f)
 			{
 				const D2D1_POINT_2F direction = Math::NormalizeVector(toTarget);
-				const D2D1_POINT_2F velocity = Math::ScaleVector(direction, SPEED);
-
-				const D2D1_POINT_2F movePosition = Math::ScaleVector(velocity, deltaTime);
-				position = Math::AddVector(position, movePosition);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
+				
+				position = Math::AddVector(position, velocity);
+				monster.SetPosition(position);
 			}
-
-			monster.SetPosition(position);
 		}
 	}
 
@@ -608,7 +610,7 @@ bool MainScene::Update(const float deltaTime)
 			isRight = false;
 		}
 
-
+		// 원과 원의 충돌체크를 한다.
 		const D2D1_ELLIPSE heroEllipse = { .point = mHero.GetPosition(), .radiusX = getCircleFromSprite(mHero).radiusX };
 
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
@@ -616,11 +618,11 @@ bool MainScene::Update(const float deltaTime)
 		
 		if (Collision::IsCollidedCircleWithCircle(heroEllipse, zoomEllipse))
 		{
-			DEBUG_LOG("ㅇㅇ");
+			//DEBUG_LOG("ㅇㅇ");
 		}
 		else
 		{
-			DEBUG_LOG("ss");
+			//DEBUG_LOG("ss");
 		}
 		
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
