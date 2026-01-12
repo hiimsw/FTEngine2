@@ -74,24 +74,23 @@ void MainScene::Initialize()
 	{
 		constexpr float MONSTER_SCALE = 0.7f;
 
-		constexpr float MIN_ANGLE = 0.0f;
-		constexpr float MAX_ANGLE = 2.0f * Math::PI;
+		// 랜덤 좌표를 생성한다.
+		for (Sprite& monster : mMonsters)
+		{
+			monster.SetTexture(&mRectangleTexture);
+			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
+			monster.SetActive(false);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
+		}
+	}
+
+	// 돌진 몬스터를 초기화한다.
+	{
+		constexpr float MONSTER_SCALE = 0.4f;
 
 		// 랜덤 좌표를 생성한다.
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		for (Sprite& monster : mRunMonsters)
 		{
-			//float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
-			//const D2D1_POINT_2F spawnDirection = 
-			//{
-			//	.x = cos(angle),
-			//	.y = sin(angle)
-			//};
-
-			//constexpr float OFFSET = BOUNDARY_RADIUS - 30.0f;
-			//const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, OFFSET);
-			//monster.SetPosition(spawnPositionCircle);
-
-			Sprite& monster = mMonsters[i];
 			monster.SetTexture(&mRectangleTexture);
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(false);
@@ -477,13 +476,11 @@ bool MainScene::Update(const float deltaTime)
 
 	// 몬스터를 업데이트한다.
 	{		
-		constexpr float MIN_ANGLE = 0.0f;
-		constexpr float MAX_ANGLE = 2.0f * Math::PI;
 		static float speed[MONSTER_COUNT];
 
 		// 몬스터를 일정 시간마다 스폰한다.
 		mSpawnTimer += deltaTime;
-		//if (mSpawnTimer >= 0.5f)
+		if (mSpawnTimer >= 0.5f)
 		{
 			for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 			{
@@ -535,6 +532,71 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(position);
 			}
 		}
+	}
+
+	// 돌진 몬스터를 업데이트한다.
+	{
+		static float speed[RUN_MONSTER_COUNT];
+		static D2D1_POINT_2F toTarget;
+		static D2D1_POINT_2F direction[RUN_MONSTER_COUNT];
+
+		// 몬스터를 일정 시간마다 스폰한다.
+		mRunMonsterSpawnTimer += deltaTime;
+		if (mRunMonsterSpawnTimer >= 0.5f)
+		{
+			for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+			{
+				Sprite& monster = mRunMonsters[i];
+				if (monster.IsActive())
+				{
+					continue;
+				}
+
+				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
+				const D2D1_POINT_2F spawnDirection =
+				{
+					.x = cos(angle),
+					.y = sin(angle)
+				};
+
+				const float offset = BOUNDARY_RADIUS - 30.0f;
+				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+				monster.SetPosition(spawnPositionCircle);
+				monster.SetActive(true);
+
+				mRunMonsterSpawnTimer = 0.0f;
+
+				// 스폰할 때 속도와 이동방향을 세팅한다.
+				speed[i] = getRandom(10.0f, 80.0f);
+
+				D2D1_POINT_2F monsterPosition = monster.GetPosition();
+				D2D1_POINT_2F heroPosition = mHero.GetPosition();
+				toTarget = Math::SubtractVector(heroPosition, monsterPosition);
+				direction[i] = Math::NormalizeVector(toTarget);
+
+				break;
+			}
+		}
+
+		// 이동한다.
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mRunMonsters[i];
+			if (not monster.IsActive())
+			{
+				continue;
+			}
+
+			if (Math::GetVectorLength(toTarget) != 0.0f)
+			{
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], speed[i] * deltaTime);
+
+				D2D1_POINT_2F position = monster.GetPosition();
+				position = Math::AddVector(position, velocity);
+				monster.SetPosition(position);
+			}
+		}
+
 	}
 
 	// 플레이어 체력바를 업데이트한다.
