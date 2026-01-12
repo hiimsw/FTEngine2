@@ -119,8 +119,6 @@ private:
 	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
 	float mBarStartTimers[RUN_MONSTER_COUNT]{};
-	float mBarValues[RUN_MONSTER_COUNT]{};
-	float mBarMaxs{};
 
 	float mGameTimer{};
 

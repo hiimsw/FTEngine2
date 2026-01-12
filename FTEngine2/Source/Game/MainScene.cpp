@@ -603,14 +603,17 @@ bool MainScene::Update(const float deltaTime)
 			Sprite& monster = mRunMonsters[i];
 			if (not monster.IsActive())
 			{
+				mRunMonsterBars[i].SetActive(false);
 				mBarStartTimers[i] = 0.0f;
+
 				continue;
 			}
 
 			if (Math::GetVectorLength(toTarget) != 0.0f)
 			{
-				// 출발바가 실행된다.
-				float barSpeed = RUN_MONSTER_WIDTH / 2.0f;
+				// 출발바가 꽉 차면 돌진 몬스터는 이동한다.
+				constexpr float COOL_TIME = 2.0f;
+				float barSpeed = RUN_MONSTER_WIDTH / COOL_TIME;
 				D2D1_SIZE_F scale = mRunMonsterBars[i].GetScale();
 
 				if (scale.width > RUN_MONSTER_WIDTH)
@@ -621,7 +624,7 @@ bool MainScene::Update(const float deltaTime)
 				scale.width += barSpeed * deltaTime;
 				mRunMonsterBars[i].SetScale(scale);
 
-				if (mBarStartTimers[i] >= 2.0f)
+				if (mBarStartTimers[i] >= COOL_TIME)
 				{
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], speed[i] * deltaTime);
 
@@ -635,7 +638,6 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 		}
-
 	}
 
 	// 플레이어 체력바를 업데이트한다.
@@ -877,6 +879,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
+			Sprite* targetMonsterBar = nullptr;
 			for (Sprite& runMonster : mRunMonsters)
 			{
 				if (not runMonster.IsActive())
