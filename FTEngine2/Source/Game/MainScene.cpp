@@ -328,8 +328,8 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float MAX_SPEED = 280.0f;
 			constexpr float ACC = 20.0f; // 가속도
 
-			int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
-			int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
+			const int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
+			const int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
 
 			static int32_t previousMoveX;
 			static int32_t previousMoveY;
@@ -388,14 +388,14 @@ bool MainScene::Update(const float deltaTime)
 					dashDirection = direction;
 				}
 
-				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
+				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
 				mHero.SetPosition(position);
 			}
 
 			if (bDashing)
 			{
 				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
-				D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
 
 				if (dashSpeed >= MAX_DASH_SPEED)
 				{
@@ -403,7 +403,7 @@ bool MainScene::Update(const float deltaTime)
 					bDashing = false;
 				}
 
-				D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
+				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
 			}
 		}
@@ -424,7 +424,7 @@ bool MainScene::Update(const float deltaTime)
 						continue;
 					}
 
-					D2D1_POINT_2F spawnPosition = mHero.GetPosition();
+					const D2D1_POINT_2F spawnPosition = mHero.GetPosition();
 					bullet.SetPosition(spawnPosition);
 					mPrevBulletPosition[i] = spawnPosition;
 
@@ -461,7 +461,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MOVE_SPEED * deltaTime);
-				D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
+				const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
 				lifetime[i] += deltaTime;
 				if (lifetime[i] >= 1.5f)
@@ -478,7 +478,7 @@ bool MainScene::Update(const float deltaTime)
 	// 몬스터를 업데이트한다.
 	{		
 		constexpr float MIN_ANGLE = 0.0f;
-		constexpr float MAX_ANGLE = 2.0f * 3.141592f;
+		constexpr float MAX_ANGLE = 2.0f * Math::PI;
 		static float speed[MONSTER_COUNT];
 
 		// 몬스터를 일정 시간마다 스폰한다.
@@ -493,7 +493,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
+				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 				const D2D1_POINT_2F spawnDirection =
 				{
 					.x = cos(angle),
@@ -552,7 +552,7 @@ bool MainScene::Update(const float deltaTime)
 
 		if (prevHp != mHeroHpValue)
 		{
-			D2D1_SIZE_F prevScale{ .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, .height = 1.0f };
+			const D2D1_SIZE_F prevScale{ .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, .height = 1.0f };
 			mHpBar.SetScale(prevScale);
 
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
@@ -737,12 +737,12 @@ bool MainScene::Update(const float deltaTime)
 	// 카메라를 업데이트한다.
 	{
 		D2D1_POINT_2F position = mMainCamera.GetPosition();
-		D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 		position = Math::LerpVector(position, heroPosition, 8.0f * deltaTime);
 
 		if (mCameraShakeAmplitude > 0.0f)
 		{
-			D2D1_POINT_2F offset = updateCameraShake(deltaTime);
+			const D2D1_POINT_2F offset = updateCameraShake(deltaTime);
 			position = Math::AddVector(position, offset);
 		}
 
@@ -758,7 +758,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 라인을 그린다.
 	{
-		D2D1_ELLIPSE CIRCLE{ .radiusX = RADIUS, .radiusY = RADIUS };
+		const D2D1_ELLIPSE CIRCLE{ .radiusX = RADIUS, .radiusY = RADIUS };
 
 		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
 		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
@@ -774,8 +774,8 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 		// 라인을 그린다.
 		{
-			D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
-			D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
+			const D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
+			const D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
 			renderTarget->SetTransform(Matrix3x2F::Identity());
 			renderTarget->DrawLine(point0, point1, mDefaultBrush);
 		}
@@ -900,13 +900,13 @@ D2D1_ELLIPSE MainScene::getCircleFromSprite(const Sprite& sprite)
 
 float MainScene::getRandom(const float min, const float max)
 {
-	float result = float(rand()) / RAND_MAX * (max - min) + min;
+	const float result = float(rand()) / RAND_MAX * (max - min) + min;
 	return result;
 }
 
 uint32_t MainScene::getRandom(const uint32_t min, const uint32_t max)
 {
-	uint32_t result = rand() % (max - min + 1) + min;
+	const uint32_t result = rand() % (max - min + 1) + min;
 	return result;
 }
 
