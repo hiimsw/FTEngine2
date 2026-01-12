@@ -6,6 +6,7 @@ namespace Collision
 	inline bool IsCollidedSqureWithSqure(const D2D1_RECT_F lhs, const D2D1_RECT_F rhs);
 	inline bool IsCollidedSqureWithLine(const D2D1_RECT_F rect, const Line line);
 	inline bool IsCollidedCircleWithPoint(const D2D1_POINT_2F center, const float radius, const D2D1_POINT_2F point);
+	inline bool IsCollidedCircleWithCircle(const D2D1_ELLIPSE lhs, const D2D1_ELLIPSE rhs);
 	inline bool DoLinesIntersect(Line line0, Line line1);
 
 	bool IsCollidedSqureWithPoint(const D2D1_RECT_F rect, const D2D1_POINT_2F point)
@@ -46,6 +47,18 @@ namespace Collision
 		D2D1_POINT_2F centerToPoint = Math::SubtractVector(center, point);
 		float centerToPointLength = Math::GetVectorLength(centerToPoint);
 		bool result = centerToPointLength <= radius;
+
+		return result;
+	}
+
+	bool IsCollidedCircleWithCircle(const D2D1_ELLIPSE lhs, const D2D1_ELLIPSE rhs)
+	{
+		const float radius = lhs.radiusX + rhs.radiusX;
+
+		const D2D1_POINT_2F toTarget = Math::SubtractVector(lhs.point, rhs.point);
+		const float distance = Math::GetVectorLength(toTarget);
+		
+		const bool result = radius >= distance;
 
 		return result;
 	}

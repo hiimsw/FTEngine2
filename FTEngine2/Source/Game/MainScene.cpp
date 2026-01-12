@@ -54,7 +54,7 @@ void MainScene::Initialize()
 	// 플레이어를 초기화한다.
 	{
 		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
-		mHero.SetTexture(&mRectangleTexture);
+		mHero.SetTexture(&mCircleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 	}
 
@@ -102,9 +102,9 @@ void MainScene::Initialize()
 	// 줌을 초기화한다.
 	{
 		mZoom.SetScale({ .width = 0.7f, .height = 0.7f });
-		mZoom.SetAngle(45.0f);
+		mZoom.SetAngle(0.0f);
 		mZoom.SetUI(true);
-		mZoom.SetTexture(&mRedRectangleTexture);
+		mZoom.SetTexture(&mRedCircleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mZoom);
 	}
 
@@ -576,29 +576,52 @@ bool MainScene::Update(const float deltaTime)
 	// 충돌 처리를 업데이트한다.
 	{
 		// 선과 마우스 커서의 충돌체크를 하고 좌표 이동을 한다.
-		constexpr float offset = 10.0f;
-		static bool isLeft;
-		if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS + offset, getMouseWorldPosition()))
+		constexpr float offset = 5.0f;
+		static bool isLeft, isRight, isDrag;
+
+		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 		{
-			isLeft = true;
-		}
-		else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS + offset, getMouseWorldPosition()))
-		{
-			isLeft = false;
+			if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS + offset, getMouseWorldPosition()))
+			{
+				isLeft = true;
+			}
+			else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS + offset, getMouseWorldPosition()))
+			{
+				isRight = true;
+			}
 		}
 
-	if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
-	{
-		if (isLeft)
+		if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
 		{
-			mLine.Point0 = getMouseWorldPosition();
+			if (isLeft)
+			{
+				mLine.Point0 = getMouseWorldPosition();
+			}
+			if (isRight)
+			{
+				mLine.Point1 = getMouseWorldPosition();
+			}
+		}
+		else if (Input::Get().GetMouseButtonUp(Input::eMouseButton::Left))
+		{
+			isLeft = false;
+			isRight = false;
+		}
+
+
+		const D2D1_ELLIPSE heroEllipse = { .point = mHero.GetPosition(), .radiusX = getCircleFromSprite(mHero).radiusX };
+
+		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
+		const D2D1_ELLIPSE zoomEllipse = { .point = zoomPosition, .radiusX = getCircleFromSprite(mZoom).radiusX };
+		
+		if (Collision::IsCollidedCircleWithCircle(heroEllipse, zoomEllipse))
+		{
+			DEBUG_LOG("ㅇㅇ");
 		}
 		else
 		{
-			mLine.Point1 = getMouseWorldPosition();
+			DEBUG_LOG("ss");
 		}
-	}
-		
 		
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
@@ -866,8 +889,8 @@ D2D1_ELLIPSE MainScene::getCircleFromSprite(const Sprite& sprite)
 	const D2D1_ELLIPSE circle =
 	{
 		.point = position,
-		.radiusX = fabs(rect.right - position.x),
-		.radiusY = fabs(rect.top - position.y)
+		.radiusX = (rect.right - position.x),
+		.radiusY = rect.top - position.y
 	};
 
 	return circle;
