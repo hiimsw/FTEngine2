@@ -749,6 +749,32 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mRunMonsters[i];
+
+			if (not monster.IsActive())
+			{
+				continue;
+			}
+
+			mRunMonsterDamageTimer += deltaTime;
+
+			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
+			{
+				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= mMonsterAttackValue;
+					monster.SetActive(false);
+					mRunMonsterDamageTimer = 0.0f;
+				}
+
+				break;
+			}
+		}
+
+
 		// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{

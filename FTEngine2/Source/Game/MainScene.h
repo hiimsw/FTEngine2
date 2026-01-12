@@ -119,4 +119,5 @@ private:
 	float mGameTimer{};
 
 	float mDamageTimer{};
+	float mRunMonsterDamageTimer{};
 };
