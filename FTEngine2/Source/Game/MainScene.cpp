@@ -238,8 +238,6 @@ bool MainScene::Update(const float deltaTime)
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
 
 		D2D1_POINT_2F toTarget = Math::SubtractVector(zoomPosition, heroPosition);
-		const float heroLength = Math::GetVectorLength(heroPosition);
-		const float zoomLength = Math::GetVectorLength(zoomPosition);
 		const float length = Math::GetVectorLength(toTarget);
 
 		D2D1_SIZE_F zoomScale = mZoom.GetScale();
@@ -578,21 +576,30 @@ bool MainScene::Update(const float deltaTime)
 	// 충돌 처리를 업데이트한다.
 	{
 		// 선과 마우스 커서의 충돌체크를 하고 좌표 이동을 한다.
-		if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS, getMouseWorldPosition()))
+		constexpr float offset = 10.0f;
+		static bool isLeft;
+		if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS + offset, getMouseWorldPosition()))
 		{
-			if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
-			{
-				mLine.Point0 = getMouseWorldPosition();
-			}
+			isLeft = true;
 		}
-		else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS, getMouseWorldPosition()))
+		else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS + offset, getMouseWorldPosition()))
 		{
-			if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
-			{
-				mLine.Point1 = getMouseWorldPosition();
-			}
+			isLeft = false;
 		}
 
+	if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
+	{
+		if (isLeft)
+		{
+			mLine.Point0 = getMouseWorldPosition();
+		}
+		else
+		{
+			mLine.Point1 = getMouseWorldPosition();
+		}
+	}
+		
+		
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
 			mHeroVelocity = {};
