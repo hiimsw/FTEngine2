@@ -7,6 +7,14 @@
 #include "Core/Label.h"
 #include "Core/Font.h"
 
+enum class SHIELD_STATE
+{
+	Growing,
+	Waiting,
+	CoolTime,
+	End
+};
+
 struct GizmoLine
 {
 	D2D1_POINT_2F Point0;
@@ -64,6 +72,9 @@ private:
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
 
+	static constexpr float SHELD_MAX_RADIUS = 150.0f;
+	static constexpr float SHELD_MIN_RADIUS = 50.0f;
+
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
@@ -98,6 +109,9 @@ private:
 	
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+
+	D2D1_SIZE_F mSheldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
+
 	
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
@@ -124,4 +138,6 @@ private:
 
 	float mMonsterDamageTimer{};
 	float mRunMonsterDamageTimer{};
+
+	SHIELD_STATE mShieldState = SHIELD_STATE::End;
 };

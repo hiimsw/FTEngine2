@@ -63,9 +63,9 @@ void MainScene::Initialize()
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
 			mBullets[i].SetPosition(mHero.GetPosition());
-			mBullets[i].SetScale({ .width = 0.7f, .height = 0.7f });
+			mBullets[i].SetCenter({ .x = -0.5f, .y = 0.0f });
 			mBullets[i].SetActive(false);
-			mBullets[i].SetTexture(&mCircleTexture);
+			mBullets[i].SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullets[i]);
 		}
 	}
@@ -113,9 +113,9 @@ void MainScene::Initialize()
 	// 줌을 초기화한다.
 	{
 		mZoom.SetScale({ .width = 0.7f, .height = 0.7f });
-		mZoom.SetAngle(0.0f);
+		mZoom.SetAngle(45.0f);
 		mZoom.SetUI(true);
-		mZoom.SetTexture(&mRedCircleTexture);
+		mZoom.SetTexture(&mRedRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mZoom);
 	}
 
@@ -423,7 +423,7 @@ bool MainScene::Update(const float deltaTime)
 		{
 			static float lifetime[BULLET_COUNT];
 			static D2D1_POINT_2F direction[BULLET_COUNT];
-
+			static float angleDegree;
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
@@ -442,11 +442,14 @@ bool MainScene::Update(const float deltaTime)
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					direction[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
+					angleDegree = Math::ConvertRadianToDegree(atan2f(direction[i].y, direction[i].x));
+
 					direction[i] = Math::RotateVector(direction[i], getRandom(-5.0f, 5.0f));
 					direction[i] = Math::NormalizeVector(direction[i]);
 
 					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
+					
 
 					// 카메라 흔들기를 시작합니다.
 					{
@@ -471,7 +474,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], MOVE_SPEED * deltaTime);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], bullet.GetScale().width * 0.5f * MOVE_SPEED * deltaTime);
 				const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
 				lifetime[i] += deltaTime;
@@ -479,9 +482,79 @@ bool MainScene::Update(const float deltaTime)
 				{
 					bullet.SetActive(false);
 				}
-
+				
 				mPrevBulletPosition[i] = bullet.GetPosition();
 				bullet.SetPosition(position);
+				bullet.SetAngle(angleDegree);
+			}
+		}
+
+		// 쉴드 키를 업데이트한다.
+		{
+			static float speed;
+			static float sheldTimer;
+			static float sheldCoolTimer;
+
+			if (mShieldState == SHIELD_STATE::End
+				and Input::Get().GetKeyDown('R'))
+			{
+				mShieldState = SHIELD_STATE::Growing;
+			}
+
+			switch (mShieldState)
+			{	
+			case SHIELD_STATE::Growing:
+			{
+				speed = 50.0f;
+
+				mSheldScale.width += speed * deltaTime;
+				mSheldScale.height += speed * deltaTime;
+				
+				if (mSheldScale.width >= SHELD_MAX_RADIUS)
+				{
+					mShieldState = SHIELD_STATE::Waiting;
+				}
+
+				break;
+			}
+
+			case SHIELD_STATE::Waiting:
+			{
+				speed = 0.0f;
+
+				sheldTimer += deltaTime;
+
+				if (sheldTimer >= 3.0f)
+				{
+					mSheldScale.width = SHELD_MIN_RADIUS;
+					mSheldScale.height = SHELD_MIN_RADIUS;
+
+					sheldTimer = 0.0f;
+
+					mShieldState = SHIELD_STATE::CoolTime;
+				}
+
+				break;
+			}
+
+			case SHIELD_STATE::CoolTime:
+			{
+				sheldCoolTimer += deltaTime;
+
+				if (sheldCoolTimer >= 2.0f)
+				{
+					sheldCoolTimer = 0.0f;
+					mShieldState = SHIELD_STATE::End;
+				}
+
+				break;
+			}
+
+			case SHIELD_STATE::End:
+				break;
+
+			default:
+				break;
 			}
 		}
 	}
@@ -927,6 +1000,15 @@ bool MainScene::Update(const float deltaTime)
 void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
 {
 	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
+
+	// Hero 쉴드를 그린다.
+	{
+		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
+		renderTarget->SetTransform(worldView);
+
+		const D2D1_ELLIPSE ellipse{ .radiusX = mSheldScale.width * 0.5f, .radiusY = mSheldScale.height * 0.5f };
+		renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+	}
 
 	// 라인을 그린다.
 	{
