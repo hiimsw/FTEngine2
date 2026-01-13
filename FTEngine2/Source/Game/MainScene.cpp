@@ -575,15 +575,16 @@ bool MainScene::Update(const float deltaTime)
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 			
-				mRunMonsterBars[i].SetPosition({ .x = spawnPositionCircle.x -10.0f, .y = spawnPositionCircle.y - 20.0f });
+				mRunMonsterBars[i].SetPosition({ .x = spawnPositionCircle.x - 10.0f, .y = spawnPositionCircle.y - 20.0f });
+				mRunMonsterBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
 				mRunMonsterBars[i].SetActive(true);
-
+				
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetActive(true);
 
 				mRunMonsterSpawnTimer = 0.0f;
 				
-				// 스폰할 때 속도를 먼저 세팅한다.
+				// 스폰할 때 속도와 방향을 세팅한다.
 				speed[i] = getRandom(10.0f, 80.0f);
 				
 				const D2D1_POINT_2F monsterPosition = monster.GetPosition();
@@ -598,22 +599,19 @@ bool MainScene::Update(const float deltaTime)
 		// 이동한다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			mBarStartTimers[i] += deltaTime;
-
 			Sprite& monster = mRunMonsters[i];
 			if (not monster.IsActive())
 			{
 				mRunMonsterBars[i].SetActive(false);
-				mBarStartTimers[i] = 0.0f;
-
 				continue;
 			}
 
 			if (Math::GetVectorLength(toTarget) != 0.0f)
-			{
+			{			
 				// 출발바가 꽉 차면 돌진 몬스터는 이동한다.
-				constexpr float COOL_TIME = 2.0f;
-				float barSpeed = RUN_MONSTER_WIDTH / COOL_TIME;
+				constexpr float START_COOL_TIME = 2.0f;
+
+				float barSpeed = RUN_MONSTER_WIDTH / START_COOL_TIME;
 				D2D1_SIZE_F scale = mRunMonsterBars[i].GetScale();
 
 				if (scale.width > RUN_MONSTER_WIDTH)
@@ -624,7 +622,7 @@ bool MainScene::Update(const float deltaTime)
 				scale.width += barSpeed * deltaTime;
 				mRunMonsterBars[i].SetScale(scale);
 
-				if (mBarStartTimers[i] >= COOL_TIME)
+				if (mRunMonsterBars[i].GetScale().width >= RUN_MONSTER_WIDTH)
 				{
 					const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], speed[i] * deltaTime);
 

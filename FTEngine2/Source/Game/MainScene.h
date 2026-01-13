@@ -70,6 +70,7 @@ private:
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
+
 	static constexpr uint32_t BULLET_COUNT = 6;
 
 	static constexpr int32_t mMonsterAttackValue = 10;
@@ -118,7 +119,6 @@ private:
 
 	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
-	float mBarStartTimers[RUN_MONSTER_COUNT]{};
 
 	float mGameTimer{};
 
