@@ -26,7 +26,7 @@ void MainScene::Initialize()
 		SetLabels(&mLabels);
 
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
-		mHpFont.Initialize(GetHelper(), L"Arial", 20.0f);
+		mDefaultFont.Initialize(GetHelper(), L"Arial", 20.0f);
 		mEndingFont.Initialize(GetHelper(), L"Arial", 50.0f);
 
 		Input::Get().SetCursorVisible(false);
@@ -146,7 +146,7 @@ void MainScene::Initialize()
 		mLabels.push_back(&mTimerLabel);
 
 		// 현재 체력
-		mHpValueLabel.SetFont(&mHpFont);
+		mHpValueLabel.SetFont(&mDefaultFont);
 		mHpValueLabel.SetUI(true);
 
 		const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
@@ -157,6 +157,19 @@ void MainScene::Initialize()
 		mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
 		mLabels.push_back(&mHpValueLabel);
+
+		// 쉴드 쿨 타이머
+		{
+			mShieldLabel.SetFont(&mDefaultFont);
+			mShieldLabel.SetUI(true);
+
+			D2D1_POINT_2F position = mHpValueLabel.GetPosition();
+			D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y + 10.0f };
+			mShieldLabel.SetPosition(offset);
+
+			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mShieldLabel);
+		}
 
 		// 엔딩
 		mEndingLabel.SetFont(&mEndingFont);
@@ -424,6 +437,7 @@ bool MainScene::Update(const float deltaTime)
 			static float lifetime[BULLET_COUNT];
 			static D2D1_POINT_2F direction[BULLET_COUNT];
 			static float angleDegree;
+
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
@@ -492,13 +506,27 @@ bool MainScene::Update(const float deltaTime)
 		// 쉴드 키를 업데이트한다.
 		{
 			static float speed;
-			static float sheldTimer;
-			static float sheldCoolTimer;
+			static float shieldTimer;
+			static float shieldCoolTimer;
 
 			if (mShieldState == SHIELD_STATE::End
 				and Input::Get().GetKeyDown('R'))
 			{
+				mShieldLabel.SetActive(true);
 				mShieldState = SHIELD_STATE::Growing;
+			}
+
+			mShieldTotalElapsedTimer += deltaTime;
+
+			uint32_t seconds = uint32_t(mShieldTotalElapsedTimer) % 60;
+
+			if (mShieldState != SHIELD_STATE::End)
+			{
+				mShieldLabel.SetText(std::to_wstring(8 - seconds));
+			}
+			else
+			{
+				mShieldLabel.SetActive(false);
 			}
 
 			switch (mShieldState)
@@ -522,14 +550,14 @@ bool MainScene::Update(const float deltaTime)
 			{
 				speed = 0.0f;
 
-				sheldTimer += deltaTime;
+				shieldTimer += deltaTime;
 
-				if (sheldTimer >= 3.0f)
+				if (shieldTimer >= 3.0f)
 				{
 					mSheldScale.width = SHELD_MIN_RADIUS;
 					mSheldScale.height = SHELD_MIN_RADIUS;
 
-					sheldTimer = 0.0f;
+					shieldTimer = 0.0f;
 
 					mShieldState = SHIELD_STATE::CoolTime;
 				}
@@ -539,12 +567,14 @@ bool MainScene::Update(const float deltaTime)
 
 			case SHIELD_STATE::CoolTime:
 			{
-				sheldCoolTimer += deltaTime;
+				shieldCoolTimer += deltaTime;
 
-				if (sheldCoolTimer >= 2.0f)
+				if (shieldCoolTimer >= 2.0f)
 				{
-					sheldCoolTimer = 0.0f;
+					shieldCoolTimer = 0.0f;
 					mShieldState = SHIELD_STATE::End;
+
+					mShieldTotalElapsedTimer = 0.0f;
 				}
 
 				break;
@@ -1098,6 +1128,21 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				renderTarget->DrawEllipse(circleSize, mYellowBrush);
 			}
 		}
+	}
+
+	// 쉴드 스킬 UI를 그린다.
+	{
+		const Matrix3x2F worldView = Transformation::getWorldMatrix
+		(
+			{ 
+				.x = float(Constant::Get().GetWidth()) * 0.5f, 
+				.y = 110.0f
+			}
+		);
+		renderTarget->SetTransform(worldView);
+
+		const D2D1_ELLIPSE ellipse{ .radiusX = 25.0f, .radiusY = 25.0f };
+		renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
 	}
 }
 

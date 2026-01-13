@@ -110,9 +110,6 @@ private:
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
 
-	D2D1_SIZE_F mSheldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
-
-	
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
 
@@ -123,13 +120,14 @@ private:
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;
 
+	Font mDefaultFont{};
 	Font mTimerFont{};
-	Font mHpFont{};
 	Font mEndingFont{};
 
 	Label mTimerLabel{};
 	Label mHpValueLabel{};
 	Label mEndingLabel{};
+	Label mShieldLabel{};
 
 	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
@@ -139,5 +137,8 @@ private:
 	float mMonsterDamageTimer{};
 	float mRunMonsterDamageTimer{};
 
+	D2D1_SIZE_F mSheldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
 	SHIELD_STATE mShieldState = SHIELD_STATE::End;
+	
+	float mShieldTotalElapsedTimer{};
 };
