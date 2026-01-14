@@ -58,6 +58,7 @@ private:
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
+	Texture mBlueRectangleTexture{};
 
 	Texture mCircleTexture{};
 	Texture mRedCircleTexture{};
@@ -79,6 +80,8 @@ private:
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
 
+	static constexpr float UI_DASH_SCALE_WIDTH = 3.0f;
+
 	static constexpr uint32_t MONSTER_COUNT = 1;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
 
@@ -90,7 +93,9 @@ private:
 	static constexpr float MIN_ANGLE = 0.0f;
 	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
 
-	static constexpr float RADIUS = 5.0f;
+	static constexpr float TEST_RADIUS = 5.0f;
+
+	static constexpr uint32_t DASH_MAX_COUNT = 3;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -102,6 +107,8 @@ private:
 	Sprite mZoom{};
 	Sprite mBullets[BULLET_COUNT]{};
 	Sprite mHpBar{};
+	Sprite mDashValue{};
+	Sprite mDashUiBar{};
 
 	GizmoLine mLine{};
 
@@ -109,6 +116,8 @@ private:
 	
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+
+	int32_t mDashCount = DASH_MAX_COUNT;
 
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;

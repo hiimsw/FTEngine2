@@ -46,6 +46,7 @@ void MainScene::Initialize()
 	{
 		mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 		mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
+		mBlueRectangleTexture.Initialize(GetHelper(), L"Resource/BlueRectangle.png");
 
 		mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
 		mRedCircleTexture.Initialize(GetHelper(), L"Resource/RedCircle.png");
@@ -137,34 +138,55 @@ void MainScene::Initialize()
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
 	}
 
+	// Dash 게이지를 초기화한다.
+	{
+		mDashUiBar.SetPosition({ .x = -330.0f, .y = UI_CENTER_POSITION_Y });
+		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
+		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mDashUiBar.SetUI(true);
+		mDashUiBar.SetTexture(&mRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashUiBar);
+
+		mDashValue.SetPosition({ .x = -330.0f, .y = UI_CENTER_POSITION_Y });
+		mDashValue.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
+		mDashValue.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mDashValue.SetUI(true);
+		mDashValue.SetTexture(&mBlueRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashValue);
+	}
+
 	// 라벨을 초기화한다.
 	{
 		// 타이머
-		mTimerLabel.SetFont(&mTimerFont);
-		mTimerLabel.SetUI(true);
-		mTimerLabel.SetPosition({ .x = 0.0f, .y = UI_CENTER_POSITION_Y });
-		mLabels.push_back(&mTimerLabel);
+		{
+			mTimerLabel.SetFont(&mTimerFont);
+			mTimerLabel.SetUI(true);
+			mTimerLabel.SetPosition({ .x = 0.0f, .y = UI_CENTER_POSITION_Y });
+			mLabels.push_back(&mTimerLabel);
+		}
 
 		// 현재 체력
-		mHpValueLabel.SetFont(&mDefaultFont);
-		mHpValueLabel.SetUI(true);
+		{
+			mHpValueLabel.SetFont(&mDefaultFont);
+			mHpValueLabel.SetUI(true);
 
-		const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
-		constexpr float OFFSET_Y = 50.0f;
-		D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSET_Y };
-		mHpValueLabel.SetPosition(offset);
+			const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
+			constexpr float OFFSET_Y = 50.0f;
+			D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSET_Y };
+			mHpValueLabel.SetPosition(offset);
 
-		mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
-		mLabels.push_back(&mHpValueLabel);
+			mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
+			mLabels.push_back(&mHpValueLabel);
+		}
 
 		// 쉴드 쿨 타이머
 		{
 			mShieldLabel.SetFont(&mDefaultFont);
 			mShieldLabel.SetUI(true);
 
-			D2D1_POINT_2F position = mHpValueLabel.GetPosition();
-			D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y + 10.0f };
+			const D2D1_POINT_2F position = mHpValueLabel.GetPosition();
+			const D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y + 10.0f };
 			mShieldLabel.SetPosition(offset);
 
 			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
@@ -172,12 +194,14 @@ void MainScene::Initialize()
 		}
 
 		// 엔딩
-		mEndingLabel.SetFont(&mEndingFont);
-		mEndingLabel.SetUI(true);
-		mEndingLabel.SetPosition({});
-		mEndingLabel.SetActive(false);
-		mEndingLabel.SetText(L"GameOver");
-		mLabels.push_back(&mEndingLabel);
+		{
+			mEndingLabel.SetFont(&mEndingFont);
+			mEndingLabel.SetUI(true);
+			mEndingLabel.SetPosition({});
+			mEndingLabel.SetActive(false);
+			mEndingLabel.SetText(L"GameOver");
+			mLabels.push_back(&mEndingLabel);
+		}
 	}
 
 	mLine.Point0 = { .x = -200.0f, .y = 200.0f };
@@ -393,7 +417,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// TODO(이수원): 코드 정리가 필요하다.
-			constexpr float MAX_DASH_SPEED = 400.0f;
+			constexpr float MAX_DASH_SPEED = 600.0f;
 			constexpr float DASH_ACC = 30.0f;
 			static float dashSpeed = 0.0f;
 			static bool bDashing = false;
@@ -408,13 +432,23 @@ bool MainScene::Update(const float deltaTime)
 
 				if (not bDashing and Input::Get().GetKeyDown(VK_SPACE))
 				{
-					bDashing = true;
 					dashDirection = direction;
+
+					if (mDashCount != 0)
+					{
+						mDashCount--;
+						bDashing = true;
+					}
 				}
 
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
 				mHero.SetPosition(position);
 			}
+
+			D2D1_SIZE_F dashScale = mDashValue.GetScale();
+			static float dashTimer;
+
+			DEBUG_LOG("%d", mDashCount);
 
 			if (bDashing)
 			{
@@ -430,6 +464,18 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
 			}
+
+			dashTimer += deltaTime;
+
+			if ((dashTimer >= 3.0f)
+				and (mDashCount < DASH_MAX_COUNT))
+			{
+				mDashCount++;
+				dashTimer = 0.0f;
+			}
+
+			dashScale.width = UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH;
+			mDashValue.SetScale(dashScale);
 		}
 
 		// 총알을 업데이트한다.
@@ -777,11 +823,11 @@ bool MainScene::Update(const float deltaTime)
 
 		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 		{
-			if (Collision::IsCollidedCircleWithPoint(mLine.Point0, RADIUS + offset, getMouseWorldPosition()))
+			if (Collision::IsCollidedCircleWithPoint(mLine.Point0, TEST_RADIUS + offset, getMouseWorldPosition()))
 			{
 				isLeft = true;
 			}
-			else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, RADIUS + offset, getMouseWorldPosition()))
+			else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, TEST_RADIUS + offset, getMouseWorldPosition()))
 			{
 				isRight = true;
 			}
@@ -1062,12 +1108,16 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		renderTarget->SetTransform(worldView);
 
 		const D2D1_ELLIPSE ellipse{ .radiusX = mShieldScale.width * 0.5f, .radiusY = mShieldScale.height * 0.5f };
-		renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+
+		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting)
+		{
+			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+		}
 	}
 
 	// 라인을 그린다.
 	{
-		const D2D1_ELLIPSE CIRCLE{ .radiusX = RADIUS, .radiusY = RADIUS };
+		const D2D1_ELLIPSE CIRCLE{ .radiusX = TEST_RADIUS, .radiusY = TEST_RADIUS };
 
 		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
 		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
@@ -1179,6 +1229,7 @@ void MainScene::Finalize()
 
 	mRectangleTexture.Finalize();
 	mRedRectangleTexture.Finalize();
+	mBlueRectangleTexture.Finalize();
 
 	mCircleTexture.Finalize();
 	mRedCircleTexture.Finalize();
