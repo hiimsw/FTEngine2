@@ -434,7 +434,6 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static float lifetime[BULLET_COUNT];
 			static D2D1_POINT_2F direction[BULLET_COUNT];
 			static float angleDegree;
 
@@ -461,7 +460,6 @@ bool MainScene::Update(const float deltaTime)
 					direction[i] = Math::RotateVector(direction[i], getRandom(-5.0f, 5.0f));
 					direction[i] = Math::NormalizeVector(direction[i]);
 
-					lifetime[i] = 0.0f;
 					bullet.SetActive(true);
 					
 
@@ -491,12 +489,6 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], bullet.GetScale().width * 0.5f * MOVE_SPEED * deltaTime);
 				const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
-				lifetime[i] += deltaTime;
-				if (lifetime[i] >= 1.5f)
-				{
-					bullet.SetActive(false);
-				}
-				
 				mPrevBulletPosition[i] = bullet.GetPosition();
 				bullet.SetPosition(position);
 				bullet.SetAngle(angleDegree);
@@ -829,6 +821,7 @@ bool MainScene::Update(const float deltaTime)
 			//DEBUG_LOG("ss");
 		}
 		
+		// 플레이어와 원의 충돌을 한다.
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
 			mHeroVelocity = {};
@@ -849,6 +842,21 @@ bool MainScene::Update(const float deltaTime)
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, 2.0f));
 			mHero.SetPosition(heroPosition);
+		}
+
+		// 총알과 원이 충돌한다.
+		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+		{
+			Sprite& bullet = mBullets[i];
+			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, bullet.GetPosition()))
+			{
+				bullet.SetActive(false);
+			}
+
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, bullet.GetPosition()))
+			{
+				bullet.SetActive(false);
+			}
 		}
 
 		constexpr float DAMAGE_COOL_TIMER = 0.5f;
