@@ -79,8 +79,8 @@ private:
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
 
-	static constexpr uint32_t MONSTER_COUNT = 10;
-	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
+	static constexpr uint32_t MONSTER_COUNT = 1;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
 
 	static constexpr uint32_t BULLET_COUNT = 6;
 
@@ -137,7 +137,7 @@ private:
 	float mMonsterDamageTimer{};
 	float mRunMonsterDamageTimer{};
 
-	D2D1_SIZE_F mSheldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
+	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
 	SHIELD_STATE mShieldState = SHIELD_STATE::End;
 	
 	float mShieldTotalElapsedTimer{};

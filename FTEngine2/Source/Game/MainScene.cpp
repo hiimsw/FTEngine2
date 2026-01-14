@@ -535,10 +535,10 @@ bool MainScene::Update(const float deltaTime)
 			{
 				speed = 50.0f;
 
-				mSheldScale.width += speed * deltaTime;
-				mSheldScale.height += speed * deltaTime;
+				mShieldScale.width += speed * deltaTime;
+				mShieldScale.height += speed * deltaTime;
 				
-				if (mSheldScale.width >= SHELD_MAX_RADIUS)
+				if (mShieldScale.width >= SHELD_MAX_RADIUS)
 				{
 					mShieldState = SHIELD_STATE::Waiting;
 				}
@@ -554,8 +554,8 @@ bool MainScene::Update(const float deltaTime)
 
 				if (shieldTimer >= 3.0f)
 				{
-					mSheldScale.width = SHELD_MIN_RADIUS;
-					mSheldScale.height = SHELD_MIN_RADIUS;
+					mShieldScale.width = SHELD_MIN_RADIUS;
+					mShieldScale.height = SHELD_MIN_RADIUS;
 
 					shieldTimer = 0.0f;
 
@@ -1007,6 +1007,25 @@ bool MainScene::Update(const float deltaTime)
 				targetMonster->SetActive(false);
 			}
 		}
+
+		// 플레이어 쉴드와 몬스터가 충돌하면 몬스터는 삭제된다.
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, monster.GetPosition()))
+			{
+				monster.SetActive(false);
+			}
+		}
+
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Sprite& runMonster = mRunMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, runMonster.GetPosition()))
+			{
+				runMonster.SetActive(false);
+			}
+		}
 	}
 
 	// 카메라를 업데이트한다.
@@ -1036,7 +1055,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
-		const D2D1_ELLIPSE ellipse{ .radiusX = mSheldScale.width * 0.5f, .radiusY = mSheldScale.height * 0.5f };
+		const D2D1_ELLIPSE ellipse{ .radiusX = mShieldScale.width * 0.5f, .radiusY = mShieldScale.height * 0.5f };
 		renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
 	}
 
