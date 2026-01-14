@@ -559,6 +559,8 @@ bool MainScene::Update(const float deltaTime)
 			static float speed;
 			static float shieldTimer;
 			static float shieldCoolTimer;
+			constexpr float SHIELD_SKILL_DURATION = 3.0f;
+			static float blinkTimer;
 
 			if (mShieldState == SHIELD_STATE::End
 				and Input::Get().GetKeyDown('R'))
@@ -602,12 +604,31 @@ bool MainScene::Update(const float deltaTime)
 
 				shieldTimer += deltaTime;
 
-				if (shieldTimer >= 3.0f)
+				// 1초 남았을 때 깜빡거린다.
+				if ((SHIELD_SKILL_DURATION - shieldTimer) <= 1.0f)
+				{
+					blinkTimer += deltaTime;
+
+					if (blinkTimer >= 0.1f)
+					{
+						blinkOn = !blinkOn;
+						blinkTimer = 0.0f;
+					}
+				}
+				else
+				{
+					blinkOn = true;
+				}
+
+				if (shieldTimer >= SHIELD_SKILL_DURATION)
 				{
 					mShieldScale.width = SHELD_MIN_RADIUS;
 					mShieldScale.height = SHELD_MIN_RADIUS;
 
 					shieldTimer = 0.0f;
+
+					blinkTimer = 0.0f;
+					blinkOn = true;
 
 					mShieldState = SHIELD_STATE::CoolTime;
 				}
@@ -1122,7 +1143,8 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 		const D2D1_ELLIPSE ellipse{ .radiusX = mShieldScale.width * 0.5f, .radiusY = mShieldScale.height * 0.5f };
 
-		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting)
+		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting
+			and blinkOn)
 		{
 			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
 		}

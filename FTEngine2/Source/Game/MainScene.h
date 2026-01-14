@@ -151,4 +151,6 @@ private:
 	SHIELD_STATE mShieldState = SHIELD_STATE::End;
 	
 	float mShieldTotalElapsedTimer{};
+
+	bool blinkOn = false;
 };
