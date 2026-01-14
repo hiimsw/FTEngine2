@@ -509,8 +509,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			mShieldTotalElapsedTimer += deltaTime;
-
-			uint32_t seconds = uint32_t(mShieldTotalElapsedTimer) % 60;
+			const uint32_t seconds = uint32_t(mShieldTotalElapsedTimer) % 60;
 
 			if (mShieldState != SHIELD_STATE::End)
 			{
@@ -565,14 +564,13 @@ bool MainScene::Update(const float deltaTime)
 				{
 					shieldCoolTimer = 0.0f;
 					mShieldState = SHIELD_STATE::End;
-
-					mShieldTotalElapsedTimer = 0.0f;
 				}
 
 				break;
 			}
 
 			case SHIELD_STATE::End:
+				mShieldTotalElapsedTimer = 0.0f;
 				break;
 
 			default:
