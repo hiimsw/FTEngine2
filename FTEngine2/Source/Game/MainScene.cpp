@@ -57,6 +57,13 @@ void MainScene::Initialize()
 		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
 		mHero.SetTexture(&mCircleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+
+		// 플레이어 dash 그림자를 초기화한다.
+		mDashShadow.SetPosition({ mHero.GetPosition().x - 20.0f, mHero.GetPosition().y });
+		mDashShadow.SetActive(false);
+		mDashShadow.SetOpacity(0.5f);
+		mDashShadow.SetTexture(&mCircleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mDashShadow);
 	}
 
 	// 총알을 초기화한다.
@@ -438,6 +445,7 @@ bool MainScene::Update(const float deltaTime)
 					{
 						mDashCount--;
 						bDashing = true;
+						mDashShadow.SetActive(true);
 					}
 				}
 
@@ -459,10 +467,15 @@ bool MainScene::Update(const float deltaTime)
 				{
 					dashSpeed = 0.0f;
 					bDashing = false;
+					mDashShadow.SetActive(false);
 				}
 
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
+				
+				const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+				constexpr float OFFSET = 20.0f;
+				mDashShadow.SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET)));
 			}
 
 			dashTimer += deltaTime;

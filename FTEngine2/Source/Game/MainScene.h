@@ -109,6 +109,7 @@ private:
 	Sprite mHpBar{};
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
+	Sprite mDashShadow{};
 
 	GizmoLine mLine{};
 
