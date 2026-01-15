@@ -67,16 +67,16 @@ void MainScene::Initialize()
 	}
 
 	// 총알을 초기화한다.
+	for (Sprite& bullet : mBullets)
 	{
-		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
-		{
-			mBullets[i].SetPosition(mHero.GetPosition());
-			mBullets[i].SetCenter({ .x = -0.5f, .y = 0.0f });
-			mBullets[i].SetActive(false);
-			mBullets[i].SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Player)].push_back(&mBullets[i]);
-		}
+		bullet.SetPosition(mHero.GetPosition());
+		bullet.SetCenter({ .x = -0.5f, .y = 0.0f });
+		bullet.SetScale({ 2.5f, 0.1f });
+		bullet.SetActive(false);
+		bullet.SetTexture(&mRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&bullet);
 	}
+	
 
 	// 몬스터를 초기화한다.
 	{
@@ -295,31 +295,12 @@ bool MainScene::Update(const float deltaTime)
 		D2D1_POINT_2F toTarget = Math::SubtractVector(zoomPosition, heroPosition);
 		const float length = Math::GetVectorLength(toTarget);
 
-		D2D1_SIZE_F zoomScale = mZoom.GetScale();
-		float scaleSpeed = 0.8f;
+		constexpr float MAX_SCALE = 0.7f;
+		constexpr float MIN_SCALE = 0.5f;
+		constexpr float MAX_DISTANCE = 300.0f;
+		float zoomScale = std::clamp(length / MAX_DISTANCE, MIN_SCALE, MAX_SCALE);
 
-		if (fabs(length) <= MIN_LENGTH)
-		{
-			if (zoomScale.width >= 1.3f)
-			{
-				scaleSpeed = 0.0f;
-			}
-
-			zoomScale.width += scaleSpeed * deltaTime;
-			zoomScale.height += scaleSpeed * deltaTime;
-		}
-		else
-		{
-			if (zoomScale.width <= 0.7f)
-			{
-				scaleSpeed = 0.0f;
-			}
-
-			zoomScale.width -= scaleSpeed * deltaTime;
-			zoomScale.height -= scaleSpeed * deltaTime;
-		}
-
-		mZoom.SetScale(zoomScale);
+		mZoom.SetScale({ .width = zoomScale, .height = zoomScale });
 	}
 
 	// 플레이어를 업데이트한다.
@@ -456,8 +437,6 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_SIZE_F dashScale = mDashValue.GetScale();
 			static float dashTimer;
 
-			DEBUG_LOG("%d", mDashCount);
-
 			if (bDashing)
 			{
 				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
@@ -494,7 +473,7 @@ bool MainScene::Update(const float deltaTime)
 		// 총알을 업데이트한다.
 		{
 			static D2D1_POINT_2F direction[BULLET_COUNT];
-			static float angleDegree;
+			static float opacity[BULLET_COUNT];
 
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
@@ -514,13 +493,15 @@ bool MainScene::Update(const float deltaTime)
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					direction[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
-					angleDegree = Math::ConvertRadianToDegree(atan2f(direction[i].y, direction[i].x));
-
 					direction[i] = Math::RotateVector(direction[i], getRandom(-5.0f, 5.0f));
 					direction[i] = Math::NormalizeVector(direction[i]);
 
+					float angle = Math::ConvertRadianToDegree(atan2f(direction[i].y, direction[i].x));
+					bullet.SetAngle(-angle);
+
 					bullet.SetActive(true);
-					
+
+					opacity[i] = 0.0f;
 
 					// 카메라 흔들기를 시작합니다.
 					{
@@ -534,7 +515,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			constexpr float MOVE_SPEED = 1200.0f;
+			constexpr float MOVE_SPEED = 700.0f;
 
 			// 총알을 이동시킨다.
 			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
@@ -550,7 +531,9 @@ bool MainScene::Update(const float deltaTime)
 
 				mPrevBulletPosition[i] = bullet.GetPosition();
 				bullet.SetPosition(position);
-				bullet.SetAngle(angleDegree);
+
+				opacity[i] += 10.0f * deltaTime;
+				bullet.SetOpacity(opacity[i]);
 			}
 		}
 
@@ -685,7 +668,7 @@ bool MainScene::Update(const float deltaTime)
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 				monster.SetPosition(spawnPositionCircle);
-				monster.SetActive(true);
+				//monster.SetActive(true);
 
 				mMonsterSpawnTimer = 0.0f;		
 
@@ -752,7 +735,7 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterBars[i].SetActive(true);
 				
 				monster.SetPosition(spawnPositionCircle);
-				monster.SetActive(true);
+				//monster.SetActive(true);
 
 				mRunMonsterSpawnTimer = 0.0f;
 
