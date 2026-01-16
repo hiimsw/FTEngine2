@@ -82,8 +82,8 @@ private:
 
 	static constexpr float UI_DASH_SCALE_WIDTH = 3.0f;
 
-	static constexpr uint32_t MONSTER_COUNT = 1;
-	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
+	static constexpr uint32_t MONSTER_COUNT = 10;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
 
 	static constexpr uint32_t BULLET_COUNT = 6;
 
@@ -153,4 +153,6 @@ private:
 	float mShieldTotalElapsedTimer{};
 
 	bool blinkOn = false;
+
+	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
 };

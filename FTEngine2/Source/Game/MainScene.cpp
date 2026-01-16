@@ -472,7 +472,6 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static D2D1_POINT_2F direction[BULLET_COUNT];
 			static float opacity[BULLET_COUNT];
 
 			// 총알을 스폰한다.
@@ -492,11 +491,11 @@ bool MainScene::Update(const float deltaTime)
 
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
-					direction[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
-					direction[i] = Math::RotateVector(direction[i], getRandom(-5.0f, 5.0f));
-					direction[i] = Math::NormalizeVector(direction[i]);
+					mBulletDirections[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
+					mBulletDirections[i] = Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
+					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
 
-					float angle = Math::ConvertRadianToDegree(atan2f(direction[i].y, direction[i].x));
+					float angle = Math::ConvertRadianToDegree(atan2f(mBulletDirections[i].y, mBulletDirections[i].x));
 					bullet.SetAngle(-angle);
 
 					bullet.SetActive(true);
@@ -526,7 +525,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const D2D1_POINT_2F velocity = Math::ScaleVector(direction[i], bullet.GetScale().width * 0.5f * MOVE_SPEED * deltaTime);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(mBulletDirections[i], bullet.GetScale().width * 0.5f * MOVE_SPEED * deltaTime);
 				const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
 
 				mPrevBulletPosition[i] = bullet.GetPosition();
@@ -668,7 +667,7 @@ bool MainScene::Update(const float deltaTime)
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 				monster.SetPosition(spawnPositionCircle);
-				//monster.SetActive(true);
+				monster.SetActive(true);
 
 				mMonsterSpawnTimer = 0.0f;		
 
@@ -735,7 +734,7 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterBars[i].SetActive(true);
 				
 				monster.SetPosition(spawnPositionCircle);
-				//monster.SetActive(true);
+				monster.SetActive(true);
 
 				mRunMonsterSpawnTimer = 0.0f;
 
@@ -1023,10 +1022,17 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
+			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
+			const D2D1_POINT_2F endPosition = 
+			{ 
+				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength, 
+				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength 
+			};
+
 			const Line line =
 			{
 				.Point0 = mPrevBulletPosition[i],
-				.Point1 = bullet.GetPosition()
+				.Point1 = endPosition
 			};
 
 			Sprite* targetMonster = nullptr;
