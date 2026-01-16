@@ -288,7 +288,6 @@ bool MainScene::Update(const float deltaTime)
 		const D2D1_POINT_2F screenPosition = Math::SubtractVector(mousePosition, centerOffset);
 		mZoom.SetPosition(screenPosition);
 
-		constexpr float MIN_LENGTH = 120.0f;
 		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
 
@@ -492,7 +491,11 @@ bool MainScene::Update(const float deltaTime)
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					mBulletDirections[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
-					mBulletDirections[i] = Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
+					
+					const float length = Math::GetVectorLength(mBulletDirections[i]);
+					mBulletDirections[i] = (length >= 200.0f) ? 
+						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f)) : Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
+
 					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
 
 					float angle = Math::ConvertRadianToDegree(atan2f(mBulletDirections[i].y, mBulletDirections[i].x));
