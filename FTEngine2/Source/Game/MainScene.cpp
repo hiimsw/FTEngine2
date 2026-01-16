@@ -567,14 +567,14 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			switch (mShieldState)
-			{	
+			{
 			case SHIELD_STATE::Growing:
 			{
 				speed = 50.0f;
 
 				mShieldScale.width += speed * deltaTime;
 				mShieldScale.height += speed * deltaTime;
-				
+
 				if (mShieldScale.width >= SHELD_MAX_RADIUS)
 				{
 					mShieldState = SHIELD_STATE::Waiting;
@@ -596,13 +596,13 @@ bool MainScene::Update(const float deltaTime)
 
 					if (blinkTimer >= 0.1f)
 					{
-						blinkOn = !blinkOn;
+						mShieldBlinkOn = !mShieldBlinkOn;
 						blinkTimer = 0.0f;
 					}
 				}
 				else
 				{
-					blinkOn = true;
+					mShieldBlinkOn = true;
 				}
 
 				if (shieldTimer >= SHIELD_SKILL_DURATION)
@@ -613,7 +613,7 @@ bool MainScene::Update(const float deltaTime)
 					shieldTimer = 0.0f;
 
 					blinkTimer = 0.0f;
-					blinkOn = true;
+					mShieldBlinkOn = true;
 
 					mShieldState = SHIELD_STATE::CoolTime;
 				}
@@ -638,6 +638,72 @@ bool MainScene::Update(const float deltaTime)
 				mShieldTotalElapsedTimer = 0.0f;
 				break;
 
+			default:
+				break;
+			}
+		}
+
+		// 플레이어 주변을 공전하는 스킬을 업데이트한다.
+		{			
+			constexpr float SPEED = 300.0f;
+
+			if (Input::Get().GetKeyDown('Q')
+				and mOrbitState == ORBIT_STATE::End)
+			{
+				mOrbitState = ORBIT_STATE::Rotating;
+			}
+
+			static float orbitOnTimer;
+			static float orbitCoolTimer;
+			static float tempTimer;
+			constexpr float ORBIT_ON_TIMER = 4.0f;
+			constexpr float ORBIT_COOL_TIMER = 3.0f;
+
+			switch (mOrbitState)
+			{
+
+			case ORBIT_STATE::Rotating: 
+			{
+				orbitOnTimer += deltaTime;
+				mOrbitAngle += SPEED * deltaTime;
+
+				// 1초 남았을 때 깜빡거린다.
+				if ((ORBIT_ON_TIMER - orbitOnTimer) <= 1.0f)
+				{
+					tempTimer += deltaTime;
+
+					if (tempTimer >= 0.1f)
+					{
+						mOrbitBlinkOn = !mOrbitBlinkOn;
+						tempTimer = 0.0f;
+					}
+				}
+				else
+				{
+					mOrbitBlinkOn = true;
+				}
+
+				if (orbitOnTimer >= ORBIT_ON_TIMER)
+				{
+					orbitOnTimer = 0.0f;
+					mOrbitState = ORBIT_STATE::CoolTime;
+				}
+
+				break;
+			}
+			case ORBIT_STATE::CoolTime:
+			{
+				orbitCoolTimer += deltaTime;
+
+				if (orbitCoolTimer >= ORBIT_COOL_TIMER)
+				{
+					orbitCoolTimer = 0.0f;
+					mOrbitState = ORBIT_STATE::End;
+				}
+				break;
+			}
+			case ORBIT_STATE::End:
+				break;
 			default:
 				break;
 			}
@@ -1131,7 +1197,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 {
 	ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
 
-	// Hero 쉴드를 그린다.
+	// Hero 쉴드 스킬을 그린다.
 	{
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
@@ -1139,8 +1205,24 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const D2D1_ELLIPSE ellipse{ .radiusX = mShieldScale.width * 0.5f, .radiusY = mShieldScale.height * 0.5f };
 
 		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting
-			and blinkOn)
+			and mShieldBlinkOn)
 		{
+			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+		}
+	}
+
+	// Hero 공전 스킬을 그린다.
+	{
+		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
+		renderTarget->SetTransform(worldView);
+
+		const D2D1_POINT_2F localOffset = { .x = 0.0f, .y = -60.0f };
+		const D2D1_POINT_2F rotated = Math::RotateVector(localOffset, -mOrbitAngle);	// 반시계로 맞춘다.
+
+		if (mOrbitState == ORBIT_STATE::Rotating
+			and mOrbitBlinkOn)
+		{
+			const D2D1_ELLIPSE ellipse{ .point = rotated, .radiusX = 5.0f, .radiusY = 5.0f };
 			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
 		}
 	}

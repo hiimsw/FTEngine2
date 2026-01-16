@@ -15,6 +15,13 @@ enum class SHIELD_STATE
 	End
 };
 
+enum class ORBIT_STATE
+{
+	Rotating,
+	CoolTime,
+	End
+};
+
 struct GizmoLine
 {
 	D2D1_POINT_2F Point0;
@@ -72,30 +79,23 @@ private:
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
 	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
-
 	static constexpr float SHELD_MAX_RADIUS = 150.0f;
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
-
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
-
 	static constexpr float UI_DASH_SCALE_WIDTH = 3.0f;
+	static constexpr float MIN_ANGLE = 0.0f;
+	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
+	static constexpr float TEST_RADIUS = 5.0f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
-
 	static constexpr uint32_t BULLET_COUNT = 6;
+	static constexpr uint32_t DASH_MAX_COUNT = 3;
 
 	static constexpr int32_t mMonsterAttackValue = 10;
 	static constexpr int32_t mHeroHpMax = 1500;
-
-	static constexpr float MIN_ANGLE = 0.0f;
-	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
-
-	static constexpr float TEST_RADIUS = 5.0f;
-
-	static constexpr uint32_t DASH_MAX_COUNT = 3;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -113,15 +113,20 @@ private:
 
 	GizmoLine mLine{};
 
-	int32_t mHeroHpValue = mHeroHpMax;
-	
-	D2D1_POINT_2F mHeroVelocity{};
-	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
-
-	int32_t mDashCount = DASH_MAX_COUNT;
-
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
+
+	int32_t mHeroHpValue = mHeroHpMax;
+	int32_t mDashCount = DASH_MAX_COUNT;
+
+	D2D1_POINT_2F mHeroVelocity{};
+	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
+	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
+
+	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
+	
+	SHIELD_STATE mShieldState = SHIELD_STATE::End;
+	ORBIT_STATE mOrbitState = ORBIT_STATE::End;
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	ID2D1SolidColorBrush* mYellowBrush = nullptr;
@@ -129,6 +134,8 @@ private:
 
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;
+	bool mShieldBlinkOn = false;
+	bool mOrbitBlinkOn = false;
 
 	Font mDefaultFont{};
 	Font mTimerFont{};
@@ -141,18 +148,9 @@ private:
 
 	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
-
 	float mGameTimer{};
-
 	float mMonsterDamageTimer{};
-	float mRunMonsterDamageTimer{};
-
-	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
-	SHIELD_STATE mShieldState = SHIELD_STATE::End;
-	
+	float mRunMonsterDamageTimer{};	
 	float mShieldTotalElapsedTimer{};
-
-	bool blinkOn = false;
-
-	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
+	float mOrbitAngle{};
 };
