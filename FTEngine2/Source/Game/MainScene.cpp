@@ -442,7 +442,7 @@ bool MainScene::Update(const float deltaTime)
 				mHero.SetPosition(position);
 			}
 
-			D2D1_SIZE_F dashScale = mDashValue.GetScale();
+			D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
 			static float dashTimer;
 
 			if (bDashing)
@@ -474,8 +474,8 @@ bool MainScene::Update(const float deltaTime)
 				dashTimer = 0.0f;
 			}
 
-			dashScale.width = UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH;
-			mDashValue.SetScale(dashScale);
+			dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH,  dashScale.y }, 8.0f * deltaTime);
+			mDashValue.SetScale({ dashScale.x, dashScale.y });
 		}
 
 		// 총알을 업데이트한다.
@@ -1021,9 +1021,15 @@ bool MainScene::Update(const float deltaTime)
 
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
-			{
+			{					
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
-				{
+				{	
+					// 카메라 흔들기를 시작합니다.
+					const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
+					const float duration = getRandom(0.5f, 0.8f);
+					const float frequency = getRandom(50.0f, 60.0f);
+					initializeCameraShake(amplitude, duration, frequency);
+
 					mHeroHpValue -= mMonsterAttackValue;
 					monster.SetActive(false);
 					mMonsterDamageTimer = 0.0f;
@@ -1035,6 +1041,16 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
+				D2D1_POINT_2F scale = { monster.GetScale().width, monster.GetScale().height };
+				scale = Math::LerpVector(scale, { 1.5f, 1.5f }, 20.0f * deltaTime);
+
+				//if (mMonsterDamageScaleTimer >= 2.0f)
+				{
+					scale = Math::LerpVector(scale, { 0.1f, 0.1f }, 50.0f * deltaTime);
+				}
+
+				monster.SetScale({ scale.x, scale.y });
+
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
@@ -1447,15 +1463,15 @@ void MainScene::initializeCameraShake(const float amplitude, const float duratio
 	mCameraShakeTime = 0.0f;
 	mCameraShakeTimer = 0.0f;
 
-	if (amplitude > mCameraShakeAmplitude)
+	//if (amplitude > mCameraShakeAmplitude)
 	{
 		mCameraShakeAmplitude = amplitude;
 	}
-	if (duration > mCameraShakeDuration)
+	//if (duration > mCameraShakeDuration)
 	{
 		mCameraShakeDuration = duration;
 	}
-	if (frequency > mCameraShakeFrequency)
+	//if (frequency > mCameraShakeFrequency)
 	{
 		mCameraShakeFrequency = frequency;
 	}
