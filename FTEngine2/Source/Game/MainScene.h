@@ -136,6 +136,7 @@ private:
 	bool mIsColliderKeyDown = false;
 	bool mShieldBlinkOn = false;
 	bool mOrbitBlinkOn = false;
+	bool mIsMonsterToBullets[MONSTER_COUNT]{};
 
 	Font mDefaultFont{};
 	Font mTimerFont{};

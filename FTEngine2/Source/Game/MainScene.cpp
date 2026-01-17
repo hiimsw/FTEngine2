@@ -512,7 +512,7 @@ bool MainScene::Update(const float deltaTime)
 
 					bullet.SetActive(true);
 
-					opacity[i] = 0.0f;
+					bullet.SetOpacity(0.0f);
 
 					// 카메라 흔들기를 시작합니다.
 					{
@@ -543,8 +543,11 @@ bool MainScene::Update(const float deltaTime)
 				mPrevBulletPosition[i] = bullet.GetPosition();
 				bullet.SetPosition(position);
 
-				opacity[i] += 10.0f * deltaTime;
-				bullet.SetOpacity(opacity[i]);
+				float opacity = bullet.GetOpacity();
+
+				D2D1_POINT_2F lerp = { opacity, opacity };
+				lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
+				bullet.SetOpacity(lerp.x);
 			}
 		}
 
@@ -754,11 +757,11 @@ bool MainScene::Update(const float deltaTime)
 
 				// 스폰할 때 속도도 같이 초기화한다.
 				speed[i] = getRandom(10.0f, 80.0f);
-
 				break;
 			}
 		}
 
+		static float scaleT = 0.0f;
 		// 몬스터를 이동시킨다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -1162,7 +1165,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (targetMonster != nullptr)
 			{
-				bullet.SetActive(false);
+				bullet.SetActive(false);	
 				targetMonster->SetActive(false);
 			}
 		}
