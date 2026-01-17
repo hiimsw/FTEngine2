@@ -1446,9 +1446,19 @@ void MainScene::initializeCameraShake(const float amplitude, const float duratio
 {
 	mCameraShakeTime = 0.0f;
 	mCameraShakeTimer = 0.0f;
-	mCameraShakeAmplitude = amplitude;
-	mCameraShakeDuration = duration;
-	mCameraShakeFrequency = frequency;
+
+	if (amplitude > mCameraShakeAmplitude)
+	{
+		mCameraShakeAmplitude = amplitude;
+	}
+	if (duration > mCameraShakeDuration)
+	{
+		mCameraShakeDuration = duration;
+	}
+	if (frequency > mCameraShakeFrequency)
+	{
+		mCameraShakeFrequency = frequency;
+	}
 }
 
 D2D1_POINT_2F MainScene::updateCameraShake(const float deltaTime)
