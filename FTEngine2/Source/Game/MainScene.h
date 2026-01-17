@@ -107,6 +107,7 @@ private:
 	Sprite mZoom{};
 	Sprite mBullets[BULLET_COUNT]{};
 	Sprite mHpBar{};
+	Sprite mHpUiBar{};
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
 	Sprite mDashShadow{};

@@ -146,6 +146,13 @@ void MainScene::Initialize()
 
 	// HP바를 초기화한다.
 	{
+		mHpUiBar.SetPosition({ .x = -UI_HP_SCALE_WIDTH * 0.5f * mRectangleTexture.GetWidth(), .y = -UI_CENTER_POSITION_Y });
+		mHpUiBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mHpUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mHpUiBar.SetUI(true);
+		mHpUiBar.SetTexture(&mRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
+
 		mHpBar.SetPosition({ .x = -UI_HP_SCALE_WIDTH * 0.5f * mRedRectangleTexture.GetWidth(), .y = -UI_CENTER_POSITION_Y });
 		mHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
 		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
