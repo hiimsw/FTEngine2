@@ -77,6 +77,15 @@ void MainScene::Initialize()
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&bullet);
 	}
 	
+	// 공전 스킬을 초기화한다.
+	{
+		mOrbitEllipse =
+		{
+			.point = { .x = 0.0f, .y = -80.0f },
+			.radiusX = 5.0f,
+			.radiusY = 5.0f,
+		};
+	}
 
 	// 몬스터를 초기화한다.
 	{
@@ -450,7 +459,7 @@ bool MainScene::Update(const float deltaTime)
 
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
-				
+
 				const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 				constexpr float OFFSET = 20.0f;
 				mDashShadow.SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET)));
@@ -477,7 +486,7 @@ bool MainScene::Update(const float deltaTime)
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
-				{					
+				{
 					Sprite& bullet = mBullets[i];
 					if (bullet.IsActive())
 					{
@@ -491,9 +500,9 @@ bool MainScene::Update(const float deltaTime)
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					mBulletDirections[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
-					
+
 					const float length = Math::GetVectorLength(mBulletDirections[i]);
-					mBulletDirections[i] = (length >= 200.0f) ? 
+					mBulletDirections[i] = (length >= 200.0f) ?
 						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f)) : Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
 
 					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
@@ -644,9 +653,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 플레이어 주변을 공전하는 스킬을 업데이트한다.
-		{			
-			constexpr float SPEED = 300.0f;
-
+		{
 			if (Input::Get().GetKeyDown('Q')
 				and mOrbitState == ORBIT_STATE::End)
 			{
@@ -658,14 +665,19 @@ bool MainScene::Update(const float deltaTime)
 			static float tempTimer;
 			constexpr float ORBIT_ON_TIMER = 4.0f;
 			constexpr float ORBIT_COOL_TIMER = 3.0f;
+			constexpr float SPEED = 400.0f;
 
 			switch (mOrbitState)
 			{
 
-			case ORBIT_STATE::Rotating: 
+			case ORBIT_STATE::Rotating:
 			{
 				orbitOnTimer += deltaTime;
 				mOrbitAngle += SPEED * deltaTime;
+
+				constexpr float OFFSET = 120.0f;
+				mOrbitEllipse.point = { .x = 0.0f, .y = -OFFSET };
+				mOrbitEllipse.point = Math::RotateVector(mOrbitEllipse.point, -mOrbitAngle);
 
 				// 1초 남았을 때 깜빡거린다.
 				if ((ORBIT_ON_TIMER - orbitOnTimer) <= 1.0f)
@@ -1173,6 +1185,25 @@ bool MainScene::Update(const float deltaTime)
 				runMonster.SetActive(false);
 			}
 		}
+
+		// 플레이어 주변을 공전하는 원과 몬스터가 충돌하면 몬스터는 삭제된다.
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, monster.GetPosition()))
+			{
+ 				monster.SetActive(false);
+			}
+		}
+
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mRunMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, monster.GetPosition()))
+			{
+				monster.SetActive(false);
+			}
+		}
 	}
 
 	// 카메라를 업데이트한다.
@@ -1202,7 +1233,11 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
-		const D2D1_ELLIPSE ellipse{ .radiusX = mShieldScale.width * 0.5f, .radiusY = mShieldScale.height * 0.5f };
+		const D2D1_ELLIPSE ellipse = 
+		{ 
+			.radiusX = mShieldScale.width * 0.5f, 
+			.radiusY = mShieldScale.height * 0.5f
+		};
 
 		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting
 			and mShieldBlinkOn)
@@ -1213,17 +1248,14 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Hero 공전 스킬을 그린다.
 	{
+
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
-
-		const D2D1_POINT_2F localOffset = { .x = 0.0f, .y = -60.0f };
-		const D2D1_POINT_2F rotated = Math::RotateVector(localOffset, -mOrbitAngle);	// 반시계로 맞춘다.
 
 		if (mOrbitState == ORBIT_STATE::Rotating
 			and mOrbitBlinkOn)
 		{
-			const D2D1_ELLIPSE ellipse{ .point = rotated, .radiusX = 5.0f, .radiusY = 5.0f };
-			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+			renderTarget->DrawEllipse(mOrbitEllipse, mYellowBrush, 2.0f);
 		}
 	}
 

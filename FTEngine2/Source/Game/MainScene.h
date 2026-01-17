@@ -153,4 +153,6 @@ private:
 	float mRunMonsterDamageTimer{};	
 	float mShieldTotalElapsedTimer{};
 	float mOrbitAngle{};
+
+	D2D1_ELLIPSE mOrbitEllipse{};
 };
