@@ -78,7 +78,7 @@ private:
 	float mCameraShakeFrequency = 0.0f;
 
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
-	static constexpr float IN_BOUNDARY_RADIUS = 100.0f;
+	static constexpr float IN_BOUNDARY_RADIUS = 30.0f;
 	static constexpr float SHELD_MAX_RADIUS = 150.0f;
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
 	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
@@ -91,7 +91,7 @@ private:
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
-	static constexpr uint32_t BULLET_COUNT = 6;
+	static constexpr uint32_t BULLET_COUNT = 20;
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
 
 	static constexpr int32_t mMonsterAttackValue = 10;
@@ -125,7 +125,7 @@ private:
 	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
 
 	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
-	
+
 	SHIELD_STATE mShieldState = SHIELD_STATE::End;
 	ORBIT_STATE mOrbitState = ORBIT_STATE::End;
 
@@ -152,7 +152,7 @@ private:
 	float mRunMonsterSpawnTimer{};
 	float mGameTimer{};
 	float mMonsterDamageTimer{};
-	float mRunMonsterDamageTimer{};	
+	float mRunMonsterDamageTimer{};
 	float mShieldTotalElapsedTimer{};
 	float mOrbitAngle{};
 

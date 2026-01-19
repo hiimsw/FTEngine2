@@ -55,6 +55,7 @@ void MainScene::Initialize()
 	// 플레이어를 초기화한다.
 	{
 		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
+		mHero.SetScale({ .width = 0.75f, .height = 0.75f });
 		mHero.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
@@ -89,7 +90,7 @@ void MainScene::Initialize()
 
 	// 몬스터를 초기화한다.
 	{
-		constexpr float MONSTER_SCALE = 0.7f;
+		constexpr float MONSTER_SCALE = 1.2f;
 
 		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mMonsters)
@@ -103,7 +104,7 @@ void MainScene::Initialize()
 
 	// 돌진 몬스터를 초기화한다.
 	{
-		constexpr float MONSTER_SCALE = 0.4f;
+		constexpr float MONSTER_SCALE = 0.5f;
 
 		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mRunMonsters)
