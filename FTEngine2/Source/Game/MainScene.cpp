@@ -490,9 +490,12 @@ bool MainScene::Update(const float deltaTime)
 		// 총알을 업데이트한다.
 		{
 			static float opacity[BULLET_COUNT];
+			static float cooltime = 0.0f;
+
+			cooltime = max(cooltime - deltaTime, 0.0f);
 
 			// 총알을 스폰한다.
-			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+			if (Input::Get().GetMouseButton(Input::eMouseButton::Left) && cooltime <= 0.001f)
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
@@ -533,9 +536,11 @@ bool MainScene::Update(const float deltaTime)
 
 					break;
 				}
+
+				cooltime = 0.12f;
 			}
 
-			constexpr float MOVE_SPEED = 700.0f;
+			constexpr float MOVE_SPEED = 1500.0f;
 
 			// 총알을 이동시킨다.
 			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
