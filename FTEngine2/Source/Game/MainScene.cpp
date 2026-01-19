@@ -61,6 +61,7 @@ void MainScene::Initialize()
 
 		// 플레이어 dash 그림자를 초기화한다.
 		mDashShadow.SetPosition({ mHero.GetPosition().x - 20.0f, mHero.GetPosition().y });
+		mDashShadow.SetScale(mHero.GetScale());
 		mDashShadow.SetActive(false);
 		mDashShadow.SetOpacity(0.5f);
 		mDashShadow.SetTexture(&mRectangleTexture);
@@ -377,8 +378,8 @@ bool MainScene::Update(const float deltaTime)
 
 		// Case 2) 최종 이동 구현
 		{
-			constexpr float MAX_SPEED = 280.0f;
-			constexpr float ACC = 20.0f; // 가속도
+			constexpr float MAX_SPEED = 300.0f;
+			constexpr float ACC = 32.0f; // 가속도
 
 			const int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
 			const int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
