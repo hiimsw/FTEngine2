@@ -90,6 +90,8 @@ private:
 	static constexpr float TEST_RADIUS = 5.0f;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
+	static constexpr float START_LERP_TIME = 0.2f;
+	static constexpr float DURING_SMALL_TIME = 0.3f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
@@ -162,6 +164,8 @@ private:
 	float mOrbitAngle{};
 	float mMonsterDieTimer;
 	float mRunMonsterDieTimer;
+	float mInBoundaryToMonsterTimer;
+	float mInBoundaryToRunMonsterTimer;
 
 	D2D1_ELLIPSE mOrbitEllipse{};
 };

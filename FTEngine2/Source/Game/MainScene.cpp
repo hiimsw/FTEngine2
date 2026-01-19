@@ -1074,20 +1074,25 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
-				D2D1_POINT_2F scale = { monster.GetScale().width, monster.GetScale().height };
-				scale = Math::LerpVector(scale, { 1.5f, 1.5f }, 20.0f * deltaTime);
+				mInBoundaryToMonsterTimer += deltaTime;
 
-				//if (mMonsterDamageScaleTimer >= 2.0f)
+				D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
+				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
+				monster.SetScale({ startScale.x, startScale.y });
+
+				float t = (mInBoundaryToMonsterTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
+				if (t >= 1.0f)
 				{
-					scale = Math::LerpVector(scale, { 0.1f, 0.1f }, 50.0f * deltaTime);
+					monster.SetActive(false);
+					mInBoundaryToMonsterTimer = 0.0f;
 				}
-
-				monster.SetScale({ scale.x, scale.y });
 
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
-					monster.SetActive(false);
 					mMonsterDamageTimer = 0.0f;
 				}
 
@@ -1097,8 +1102,8 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mRunMonsters[i];
-			if (not monster.IsActive())
+			Sprite& runMonster = mRunMonsters[i];
+			if (not runMonster.IsActive())
 			{
 				continue;
 			}
@@ -1106,12 +1111,12 @@ bool MainScene::Update(const float deltaTime)
 			mRunMonsterDamageTimer += deltaTime;
 
 			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
-			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
 			{
 				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
-					monster.SetActive(false);
+					runMonster.SetActive(false);
 					mRunMonsterDamageTimer = 0.0f;
 				}
 
@@ -1119,12 +1124,27 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
+				mInBoundaryToRunMonsterTimer += deltaTime;
+
+				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
+				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
+				runMonster.SetScale({ startScale.x, startScale.y });
+
+				float t = (mInBoundaryToRunMonsterTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
+				if (t >= 1.0f)
+				{
+					runMonster.SetActive(false);
+					mInBoundaryToRunMonsterTimer = 0.0f;
+				}
+
 				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= mMonsterAttackValue;
-					monster.SetActive(false);
 					mRunMonsterDamageTimer = 0.0f;
 				}
 
@@ -1132,11 +1152,11 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
-			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, monster.GetPosition()))
+			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
 				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
-					monster.SetActive(false);
+					runMonster.SetActive(false);
 					mRunMonsterDamageTimer = 0.0f;
 				}
 
@@ -1225,9 +1245,6 @@ bool MainScene::Update(const float deltaTime)
 				bullet.SetActive(false);	
 			}
 		}
-
-		constexpr float START_LERP_TIME = 0.2f;
-		constexpr float DURING_SMALL_TIME = 0.3f;
 
 		// 총알과 몬스터가 충돌하면, 몬스터는 사라진다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
