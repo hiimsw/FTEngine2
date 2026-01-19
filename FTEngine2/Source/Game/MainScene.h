@@ -88,6 +88,8 @@ private:
 	static constexpr float MIN_ANGLE = 0.0f;
 	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
 	static constexpr float TEST_RADIUS = 5.0f;
+	static constexpr float MONSTER_SCALE = 1.2f;
+	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
@@ -111,6 +113,8 @@ private:
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
 	Sprite mDashShadow{};
+
+	Sprite mTemp{};
 
 	GizmoLine mLine{};
 
@@ -138,6 +142,7 @@ private:
 	bool mShieldBlinkOn = false;
 	bool mOrbitBlinkOn = false;
 	bool mIsMonsterToBullets[MONSTER_COUNT]{};
+	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
 
 	Font mDefaultFont{};
 	Font mTimerFont{};
@@ -155,6 +160,8 @@ private:
 	float mRunMonsterDamageTimer{};
 	float mShieldTotalElapsedTimer{};
 	float mOrbitAngle{};
+	float mMonsterDieTimer;
+	float mRunMonsterDieTimer;
 
 	D2D1_ELLIPSE mOrbitEllipse{};
 };
