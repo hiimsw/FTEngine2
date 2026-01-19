@@ -81,7 +81,7 @@ private:
 	static constexpr float IN_BOUNDARY_RADIUS = 30.0f;
 	static constexpr float SHELD_MAX_RADIUS = 150.0f;
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
-	static constexpr float UI_CENTER_POSITION_Y = 250.0f;
+	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
 	static constexpr float UI_DASH_SCALE_WIDTH = 3.0f;

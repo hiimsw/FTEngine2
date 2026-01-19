@@ -155,7 +155,7 @@ void MainScene::Initialize()
 		mHpUiBar.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
 
-		mHpBar.SetPosition({ .x = -UI_HP_SCALE_WIDTH * 0.5f * mRedRectangleTexture.GetWidth(), .y = -UI_CENTER_POSITION_Y });
+		mHpBar.SetPosition(mHpUiBar.GetPosition());
 		mHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
 		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpBar.SetUI(true);
@@ -165,14 +165,14 @@ void MainScene::Initialize()
 
 	// Dash 게이지를 초기화한다.
 	{
-		mDashUiBar.SetPosition({ .x = -330.0f, .y = UI_CENTER_POSITION_Y });
+		mDashUiBar.SetPosition({ .x = -600.0f, .y = UI_CENTER_POSITION_Y });
 		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
 		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashUiBar.SetUI(true);
 		mDashUiBar.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashUiBar);
 
-		mDashValue.SetPosition({ .x = -330.0f, .y = UI_CENTER_POSITION_Y });
+		mDashValue.SetPosition(mDashUiBar.GetPosition());
 		mDashValue.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
 		mDashValue.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashValue.SetUI(true);
@@ -211,7 +211,7 @@ void MainScene::Initialize()
 			mShieldLabel.SetUI(true);
 
 			const D2D1_POINT_2F position = mHpValueLabel.GetPosition();
-			const D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y + 10.0f };
+			const D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y };
 			mShieldLabel.SetPosition(offset);
 
 			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
