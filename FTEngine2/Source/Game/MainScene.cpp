@@ -928,8 +928,9 @@ bool MainScene::Update(const float deltaTime)
 
 		if (prevHp != mHeroHpValue)
 		{
-			const D2D1_SIZE_F prevScale{ .width = UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, .height = 1.0f };
-			mHpBar.SetScale(prevScale);
+			D2D1_POINT_2F scale = { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, 1.0f };
+			scale = Math::LerpVector(scale, { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, 1.0f }, 10.0f * deltaTime);
+			mHpBar.SetScale({ scale.x, scale.y });
 
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
 

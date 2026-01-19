@@ -99,7 +99,7 @@ private:
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
 
 	static constexpr int32_t mMonsterAttackValue = 10;
-	static constexpr int32_t mHeroHpMax = 1500;
+	static constexpr int32_t mHeroHpMax = 100;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
