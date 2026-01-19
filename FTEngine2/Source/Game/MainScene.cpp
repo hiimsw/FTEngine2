@@ -775,7 +775,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		static float scaleT = 0.0f;
 		// 몬스터를 이동시킨다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -801,7 +800,8 @@ bool MainScene::Update(const float deltaTime)
 
 	// 돌진 몬스터를 업데이트한다.
 	{
-		static D2D1_POINT_2F velocity[RUN_MONSTER_COUNT];
+		static D2D1_POINT_2F moveDirection[RUN_MONSTER_COUNT];
+		static float moveSpeed[RUN_MONSTER_COUNT];
 		static bool isMoveables[RUN_MONSTER_COUNT]{};
 
 		// 몬스터를 일정 시간마다 스폰한다.
@@ -878,18 +878,23 @@ bool MainScene::Update(const float deltaTime)
 					D2D1_POINT_2F direction = Math::SubtractVector(heroPosition, monsterPosition);
 					direction = Math::NormalizeVector(direction);
 
-					const float speed = getRandom(10.0f, 80.0f);
-					velocity[i] = Math::ScaleVector(direction, speed);
+					moveSpeed[i] = 0.0f;
+
+					// TODO: 길이가 0인 경우 예외 처리가 필요하다.
+					moveDirection[i] = Math::SubtractVector(heroPosition, monsterPosition);
+					moveDirection[i] = Math::NormalizeVector(moveDirection[i]);
 
 					mRunMonsterBars[i].SetActive(false);
 					isMoveables[i] = true;
 				}
 			}
 
-			const D2D1_POINT_2F adjustedVelocity = Math::ScaleVector(velocity[i], deltaTime);
+			constexpr float MOVE_ACC = 5.0f;
+			moveSpeed[i] = min(moveSpeed[i] + MOVE_ACC, 400.0f);
+			D2D1_POINT_2F velocity = Math::ScaleVector(moveDirection[i], moveSpeed[i] * deltaTime);
 
 			D2D1_POINT_2F position = monster.GetPosition();
-			position = Math::AddVector(position, adjustedVelocity);
+			position = Math::AddVector(position, velocity);
 			monster.SetPosition(position);
 		}
 	}
