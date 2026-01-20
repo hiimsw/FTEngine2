@@ -116,7 +116,8 @@ private:
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
 	Sprite mDashShadow[SHADOW_COUNT]{};
-	Sprite mSlowMonsters[SLOW_MONSTER_COUNT];
+	Sprite mSlowMonsters[SLOW_MONSTER_COUNT]{};
+	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
 
 	GizmoLine mLine{};
 

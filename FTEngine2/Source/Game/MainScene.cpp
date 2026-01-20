@@ -141,6 +141,24 @@ void MainScene::Initialize()
 			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 		}
+
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
+			{
+				Sprite& shadow = mSlowMonsterShadows[i][j];
+
+				shadow.SetScale({ .width = 0.4f, .height = 0.4f});
+
+				float opacity = 0.8f - (float(j) / SHADOW_COUNT);
+				shadow.SetOpacity(opacity);
+
+				shadow.SetActive(false);
+				shadow.SetTexture(&mRectangleTexture);
+
+				mSpriteLayers[uint32_t(Layer::Monster)].push_back(&shadow);
+			}
+		}
 	}
 
 	// 줌을 초기화한다.
@@ -1019,22 +1037,6 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			timer += deltaTime;
-
-			if (timer <= 4.0f)
-			{
-				speed = 40.0f;
-			}
-			else if (timer <= 9.0f)
-			{
-				speed = 0.0f;
-			}
-			else
-			{
-				timer = 0.0f;
-				speed = 40.0f;
-			}
-
 			D2D1_POINT_2F position = slowMonster.GetPosition();
 			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
 			direction = Math::NormalizeVector(direction);
@@ -1042,6 +1044,32 @@ bool MainScene::Update(const float deltaTime)
 
 			position = Math::AddVector(position, velocity);
 			slowMonster.SetPosition(position);
+
+			timer += deltaTime;
+
+			for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
+			{
+				Sprite& shadow = mSlowMonsterShadows[i][j];
+
+				if (timer <= 4.0f)
+				{
+					speed = 40.0f;
+					shadow.SetActive(true);
+				}
+				else if (timer <= 9.0f)
+				{
+					speed = 0.0f;
+					shadow.SetActive(false);
+				}
+				else
+				{
+					timer = 0.0f;
+					speed = 40.0f;
+					shadow.SetActive(true);
+				}
+
+				shadow.SetPosition(Math::SubtractVector(position, Math::ScaleVector(direction, 5.0f * (j + 1))));
+			}
 		}
 	}
 
