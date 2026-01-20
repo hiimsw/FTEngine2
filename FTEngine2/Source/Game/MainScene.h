@@ -123,6 +123,7 @@ private:
 
 	int32_t mHeroHpValue = HERO_MAX_HP;
 	int32_t mDashCount = DASH_MAX_COUNT;
+	int32_t mBulletValue = BULLET_COUNT;
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};

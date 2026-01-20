@@ -28,6 +28,7 @@ void MainScene::Initialize()
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
 		mDefaultFont.Initialize(GetHelper(), L"Arial", 20.0f);
 		mEndingFont.Initialize(GetHelper(), L"Arial", 50.0f);
+		mBulletFont.Initialize(GetHelper(), L"Arial", 30.0f);
 
 		Input::Get().SetCursorVisible(false);
 		Input::Get().SetCursorLockState(Input::eCursorLockState::Confined);
@@ -220,6 +221,20 @@ void MainScene::Initialize()
 
 			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 			mLabels.push_back(&mShieldLabel);
+		}
+
+		// 총알 개수
+		{
+			mBulletLabel.SetFont(&mBulletFont);
+			mBulletLabel.SetUI(true);
+
+			const D2D1_POINT_2F position = mTimerLabel.GetPosition();
+			const D2D1_POINT_2F offset = { .x = position.x - 360.0f, .y = position.y };
+			mBulletLabel.SetPosition(offset);
+
+			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
+			mBulletLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mBulletLabel);
 		}
 
 		// 엔딩
@@ -507,12 +522,15 @@ bool MainScene::Update(const float deltaTime)
 		// 총알을 업데이트한다.
 		{
 			static float opacity[BULLET_COUNT];
-			static float cooltime = 0.0f;
+			static float shootingCoolTimer = 0.0f;
+			static float coolTimer = 0.0f;
 
-			cooltime = max(cooltime - deltaTime, 0.0f);
+			shootingCoolTimer = max(shootingCoolTimer - deltaTime, 0.0f);
 
 			// 총알을 스폰한다.
-			if (Input::Get().GetMouseButton(Input::eMouseButton::Left) && cooltime <= 0.001f)
+			if (Input::Get().GetMouseButton(Input::eMouseButton::Left) 
+				and shootingCoolTimer <= 0.001f
+				and mBulletValue != 0)
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
@@ -543,6 +561,8 @@ bool MainScene::Update(const float deltaTime)
 
 					bullet.SetOpacity(0.0f);
 
+					mBulletValue--;
+
 					// 카메라 흔들기를 시작합니다.
 					{
 						const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
@@ -554,7 +574,18 @@ bool MainScene::Update(const float deltaTime)
 					break;
 				}
 
-				cooltime = 0.12f;
+				shootingCoolTimer = 0.12f;
+			}
+
+			if (mBulletValue <= 0)
+			{
+				coolTimer += deltaTime;
+
+				if (coolTimer >= 3.0f)
+				{
+					mBulletValue = BULLET_COUNT;
+					coolTimer = 0.0f;
+				}
 			}
 
 			constexpr float MOVE_SPEED = 1500.0f;
@@ -932,8 +963,6 @@ bool MainScene::Update(const float deltaTime)
 
 	// 플레이어 체력바를 업데이트한다.
 	{
-		static int32_t prevHp = mHeroHpValue;
-
 		if (mHeroHpValue <= 0)
 		{
 			mEndingLabel.SetActive(true);
@@ -942,6 +971,8 @@ bool MainScene::Update(const float deltaTime)
 			mHeroVelocity = {};
 			mHero.SetActive(false);
 		}
+
+		static int32_t prevHp = mHeroHpValue;
 
 		if (prevHp != mHeroHpValue)
 		{
@@ -952,6 +983,18 @@ bool MainScene::Update(const float deltaTime)
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 
 			prevHp = mHeroHpValue;
+		}
+	}
+
+	// 총알 라벨을 업데이트한다.
+	{
+		static uint32_t prevBulletCount = mBulletValue;
+
+		if (prevBulletCount != mBulletValue)
+		{
+			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
+			
+			prevBulletCount = mBulletValue;
 		}
 	}
 
