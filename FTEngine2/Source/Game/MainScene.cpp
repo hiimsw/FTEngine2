@@ -469,7 +469,6 @@ bool MainScene::Update(const float deltaTime)
 				mHero.SetPosition(position);
 			}
 
-			D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
 			static float dashScaleTimer;
 			static float dashTimer[SHADOW_COUNT];
 
@@ -506,17 +505,17 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			dashScaleTimer += deltaTime;
 
-			if ((dashScaleTimer >= 3.0f)
-				and (mDashCount < DASH_MAX_COUNT))
+			if (mDashCount < DASH_MAX_COUNT)
 			{
-				mDashCount++;
-				dashScaleTimer = 0.0f;
-			}
+				dashScaleTimer += deltaTime;
 
-			dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH,  dashScale.y }, 8.0f * deltaTime);
-			mDashValue.SetScale({ dashScale.x, dashScale.y });
+				if (dashScaleTimer >= 3.0f)
+				{
+					mDashCount++;
+					dashScaleTimer = 0.0f;
+				}
+			}
 		}
 
 		// 총알을 업데이트한다.
@@ -961,8 +960,9 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
-	// 플레이어 체력바를 업데이트한다.
+	// 플레이어 체력에 관련된 부분을 업데이트한다.
 	{
+		// 플레이어가 죽었을 때 종료된다.
 		if (mHeroHpValue <= 0)
 		{
 			mEndingLabel.SetActive(true);
@@ -974,9 +974,10 @@ bool MainScene::Update(const float deltaTime)
 
 		static int32_t prevHp = mHeroHpValue;
 
+		// 플레이어 체력바를 업데이트한다.
 		if (prevHp != mHeroHpValue)
 		{
-			D2D1_POINT_2F scale = { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / HERO_MAX_HP, 1.0f };
+			D2D1_POINT_2F scale = { mHpBar.GetScale().width, mHpBar.GetScale().height };
 			scale = Math::LerpVector(scale, { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / HERO_MAX_HP, 1.0f }, 10.0f * deltaTime);
 			mHpBar.SetScale({ scale.x, scale.y });
 
@@ -984,6 +985,13 @@ bool MainScene::Update(const float deltaTime)
 
 			prevHp = mHeroHpValue;
 		}
+	}
+
+	// 플레이어 대쉬바를 업데이트한다.
+	{
+		D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
+		dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH,  dashScale.y }, 8.0f * deltaTime);
+		mDashValue.SetScale({ dashScale.x, dashScale.y });
 	}
 
 	// 총알 라벨을 업데이트한다.
