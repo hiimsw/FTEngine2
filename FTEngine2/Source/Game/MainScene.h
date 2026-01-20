@@ -100,6 +100,7 @@ private:
 	static constexpr int32_t MONSTER_ATTACK_VALUE = 10;
 	static constexpr int32_t HERO_MAX_HP = 1500;
 	static constexpr int32_t SHADOW_COUNT = 5;
+	static constexpr int32_t SLOW_MONSTER_COUNT = 5;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -115,6 +116,7 @@ private:
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
 	Sprite mDashShadow[SHADOW_COUNT]{};
+	Sprite mSlowMonsters[SLOW_MONSTER_COUNT];
 
 	GizmoLine mLine{};
 
@@ -158,6 +160,7 @@ private:
 
 	float mMonsterSpawnTimer{};
 	float mRunMonsterSpawnTimer{};
+	float mSlowMonsterSpawnTimer{};
 	float mGameTimer{};
 	float mMonsterDamageTimer{};
 	float mRunMonsterDamageTimer{};

@@ -84,7 +84,7 @@ void MainScene::Initialize()
 		bullet.SetCenter({ .x = -0.5f, .y = 0.0f });
 		bullet.SetScale({ 2.5f, 0.1f });
 		bullet.SetActive(false);
-		bullet.SetTexture(&mRectangleTexture);
+		bullet.SetTexture(&mRedRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&bullet);
 	}
 	
@@ -100,7 +100,6 @@ void MainScene::Initialize()
 
 	// 몬스터를 초기화한다.
 	{
-		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mMonsters)
 		{
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
@@ -112,7 +111,6 @@ void MainScene::Initialize()
 
 	// 돌진 몬스터를 초기화한다.
 	{
-		// 랜덤 좌표를 생성한다.
 		for (Sprite& monster : mRunMonsters)
 		{
 			monster.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
@@ -131,6 +129,17 @@ void MainScene::Initialize()
 			bar.SetActive(false);
 			bar.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&bar);
+		}
+	}
+
+	// 느린 몬스터를 초기화한다.
+	{
+		for (Sprite& monster : mSlowMonsters)
+		{
+			monster.SetScale({ .width = 0.2f, .height = 0.2f });
+			monster.SetActive(false);
+			monster.SetTexture(&mRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 		}
 	}
 
@@ -876,7 +885,7 @@ bool MainScene::Update(const float deltaTime)
 
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
-			
+
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
 				monster.SetActive(true);
@@ -893,7 +902,7 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterBars[i].SetPosition({ .x = spawnPositionCircle.x - 10.0f, .y = spawnPositionCircle.y - 20.0f });
 				mRunMonsterBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
 				mRunMonsterBars[i].SetActive(true);
-				
+
 				break;
 			}
 		}
@@ -960,6 +969,82 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
+	// 느린 몬스터를 업데이트한다.
+	{
+		static D2D1_POINT_2F moveDirection[SLOW_MONSTER_COUNT];
+		static float moveSpeed[SLOW_MONSTER_COUNT];
+
+		// 몬스터를 일정 시간마다 스폰한다.
+		mSlowMonsterSpawnTimer += deltaTime;
+
+		if (mSlowMonsterSpawnTimer >= 0.5f)
+		{
+			for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+			{
+				Sprite& slowMonster = mSlowMonsters[i];
+				if (slowMonster.IsActive())
+				{
+					continue;
+				}
+
+				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
+				const D2D1_POINT_2F spawnDirection =
+				{
+					.x = cos(angle),
+					.y = sin(angle)
+				};
+
+				const float offset = BOUNDARY_RADIUS - 30.0f;
+				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+
+				slowMonster.SetPosition(spawnPositionCircle);
+				slowMonster.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
+				slowMonster.SetActive(true);
+
+				mSlowMonsterSpawnTimer = 0.0f;
+
+				break;
+			}
+		}
+
+		// 이동한다.
+		static float timer;
+		static float speed = 40.0f;
+
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+			if (not slowMonster.IsActive())
+			{
+				continue;
+			}
+
+			timer += deltaTime;
+
+			if (timer <= 4.0f)
+			{
+				speed = 40.0f;
+			}
+			else if (timer <= 9.0f)
+			{
+				speed = 0.0f;
+			}
+			else
+			{
+				timer = 0.0f;
+				speed = 40.0f;
+			}
+
+			D2D1_POINT_2F position = slowMonster.GetPosition();
+			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
+			direction = Math::NormalizeVector(direction);
+			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed * deltaTime);
+
+			position = Math::AddVector(position, velocity);
+			slowMonster.SetPosition(position);
+		}
+	}
+
 	// 플레이어 체력에 관련된 부분을 업데이트한다.
 	{
 		// 플레이어가 죽었을 때 종료된다.
@@ -996,7 +1081,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 총알 라벨을 업데이트한다.
 	{
-		static uint32_t prevBulletCount = mBulletValue;
+		static int32_t prevBulletCount = mBulletValue;
 
 		if (prevBulletCount != mBulletValue)
 		{
