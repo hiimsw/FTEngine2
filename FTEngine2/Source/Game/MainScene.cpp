@@ -1016,25 +1016,59 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 
 				slowMonster.SetPosition(spawnPositionCircle);
-				slowMonster.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
+				slowMonster.SetScale({ .width = 0.2f, .height = 0.2f });
 				slowMonster.SetActive(true);
 
 				mSlowMonsterSpawnTimer = 0.0f;
+
+				mSlowMonsterState[i] = eSlow_Monster_State::Moving;
 
 				break;
 			}
 		}
 
 		// 이동한다.
-		static float timer;
-		static float speed = 40.0f;
+		static float movingTimer[SLOW_MONSTER_COUNT];
+		static float stopTimer[SLOW_MONSTER_COUNT];
+		static float speed;
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			Sprite& slowMonster = mSlowMonsters[i];
+
 			if (not slowMonster.IsActive())
 			{
+				for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
+				{
+					mSlowMonsterShadows[i][j].SetActive(false);
+				}
+
 				continue;
+			}
+
+			switch (mSlowMonsterState[i])
+			{
+			case eSlow_Monster_State::Moving:
+				movingTimer[i] += deltaTime;
+				speed = 30.0f;
+
+				if (movingTimer[i] >= 1.0f)
+				{
+					mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+					movingTimer[i] = 0.0f;
+				}
+				break;
+
+			case eSlow_Monster_State::Stop:
+				stopTimer[i] += deltaTime;
+				speed = 0.0f;
+
+				if (stopTimer[i] >= 1.5f)
+				{
+					mSlowMonsterState[i] = eSlow_Monster_State::Moving;
+					stopTimer[i] = 0.0f;
+				}
+				break;
 			}
 
 			D2D1_POINT_2F position = slowMonster.GetPosition();
@@ -1045,31 +1079,21 @@ bool MainScene::Update(const float deltaTime)
 			position = Math::AddVector(position, velocity);
 			slowMonster.SetPosition(position);
 
-			timer += deltaTime;
-
 			for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
 			{
 				Sprite& shadow = mSlowMonsterShadows[i][j];
 
-				if (timer <= 4.0f)
+				if (mSlowMonsterState[i] == eSlow_Monster_State::Moving)
 				{
-					speed = 40.0f;
+					shadow.SetPosition(Math::SubtractVector(position, Math::ScaleVector(direction, 5.0f * (j + 1))));
 					shadow.SetActive(true);
-				}
-				else if (timer <= 9.0f)
-				{
-					speed = 0.0f;
-					shadow.SetActive(false);
 				}
 				else
 				{
-					timer = 0.0f;
-					speed = 40.0f;
-					shadow.SetActive(true);
+					shadow.SetActive(false);
 				}
-
-				shadow.SetPosition(Math::SubtractVector(position, Math::ScaleVector(direction, 5.0f * (j + 1))));
 			}
+			
 		}
 	}
 
@@ -1389,6 +1413,7 @@ bool MainScene::Update(const float deltaTime)
 				.Point1 = endPosition
 			};
 
+			// 기본 몬스터를 계산한다.
 			Sprite* targetMonster = nullptr;
 			float targetMonsterDistance = 999.9f;
 
@@ -1415,6 +1440,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
+			// 돌진 몬스터를 계산한다.
 			Sprite* targetRunMonster = nullptr;
 			float targetRunMonsterDistance = 999.9f;
 
@@ -1441,8 +1467,36 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
+			// 느린 몬스터를 계산한다
+			Sprite* targetSlowMonster = nullptr;
+			float targetSlowMonsterDistance = 999.9f;
+
+			for (uint32_t j = 0; j < SLOW_MONSTER_COUNT; ++j)
+			{
+				Sprite& slowMonster = mSlowMonsters[j];
+				if (not slowMonster.IsActive())
+				{
+					continue;
+				}
+
+				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(slowMonster), line))
+				{
+					continue;
+				}
+
+				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], slowMonster.GetPosition()));
+				if (distance < targetMonsterDistance)
+				{
+					mIsSlowMonsterToBullets[j] = true;
+
+					targetSlowMonster = &slowMonster;
+					targetSlowMonsterDistance = distance;
+				}
+			}
+
 			if (targetMonster != nullptr 
-				or targetRunMonster != nullptr)
+				or targetRunMonster != nullptr
+				or targetSlowMonster != nullptr)
 			{
 				bullet.SetActive(false);	
 			}
@@ -1497,6 +1551,33 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				runMonster.SetScale({ startScale.x , startScale.y });
+			}
+		}
+
+		// 총알과 느린 몬스터가 충돌하면, 느린 몬스터는 사라진다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+
+			if (mIsSlowMonsterToBullets[i])
+			{
+				mSlowMonsterDieTimer += deltaTime;
+
+				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
+
+				float t = (mSlowMonsterDieTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
+				if (t >= 1.0f)
+				{
+					slowMonster.SetActive(false);
+					mIsSlowMonsterToBullets[i] = false;
+					mSlowMonsterDieTimer = 0.0f;
+				}
+
+				slowMonster.SetScale({ startScale.x , startScale.y });
 			}
 		}
 

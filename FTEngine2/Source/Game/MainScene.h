@@ -22,6 +22,13 @@ enum class ORBIT_STATE
 	End
 };
 
+enum class eSlow_Monster_State
+{
+	Moving,
+	Stop,
+	End
+};
+
 struct GizmoLine
 {
 	D2D1_POINT_2F Point0;
@@ -136,6 +143,7 @@ private:
 
 	SHIELD_STATE mShieldState = SHIELD_STATE::End;
 	ORBIT_STATE mOrbitState = ORBIT_STATE::End;
+	eSlow_Monster_State mSlowMonsterState[SLOW_MONSTER_COUNT] = { eSlow_Monster_State::End };
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	ID2D1SolidColorBrush* mYellowBrush = nullptr;
@@ -147,6 +155,7 @@ private:
 	bool mOrbitBlinkOn = false;
 	bool mIsMonsterToBullets[MONSTER_COUNT]{};
 	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
+	bool mIsSlowMonsterToBullets[SLOW_MONSTER_COUNT]{};
 
 	Font mDefaultFont{};
 	Font mTimerFont{};
@@ -169,6 +178,7 @@ private:
 	float mOrbitAngle{};
 	float mMonsterDieTimer;
 	float mRunMonsterDieTimer;
+	float mSlowMonsterDieTimer;
 	float mInBoundaryToMonsterTimer;
 	float mInBoundaryToRunMonsterTimer;
 
