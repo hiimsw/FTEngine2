@@ -66,7 +66,7 @@ namespace Collision
 
 		const D2D1_POINT_2F abDirection = Math::NormalizeVector(ab);
 
-		float t = Math::Dot(ac, abDirection);
+		float t = Math::DotProduct2D(ac, abDirection);
 		t = std::clamp(t, 0.0f, abLength);
 
 		const D2D1_POINT_2F cPoint = 
@@ -77,7 +77,7 @@ namespace Collision
 
 		const D2D1_POINT_2F diff = Math::SubtractVector(center, cPoint);
 		
-		bool result = Math::Dot(diff, diff) <= radius * radius;
+		bool result = Math::DotProduct2D(diff, diff) <= radius * radius;
 
 		return result;
 	}
