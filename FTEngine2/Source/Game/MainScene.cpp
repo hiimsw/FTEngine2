@@ -60,12 +60,20 @@ void MainScene::Initialize()
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
 		// 플레이어 dash 그림자를 초기화한다.
-		mDashShadow.SetPosition({ mHero.GetPosition().x - 20.0f, mHero.GetPosition().y });
-		mDashShadow.SetScale(mHero.GetScale());
-		mDashShadow.SetActive(false);
-		mDashShadow.SetOpacity(0.5f);
-		mDashShadow.SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mDashShadow);
+		mDashShadow[0].SetOpacity(0.8f);
+		mDashShadow[1].SetOpacity(0.6f);
+		mDashShadow[2].SetOpacity(0.4f);
+		mDashShadow[3].SetOpacity(0.3f);
+		mDashShadow[4].SetOpacity(0.2f);
+
+		for (uint32_t i = 0; i < SHADOW_COUNT; ++i)
+		{
+			mDashShadow[i].SetPosition(mHero.GetPosition());
+			mDashShadow[i].SetScale(mHero.GetScale());
+			mDashShadow[i].SetActive(false);
+			mDashShadow[i].SetTexture(&mRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Player)].push_back(&mDashShadow[i]);
+		}
 	}
 
 	// 총알을 초기화한다.
@@ -227,10 +235,6 @@ void MainScene::Initialize()
 
 	mLine.Point0 = { .x = -200.0f, .y = 200.0f };
 	mLine.Point1 = { .x = 150.0f, .y = 100.0f };
-
-	mTemp.SetPosition({ -600.0f, 0.0f });
-	mTemp.SetTexture(&mRectangleTexture);
-	mSpriteLayers[uint32_t(Layer::Monster)].push_back(&mTemp);
 
 	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
 	{
@@ -443,7 +447,6 @@ bool MainScene::Update(const float deltaTime)
 					{
 						mDashCount--;
 						bDashing = true;
-						mDashShadow.SetActive(true);
 					}
 				}
 
@@ -452,35 +455,49 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
-			static float dashTimer;
+			static float dashScaleTimer;
+			static float dashTimer[SHADOW_COUNT];
 
-			if (bDashing)
+			for (uint32_t i = 0; i < SHADOW_COUNT; ++i)
 			{
-				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
-				const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
-
-				if (dashSpeed >= MAX_DASH_SPEED)
+				if (bDashing)
 				{
-					dashSpeed = 0.0f;
-					bDashing = false;
-					mDashShadow.SetActive(false);
+					mDashShadow[i].SetActive(true);
+
+					dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
+
+					if (dashSpeed >= MAX_DASH_SPEED)
+					{
+						dashSpeed = 0.0f;
+						bDashing = false;
+					}
+
+					const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
+					mHero.SetPosition(position);
+
+					const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+					constexpr float OFFSET = 30.0f;
+					mDashShadow[i].SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET * (i + 1))));
 				}
-
-				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-				mHero.SetPosition(position);
-
-				const D2D1_POINT_2F heroPosition = mHero.GetPosition();
-				constexpr float OFFSET = 20.0f;
-				mDashShadow.SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET)));
+				else
+				{
+					dashTimer[i] += deltaTime;
+					if (dashTimer[i] >= 0.13f)
+					{
+						mDashShadow[i].SetActive(false);
+						dashTimer[i] = 0.0f;
+					}
+				}
 			}
 
-			dashTimer += deltaTime;
+			dashScaleTimer += deltaTime;
 
-			if ((dashTimer >= 3.0f)
+			if ((dashScaleTimer >= 3.0f)
 				and (mDashCount < DASH_MAX_COUNT))
 			{
 				mDashCount++;
-				dashTimer = 0.0f;
+				dashScaleTimer = 0.0f;
 			}
 
 			dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH,  dashScale.y }, 8.0f * deltaTime);

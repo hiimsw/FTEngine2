@@ -97,9 +97,9 @@ private:
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
 	static constexpr uint32_t BULLET_COUNT = 20;
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
-
 	static constexpr int32_t mMonsterAttackValue = 10;
-	static constexpr int32_t mHeroHpMax = 100;
+	static constexpr int32_t mHeroHpMax = 1500;
+	static constexpr int32_t SHADOW_COUNT = 5;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -114,9 +114,7 @@ private:
 	Sprite mHpUiBar{};
 	Sprite mDashValue{};
 	Sprite mDashUiBar{};
-	Sprite mDashShadow{};
-
-	Sprite mTemp{};
+	Sprite mDashShadow[SHADOW_COUNT]{};
 
 	GizmoLine mLine{};
 
