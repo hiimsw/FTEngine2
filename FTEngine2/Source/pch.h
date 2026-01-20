@@ -148,6 +148,8 @@ namespace Math
 	inline float CrossProduct2D(const D2D1_POINT_2F point0, const D2D1_POINT_2F point1, const D2D1_POINT_2F point2);
 	inline float ConvertDegreeToRadian(const float degree);
 	inline float ConvertRadianToDegree(const float radian);
+	inline float Dot(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
+	inline float CosTheta(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs);
 
 	constexpr float PI = 3.141592f;
 
@@ -218,5 +220,23 @@ namespace Math
 	float ConvertRadianToDegree(const float radian)
 	{
 		return radian * (180.0f / PI);
+	}
+
+	float Dot(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
+	{
+		return lhs.x * rhs.x + lhs.y * rhs.y;
+	}
+
+	float CosTheta(const D2D1_POINT_2F lhs, const D2D1_POINT_2F rhs)
+	{
+		float lenA = GetVectorLength(lhs);
+		float lenB = GetVectorLength(rhs);
+
+		if (lenA == 0.0f or lenB == 0.0f)
+		{
+			return 0.0f;
+		}
+
+		return Dot(lhs, rhs) / (lenA * lenB);
 	}
 }

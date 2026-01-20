@@ -1046,12 +1046,26 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
 			Sprite& bullet = mBullets[i];
-			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, bullet.GetPosition()))
+			
+			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
+			const D2D1_POINT_2F endPosition =
+			{
+				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength,
+				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
+			};
+
+			const Line line =
+			{
+				.Point0 = mPrevBulletPosition[i],
+				.Point1 = endPosition
+			};
+
+			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, endPosition))
 			{
 				bullet.SetActive(false);
 			}
 
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, bullet.GetPosition()))
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, endPosition))
 			{
 				bullet.SetActive(false);
 			}

@@ -6,13 +6,14 @@ namespace Collision
 	inline bool IsCollidedSqureWithSqure(const D2D1_RECT_F lhs, const D2D1_RECT_F rhs);
 	inline bool IsCollidedSqureWithLine(const D2D1_RECT_F rect, const Line line);
 	inline bool IsCollidedCircleWithPoint(const D2D1_POINT_2F center, const float radius, const D2D1_POINT_2F point);
+	inline bool IsCollidedCircleWithLine(const D2D1_POINT_2F center, const float radius, const Line line);
 	inline bool IsCollidedCircleWithCircle(const D2D1_ELLIPSE lhs, const D2D1_ELLIPSE rhs);
 	inline bool DoLinesIntersect(Line line0, Line line1);
 
 	bool IsCollidedSqureWithPoint(const D2D1_RECT_F rect, const D2D1_POINT_2F point)
 	{
 		const bool result = rect.left <= point.x and point.x <= rect.right
-				and rect.bottom <= point.y and point.y <= rect.top;
+			and rect.bottom <= point.y and point.y <= rect.top;
 
 		return result;
 	}
@@ -20,10 +21,10 @@ namespace Collision
 	bool IsCollidedSqureWithSqure(const D2D1_RECT_F lhs, const D2D1_RECT_F rhs)
 	{
 		const bool result = IsCollidedSqureWithPoint(lhs, { .x = float(rhs.left), .y = float(rhs.top) })
-				or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.left), .y = float(rhs.bottom) })
-				or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.top) })
-				or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.bottom) });
-		
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.left), .y = float(rhs.bottom) })
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.top) })
+			or IsCollidedSqureWithPoint(lhs, { .x = float(rhs.right), .y = float(rhs.bottom) });
+
 		return result;
 	}
 
@@ -35,9 +36,9 @@ namespace Collision
 		const Line bottomLine = { .Point0 = {.x = rect.left, .y = rect.bottom }, .Point1 = {.x = rect.right, .y = rect.bottom } };
 
 		const bool result = DoLinesIntersect(leftLine, line)
-				or DoLinesIntersect(rightLine, line)
-				or DoLinesIntersect(topLine, line)
-				or DoLinesIntersect(bottomLine, line);
+			or DoLinesIntersect(rightLine, line)
+			or DoLinesIntersect(topLine, line)
+			or DoLinesIntersect(bottomLine, line);
 
 		return result;
 	}
@@ -51,13 +52,43 @@ namespace Collision
 		return result;
 	}
 
+	bool IsCollidedCircleWithLine(const D2D1_POINT_2F center, const float radius, const Line line)
+	{
+		const D2D1_POINT_2F ac = Math::SubtractVector(center, line.Point0);
+		const D2D1_POINT_2F ab = Math::SubtractVector(line.Point1, line.Point0);
+		
+		const float abLength = Math::GetVectorLength(ab);
+
+		if (abLength == 0.0f)	// 선이 아니라 점일 때
+		{
+			return Math::GetVectorLength(ac) <= radius;
+		}
+
+		const D2D1_POINT_2F abDirection = Math::NormalizeVector(ab);
+
+		float t = Math::Dot(ac, abDirection);
+		t = std::clamp(t, 0.0f, abLength);
+
+		const D2D1_POINT_2F cPoint = 
+		{
+			line.Point0.x + abDirection.x * t,
+			line.Point0.y + abDirection.y * t
+		};
+
+		const D2D1_POINT_2F diff = Math::SubtractVector(center, cPoint);
+		
+		bool result = Math::Dot(diff, diff) <= radius * radius;
+
+		return result;
+	}
+
 	bool IsCollidedCircleWithCircle(const D2D1_ELLIPSE lhs, const D2D1_ELLIPSE rhs)
 	{
 		const float radius = lhs.radiusX + rhs.radiusX;
 
 		const D2D1_POINT_2F toTarget = Math::SubtractVector(lhs.point, rhs.point);
 		const float distance = Math::GetVectorLength(toTarget);
-		
+
 		const bool result = radius >= distance;
 
 		return result;
