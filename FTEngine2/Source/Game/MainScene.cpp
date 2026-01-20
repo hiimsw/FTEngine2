@@ -205,7 +205,7 @@ void MainScene::Initialize()
 			mHpValueLabel.SetPosition(offset);
 
 			mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
-			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 			mLabels.push_back(&mHpValueLabel);
 		}
 
@@ -945,11 +945,11 @@ bool MainScene::Update(const float deltaTime)
 
 		if (prevHp != mHeroHpValue)
 		{
-			D2D1_POINT_2F scale = { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, 1.0f };
-			scale = Math::LerpVector(scale, { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / mHeroHpMax, 1.0f }, 10.0f * deltaTime);
+			D2D1_POINT_2F scale = { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / HERO_MAX_HP, 1.0f };
+			scale = Math::LerpVector(scale, { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / HERO_MAX_HP, 1.0f }, 10.0f * deltaTime);
 			mHpBar.SetScale({ scale.x, scale.y });
 
-			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(mHeroHpMax));
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 
 			prevHp = mHeroHpValue;
 		}
@@ -1095,7 +1095,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{	
-					mHeroHpValue -= mMonsterAttackValue;
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					monster.SetActive(false);
 					mMonsterDamageTimer = 0.0f;
 				}
@@ -1124,7 +1124,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
-					mHeroHpValue -= mMonsterAttackValue;
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mMonsterDamageTimer = 0.0f;
 				}
 
@@ -1153,7 +1153,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
-					mHeroHpValue -= mMonsterAttackValue;
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					runMonster.SetActive(false);
 					mRunMonsterDamageTimer = 0.0f;
 				}
@@ -1182,7 +1182,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
 				{
-					mHeroHpValue -= mMonsterAttackValue;
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mRunMonsterDamageTimer = 0.0f;
 				}
 
