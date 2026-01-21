@@ -1853,6 +1853,34 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
+	// 총알과 느린 몬스터가 충돌하면, 이펙트를 그린다.
+	{
+		constexpr float OFFSET = 7.5f;
+
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			if (not mIsSlowMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			Sprite& slowMonster = mSlowMonsters[i];
+
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 2.0f }, 45.0f) * view;
+			renderTarget->SetTransform(worldView);
+
+			const D2D1_RECT_F colliderSize =
+			{
+				.left = 0.0f,
+				.top = 0.0f,
+				.right = OFFSET,
+				.bottom = OFFSET
+			};
+
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+		}
+	}
+
 
 	// 라인을 그린다.
 	{
