@@ -98,7 +98,7 @@ private:
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float START_LERP_TIME = 0.2f;
-	static constexpr float DURING_SMALL_TIME = 0.3f;
+	static constexpr float DURING_TIME = 0.3f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
@@ -142,6 +142,7 @@ private:
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
 	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
 	D2D1_POINT_2F mCasingDirections[BULLET_COUNT]{};
+	D2D1_POINT_2F mMonsterThicks{};
 
 	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
 
@@ -187,5 +188,7 @@ private:
 	float mInBoundaryToMonsterTimer;
 	float mInBoundaryToRunMonsterTimer;
 	float mCasingTimer[CASING_COUNT]{};
+	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
+
 	D2D1_ELLIPSE mOrbitEllipse{};
 };

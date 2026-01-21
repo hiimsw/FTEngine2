@@ -958,7 +958,7 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-			float t = (growingTimer[i] - START_LERP_TIME) / DURING_SMALL_TIME;
+			float t = (growingTimer[i] - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { MONSTER_SCALE , MONSTER_SCALE }, t);
@@ -1424,7 +1424,7 @@ bool MainScene::Update(const float deltaTime)
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
 				monster.SetScale({ startScale.x, startScale.y });
 
-				float t = (mInBoundaryToMonsterTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				float t = (mInBoundaryToMonsterTimer - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
@@ -1482,7 +1482,7 @@ bool MainScene::Update(const float deltaTime)
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
 				runMonster.SetScale({ startScale.x, startScale.y });
 
-				float t = (mInBoundaryToRunMonsterTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				float t = (mInBoundaryToRunMonsterTimer - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
@@ -1626,21 +1626,28 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 총알과 몬스터가 충돌하면, 몬스터는 사라진다.
+		// 총알과 몬스터가 충돌하면, 몬스터는 사라지고 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
-			if (mIsMonsterToBullets[i])
+
+			if (not mIsMonsterToBullets[i])
+			{
+				continue;
+			}
+			
+			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mMonsterDieTimer += deltaTime;
 
 				D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-				float t = (mMonsterDieTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				float t = (mMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
+
 				if (t >= 1.0f)
 				{
 					monster.SetActive(false);
@@ -1649,6 +1656,24 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				monster.SetScale({ startScale.x , startScale.y });
+			}
+
+			// 총알 이펙트가 생성된다.
+			{
+				mMonsterDieEffectTimer[i] += deltaTime;
+
+				mMonsterThicks = { .x = 10.0f, .y = 10.0f };
+
+				float t = (mMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+
+				if (t >= 1.0f)
+				{
+					mMonsterDieEffectTimer[i] = 0.0f;
+				}
+
 			}
 		}
 
@@ -1663,7 +1688,7 @@ bool MainScene::Update(const float deltaTime)
 				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-				float t = (mRunMonsterDieTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				float t = (mRunMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
@@ -1690,7 +1715,7 @@ bool MainScene::Update(const float deltaTime)
 				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-				float t = (mSlowMonsterDieTimer - START_LERP_TIME) / DURING_SMALL_TIME;
+				float t = (mSlowMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
@@ -1821,7 +1846,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
 		}
 	}
 
