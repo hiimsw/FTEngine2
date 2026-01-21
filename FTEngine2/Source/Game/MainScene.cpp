@@ -901,6 +901,7 @@ bool MainScene::Update(const float deltaTime)
 	// 몬스터를 업데이트한다.
 	{		
 		static float speed[MONSTER_COUNT];
+		static float growingTimer[MONSTER_COUNT];
 
 		// 몬스터를 일정 시간마다 스폰한다.
 		mMonsterSpawnTimer += deltaTime;
@@ -927,12 +928,48 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 				monster.SetActive(true);
 
-				mMonsterSpawnTimer = 0.0f;		
+				mMonsterSpawnTimer = 0.0f;
+
+				mIsMonsterSpawns[i] = true;
 
 				// 스폰할 때 속도도 같이 초기화한다.
 				speed[i] = getRandom(10.0f, 80.0f);
 				break;
 			}
+		}
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			Sprite& monster = mMonsters[i];
+
+			if (not monster.IsActive())
+			{
+				continue;
+			}
+
+			if (not mIsMonsterSpawns[i])
+			{
+				continue;
+			}
+
+			// 몬스터가 생성되면 커졌다가 작아진다.
+			growingTimer[i] += deltaTime;
+
+			D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
+			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
+
+			float t = (growingTimer[i] - START_LERP_TIME) / DURING_SMALL_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			startScale = Math::LerpVector(startScale, { MONSTER_SCALE , MONSTER_SCALE }, t);
+			if (t >= 1.0f)
+			{
+				growingTimer[i] = 0.0f;
+				mIsMonsterSpawns[i] = false;
+			}
+
+			monster.SetScale({ startScale.x , startScale.y });
+
+			break;
 		}
 
 		// 몬스터를 이동시킨다.

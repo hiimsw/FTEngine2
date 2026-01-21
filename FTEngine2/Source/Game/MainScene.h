@@ -160,6 +160,7 @@ private:
 	bool mIsMonsterToBullets[MONSTER_COUNT]{};
 	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
 	bool mIsSlowMonsterToBullets[SLOW_MONSTER_COUNT]{};
+	bool mIsMonsterSpawns[MONSTER_COUNT]{};
 
 	Font mDefaultFont{};
 	Font mTimerFont{};
