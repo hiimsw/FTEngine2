@@ -1825,6 +1825,35 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
+	// 총알과 돌진 몬스터가 충돌하면, 이펙트를 그린다.
+	{
+		constexpr float OFFSET = 15.0f;
+
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			if (not mIsRunMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			Sprite& runMonster = mRunMonsters[i];
+
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ runMonster.GetPosition().x, runMonster.GetPosition().y + 10.0f }, 45.0f) * view;
+			renderTarget->SetTransform(worldView);
+
+			const D2D1_RECT_F colliderSize =
+			{
+				.left = 0.0f,
+				.top = 0.0f,
+				.right = OFFSET,
+				.bottom = OFFSET
+			};
+
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+		}
+	}
+
+
 	// 라인을 그린다.
 	{
 		//const D2D1_ELLIPSE CIRCLE{ .radiusX = TEST_RADIUS, .radiusY = TEST_RADIUS };
