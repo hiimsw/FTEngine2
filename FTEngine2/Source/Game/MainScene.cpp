@@ -102,12 +102,12 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Player)].push_back(&casing);
 		}
 	}
-	
+
 	// 공전 스킬을 초기화한다.
 	{
 		mOrbitEllipse =
 		{
-			.point = { .x = 0.0f, .y = -80.0f },
+			.point = {.x = 0.0f, .y = -80.0f },
 			.radiusX = 5.0f,
 			.radiusY = 5.0f,
 		};
@@ -163,7 +163,7 @@ void MainScene::Initialize()
 			{
 				Sprite& shadow = mSlowMonsterShadows[i][j];
 
-				shadow.SetScale({ .width = 0.4f, .height = 0.4f});
+				shadow.SetScale({ .width = 0.4f, .height = 0.4f });
 
 				float opacity = 0.8f - (float(j) / SHADOW_COUNT);
 				shadow.SetOpacity(opacity);
@@ -569,7 +569,7 @@ bool MainScene::Update(const float deltaTime)
 			shootingCoolTimer = max(shootingCoolTimer - deltaTime, 0.0f);
 
 			// 총알을 스폰한다.
-			if (Input::Get().GetMouseButton(Input::eMouseButton::Left) 
+			if (Input::Get().GetMouseButton(Input::eMouseButton::Left)
 				and shootingCoolTimer <= 0.001f
 				and mBulletValue != 0)
 			{
@@ -592,7 +592,7 @@ bool MainScene::Update(const float deltaTime)
 					// 거리에 따라 반동효과가 다르다.
 					const float length = Math::GetVectorLength(mBulletDirections[i]);
 					mBulletDirections[i] = (length >= 200.0f) ?
-						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f)) 
+						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f))
 						: Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
 
 					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
@@ -899,7 +899,7 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 몬스터를 업데이트한다.
-	{		
+	{
 		static float speed[MONSTER_COUNT];
 		static float growingTimer[MONSTER_COUNT];
 
@@ -962,7 +962,7 @@ bool MainScene::Update(const float deltaTime)
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { MONSTER_SCALE , MONSTER_SCALE }, t);
-			
+
 			if (t >= 1.0f)
 			{
 				growingTimer[i] = 0.0f;
@@ -987,14 +987,14 @@ bool MainScene::Update(const float deltaTime)
 			{
 				continue;
 			}
-			
+
 			D2D1_POINT_2F position = monster.GetPosition();
 			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
 			direction = Math::NormalizeVector(direction);
 			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
-			
+
 			position = Math::AddVector(position, velocity);
-			monster.SetPosition(position);	
+			monster.SetPosition(position);
 		}
 	}
 
@@ -1217,7 +1217,7 @@ bool MainScene::Update(const float deltaTime)
 					shadow.SetActive(false);
 				}
 			}
-			
+
 		}
 	}
 
@@ -1262,7 +1262,7 @@ bool MainScene::Update(const float deltaTime)
 		if (prevBulletCount != mBulletValue)
 		{
 			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
-			
+
 			prevBulletCount = mBulletValue;
 		}
 	}
@@ -1321,7 +1321,7 @@ bool MainScene::Update(const float deltaTime)
 
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
 		const D2D1_ELLIPSE zoomEllipse = { .point = zoomPosition, .radiusX = getCircleFromSprite(mZoom).radiusX };
-		
+
 		if (Collision::IsCollidedCircleWithCircle(heroEllipse, zoomEllipse))
 		{
 			//DEBUG_LOG("ㅇㅇ");
@@ -1330,7 +1330,7 @@ bool MainScene::Update(const float deltaTime)
 		{
 			//DEBUG_LOG("ss");
 		}
-		
+
 		// 플레이어와 원의 충돌을 한다.
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
@@ -1358,7 +1358,7 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
 			Sprite& bullet = mBullets[i];
-			
+
 			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
 			const D2D1_POINT_2F endPosition =
 			{
@@ -1398,7 +1398,7 @@ bool MainScene::Update(const float deltaTime)
 
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
-			{							
+			{
 				// 카메라 흔들기를 시작합니다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
 				const float duration = getRandom(0.5f, 0.8f);
@@ -1406,7 +1406,7 @@ bool MainScene::Update(const float deltaTime)
 				initializeCameraShake(amplitude, duration, frequency);
 
 				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
-				{	
+				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					monster.SetActive(false);
 					mMonsterDamageTimer = 0.0f;
@@ -1456,7 +1456,7 @@ bool MainScene::Update(const float deltaTime)
 
 			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
-			{				
+			{
 				// 카메라 흔들기를 시작합니다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
 				const float duration = getRandom(0.5f, 0.8f);
@@ -1525,10 +1525,10 @@ bool MainScene::Update(const float deltaTime)
 
 			// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
 			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
-			const D2D1_POINT_2F endPosition = 
-			{ 
-				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength, 
-				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength 
+			const D2D1_POINT_2F endPosition =
+			{
+				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength,
+				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
 			};
 
 			const Line line =
@@ -1618,11 +1618,11 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			if (targetMonster != nullptr 
+			if (targetMonster != nullptr
 				or targetRunMonster != nullptr
 				or targetSlowMonster != nullptr)
 			{
-				bullet.SetActive(false);	
+				bullet.SetActive(false);
 			}
 		}
 
@@ -1635,7 +1635,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				continue;
 			}
-			
+
 			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mMonsterDieTimer += deltaTime;
@@ -1755,7 +1755,7 @@ bool MainScene::Update(const float deltaTime)
 			Sprite& monster = mMonsters[i];
 			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, monster.GetPosition()))
 			{
- 				monster.SetActive(false);
+				monster.SetActive(false);
 			}
 		}
 
@@ -1796,9 +1796,9 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
-		const D2D1_ELLIPSE ellipse = 
-		{ 
-			.radiusX = mShieldScale.width * 0.5f, 
+		const D2D1_ELLIPSE ellipse =
+		{
+			.radiusX = mShieldScale.width * 0.5f,
 			.radiusY = mShieldScale.height * 0.5f
 		};
 
@@ -1824,7 +1824,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 30.0f;
+		constexpr float OFFSET = 50.0f;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -1835,7 +1835,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& monster = mMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 20.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 30.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
@@ -1852,7 +1852,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 돌진 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 15.0f;
+		constexpr float OFFSET = 40.0f;
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
@@ -1863,7 +1863,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& runMonster = mRunMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ runMonster.GetPosition().x, runMonster.GetPosition().y + 10.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ runMonster.GetPosition().x, runMonster.GetPosition().y + 27.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
@@ -1880,7 +1880,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 느린 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 7.5f;
+		constexpr float OFFSET = 15.0f;
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
@@ -1891,7 +1891,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& slowMonster = mSlowMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 2.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 11.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
@@ -2001,8 +2001,8 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		const Matrix3x2F worldView = Transformation::getWorldMatrix
 		(
-			{ 
-				.x = float(Constant::Get().GetWidth()) * 0.5f, 
+			{
+				.x = float(Constant::Get().GetWidth()) * 0.5f,
 				.y = 110.0f
 			}
 		);
