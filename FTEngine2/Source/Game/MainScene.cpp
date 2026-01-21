@@ -937,6 +937,8 @@ bool MainScene::Update(const float deltaTime)
 				break;
 			}
 		}
+
+		// 몬스터가 스폰되면, 커졌다가 작아진다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
@@ -951,7 +953,6 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			// 몬스터가 생성되면 커졌다가 작아진다.
 			growingTimer[i] += deltaTime;
 
 			D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
@@ -961,6 +962,7 @@ bool MainScene::Update(const float deltaTime)
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { MONSTER_SCALE , MONSTER_SCALE }, t);
+			
 			if (t >= 1.0f)
 			{
 				growingTimer[i] = 0.0f;
@@ -1795,29 +1797,57 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
+	// 총알과 몬스터가 충돌하면, 이펙트를 그린다.
+	{
+		constexpr float OFFSET = 30.0f;
+
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		{
+			if (not mIsMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			Sprite& monster = mMonsters[i];
+
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 20.0f }, 45.0f) * view;
+			renderTarget->SetTransform(worldView);
+
+			const D2D1_RECT_F colliderSize =
+			{
+				.left = 0.0f,
+				.top = 0.0f,
+				.right = OFFSET,
+				.bottom = OFFSET
+			};
+
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+		}
+	}
+
 	// 라인을 그린다.
 	{
-		const D2D1_ELLIPSE CIRCLE{ .radiusX = TEST_RADIUS, .radiusY = TEST_RADIUS };
+		//const D2D1_ELLIPSE CIRCLE{ .radiusX = TEST_RADIUS, .radiusY = TEST_RADIUS };
 
-		Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
-		Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
+		//Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
+		//Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
 
-		// 두 점을 그린다.
-		{
-			renderTarget->SetTransform(point0WorldView);
-			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		//// 두 점을 그린다.
+		//{
+		//	renderTarget->SetTransform(point0WorldView);
+		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
 
-			renderTarget->SetTransform(point1WorldView);
-			renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-		}
+		//	renderTarget->SetTransform(point1WorldView);
+		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
+		//}
 
-		// 라인을 그린다.
-		{
-			const D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
-			const D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
-			renderTarget->SetTransform(Matrix3x2F::Identity());
-			renderTarget->DrawLine(point0, point1, mDefaultBrush);
-		}
+		//// 라인을 그린다.
+		//{
+		//	const D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
+		//	const D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
+		//	renderTarget->SetTransform(Matrix3x2F::Identity());
+		//	renderTarget->DrawLine(point0, point1, mDefaultBrush);
+		//}
 	}
 
 	// 몬스터를 그린다.
