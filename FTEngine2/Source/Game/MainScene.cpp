@@ -78,14 +78,29 @@ void MainScene::Initialize()
 	}
 
 	// 총알을 초기화한다.
-	for (Sprite& bullet : mBullets)
 	{
-		bullet.SetPosition(mHero.GetPosition());
-		bullet.SetCenter({ .x = -0.5f, .y = 0.0f });
-		bullet.SetScale({ 2.5f, 0.1f });
-		bullet.SetActive(false);
-		bullet.SetTexture(&mRedRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&bullet);
+		for (Sprite& bullet : mBullets)
+		{
+			bullet.SetPosition(mHero.GetPosition());
+			bullet.SetCenter({ .x = -0.5f, .y = 0.0f });
+			bullet.SetScale({ 2.5f, 0.1f });
+			bullet.SetActive(false);
+			bullet.SetTexture(&mRedRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Player)].push_back(&bullet);
+		}
+	}
+
+	// 탄피를 초기화한다.
+	{
+		for (Sprite& casing : mCasings)
+		{
+			casing.SetScale({ .width = 0.3f, .height = 0.05f });
+			casing.SetCenter({ -0.5, 0.0f });
+			casing.SetOpacity(0.3f);
+			casing.SetActive(false);
+			casing.SetTexture(&mRedRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Player)].push_back(&casing);
+		}
 	}
 	
 	// 공전 스킬을 초기화한다.
@@ -574,9 +589,11 @@ bool MainScene::Update(const float deltaTime)
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					mBulletDirections[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
 
+					// 거리에 따라 반동효과가 다르다.
 					const float length = Math::GetVectorLength(mBulletDirections[i]);
 					mBulletDirections[i] = (length >= 200.0f) ?
-						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f)) : Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
+						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f)) 
+						: Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
 
 					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
 
@@ -588,6 +605,39 @@ bool MainScene::Update(const float deltaTime)
 					bullet.SetOpacity(0.0f);
 
 					mBulletValue--;
+
+					// 탄피를 생성한다.
+					{
+						if (mCasingIndex == 20)
+						{
+							mCasingIndex = 0;
+						}
+
+						Sprite& casing = mCasings[mCasingIndex];
+
+						casing.SetActive(true);
+
+						constexpr float RANGE = 30.0f;
+						const D2D1_POINT_2F offset =
+						{
+							.x = getRandom(-RANGE, RANGE),
+							.y = getRandom(-RANGE, RANGE)
+						};
+
+						const D2D1_POINT_2F spawnPosition =
+						{
+							.x = mHero.GetPosition().x + offset.x,
+							.y = mHero.GetPosition().y + offset.y
+						};
+
+						mCasingDirections[mCasingIndex] = Math::RotateVector(mBulletDirections[i], getRandom(-30.0f, 30.0f));
+						casing.SetPosition(Math::SubtractVector(spawnPosition, mCasingDirections[i]));
+
+						const float angle = Math::ConvertRadianToDegree(atan2f(mCasingDirections[mCasingIndex].y, mCasingDirections[mCasingIndex].x));
+						casing.SetAngle(-angle);
+
+						mCasingIndex++;
+					}
 
 					// 카메라 흔들기를 시작합니다.
 					{
@@ -603,20 +653,21 @@ bool MainScene::Update(const float deltaTime)
 				shootingCoolTimer = 0.12f;
 			}
 
+			// 재장전을 한다.
 			if (mBulletValue <= 0)
 			{
 				coolTimer += deltaTime;
 
-				if (coolTimer >= 3.0f)
+				if (coolTimer >= 1.5f)
 				{
 					mBulletValue = BULLET_COUNT;
 					coolTimer = 0.0f;
 				}
 			}
 
+			// 총알을 이동시킨다.
 			constexpr float MOVE_SPEED = 1500.0f;
 
-			// 총알을 이동시킨다.
 			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 			{
 				Sprite& bullet = mBullets[i];
