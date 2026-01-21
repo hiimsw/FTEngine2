@@ -615,6 +615,7 @@ bool MainScene::Update(const float deltaTime)
 
 						Sprite& casing = mCasings[mCasingIndex];
 
+						casing.SetOpacity(0.0f);
 						casing.SetActive(true);
 
 						constexpr float RANGE = 30.0f;
@@ -691,7 +692,7 @@ bool MainScene::Update(const float deltaTime)
 
 			// 탄피를 이동시킨다.
 			{
-				static float timer[CASING_COUNT];
+				constexpr float SPEED = 500.0f;
 
 				for (uint32_t i = 0; i < CASING_COUNT; ++i)
 				{
@@ -701,16 +702,23 @@ bool MainScene::Update(const float deltaTime)
 						continue;
 					}
 
-					timer[i] += deltaTime;
+					mCasingTimer[i] += deltaTime;
 
-					const D2D1_POINT_2F velocity = Math::ScaleVector(mCasingDirections[i], -500.0f * deltaTime);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(mCasingDirections[i], -SPEED * deltaTime);
 					const D2D1_POINT_2F position = Math::AddVector(casing.GetPosition(), velocity);
 					casing.SetPosition(position);
 
-					if (timer[i] >= 0.5f)
+
+					float opacity = casing.GetOpacity();
+
+					D2D1_POINT_2F lerp = { opacity, opacity };
+					lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
+					casing.SetOpacity(lerp.x);
+
+					if (mCasingTimer[i] >= 0.5f)
 					{
 						casing.SetActive(false);
-						timer[i] = 0.0f;
+						mCasingTimer[i] = 0.0f;
 					}
 				}
 			}
