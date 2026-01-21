@@ -688,6 +688,32 @@ bool MainScene::Update(const float deltaTime)
 				lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
 				bullet.SetOpacity(lerp.x);
 			}
+
+			// 탄피를 이동시킨다.
+			{
+				static float timer[CASING_COUNT];
+
+				for (uint32_t i = 0; i < CASING_COUNT; ++i)
+				{
+					Sprite& casing = mCasings[i];
+					if (not casing.IsActive())
+					{
+						continue;
+					}
+
+					timer[i] += deltaTime;
+
+					const D2D1_POINT_2F velocity = Math::ScaleVector(mCasingDirections[i], -500.0f * deltaTime);
+					const D2D1_POINT_2F position = Math::AddVector(casing.GetPosition(), velocity);
+					casing.SetPosition(position);
+
+					if (timer[i] >= 0.5f)
+					{
+						casing.SetActive(false);
+						timer[i] = 0.0f;
+					}
+				}
+			}
 		}
 
 		// 쉴드 키를 업데이트한다.
