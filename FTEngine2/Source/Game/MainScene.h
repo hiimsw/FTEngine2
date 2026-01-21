@@ -189,6 +189,7 @@ private:
 	float mInBoundaryToRunMonsterTimer;
 	float mCasingTimer[CASING_COUNT]{};
 	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
+	float mRunMonsterDieEffectTimer[MONSTER_COUNT]{};
 
 	D2D1_ELLIPSE mOrbitEllipse{};
 };

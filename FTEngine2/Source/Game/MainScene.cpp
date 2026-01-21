@@ -1629,8 +1629,6 @@ bool MainScene::Update(const float deltaTime)
 		// 총알과 몬스터가 충돌하면, 몬스터는 사라지고 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mMonsters[i];
-
 			if (not mIsMonsterToBullets[i])
 			{
 				continue;
@@ -1639,6 +1637,8 @@ bool MainScene::Update(const float deltaTime)
 			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mMonsterDieTimer += deltaTime;
+
+				Sprite& monster = mMonsters[i];
 
 				D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
@@ -1673,17 +1673,22 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mMonsterDieEffectTimer[i] = 0.0f;
 				}
-
 			}
 		}
 
 		// 총알과 돌진 몬스터가 충돌하면, 돌진 몬스터는 사라진다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			Sprite& runMonster = mRunMonsters[i];
-			if (mIsRunMonsterToBullets[i])
+			if (not mIsRunMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mRunMonsterDieTimer += deltaTime;
+
+				Sprite& runMonster = mRunMonsters[i];
 
 				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
@@ -1692,6 +1697,7 @@ bool MainScene::Update(const float deltaTime)
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
+
 				if (t >= 1.0f)
 				{
 					runMonster.SetActive(false);
@@ -1700,6 +1706,23 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				runMonster.SetScale({ startScale.x , startScale.y });
+			}
+
+			// 총알 이펙트가 생성된다.
+			{
+				mRunMonsterDieEffectTimer[i] += deltaTime;
+
+				mMonsterThicks = { .x = 10.0f, .y = 10.0f };
+
+				float t = (mRunMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+
+				if (t >= 1.0f)
+				{
+					mRunMonsterDieEffectTimer[i] = 0.0f;
+				}
 			}
 		}
 
@@ -1874,7 +1897,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
 		}
 	}
 
