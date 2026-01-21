@@ -533,7 +533,7 @@ bool MainScene::Update(const float deltaTime)
 					mHero.SetPosition(position);
 
 					const D2D1_POINT_2F heroPosition = mHero.GetPosition();
-					constexpr float OFFSET = 30.0f;
+					constexpr float OFFSET = 20.0f;
 					mDashShadow[i].SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET * (i + 1))));
 				}
 				else
@@ -608,7 +608,7 @@ bool MainScene::Update(const float deltaTime)
 
 					// 탄피를 생성한다.
 					{
-						if (mCasingIndex == 20)
+						if (mCasingIndex == BULLET_COUNT)
 						{
 							mCasingIndex = 0;
 						}
@@ -1948,7 +1948,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
 		}
 	}
-
 
 	// 라인을 그린다.
 	{

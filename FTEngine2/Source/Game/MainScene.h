@@ -102,8 +102,8 @@ private:
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
-	static constexpr uint32_t BULLET_COUNT = 20;
-	static constexpr uint32_t CASING_COUNT = 20;
+	static constexpr uint32_t BULLET_COUNT = 40;
+	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
 	static constexpr int32_t MONSTER_ATTACK_VALUE = 10;
 	static constexpr int32_t HERO_MAX_HP = 1500;

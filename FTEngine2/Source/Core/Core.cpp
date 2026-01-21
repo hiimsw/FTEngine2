@@ -38,7 +38,7 @@ bool Core::Update(const float deltaTime)
 	// Draw
 	{
 		mRenderTarget->BeginDraw();
-		mRenderTarget->Clear(ColorF(ColorF::LightPink));
+		mRenderTarget->Clear(ColorF(ColorF::Black));
 
 		const Camera* camera = mScene->GetCameraOrNull();
 		Matrix3x2F view = Matrix3x2F::Identity();
