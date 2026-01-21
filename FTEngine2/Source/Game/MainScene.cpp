@@ -1676,7 +1676,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 총알과 돌진 몬스터가 충돌하면, 돌진 몬스터는 사라진다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			if (not mIsRunMonsterToBullets[i])
@@ -1726,14 +1725,18 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 총알과 느린 몬스터가 충돌하면, 느린 몬스터는 사라진다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			Sprite& slowMonster = mSlowMonsters[i];
-
-			if (mIsSlowMonsterToBullets[i])
+			if (not mIsSlowMonsterToBullets[i])
+			{
+				continue;
+			}
+			
+			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mSlowMonsterDieTimer += deltaTime;
+
+				Sprite& slowMonster = mSlowMonsters[i];
 
 				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
@@ -1750,6 +1753,23 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				slowMonster.SetScale({ startScale.x , startScale.y });
+			}
+
+			// 총알 이펙트가 생성된다.
+			{
+				mSlowMonsterDieEffectTimer[i] += deltaTime;
+
+				mMonsterThicks = { .x = 6.0f, .y = 6.0f };
+
+				float t = (mSlowMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+
+				if (t >= 1.0f)
+				{
+					mSlowMonsterDieEffectTimer[i] = 0.0f;
+				}
 			}
 		}
 
@@ -1925,7 +1945,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, 5.0f);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
 		}
 	}
 
