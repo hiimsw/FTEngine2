@@ -143,7 +143,7 @@ void MainScene::Initialize()
 	{
 		for (Sprite& monster : mSlowMonsters)
 		{
-			monster.SetScale({ .width = 0.2f, .height = 0.2f });
+			monster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
 			monster.SetActive(false);
 			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
@@ -155,7 +155,7 @@ void MainScene::Initialize()
 			{
 				Sprite& shadow = mSlowMonsterShadows[i][j];
 
-				shadow.SetScale({ .width = 0.4f, .height = 0.4f });
+				shadow.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
 
 				float opacity = 0.8f - (float(j) / SHADOW_COUNT);
 				shadow.SetOpacity(opacity);
@@ -1151,7 +1151,7 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 
 				slowMonster.SetPosition(spawnPositionCircle);
-				slowMonster.SetScale({ .width = 0.2f, .height = 0.2f });
+				slowMonster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
 				slowMonster.SetActive(true);
 
 				mSlowMonsterSpawnTimer = 0.0f;
@@ -1673,12 +1673,12 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mMonsterDieEffectTimer[i] += deltaTime;
 
-				mMonsterThicks = { .x = 10.0f, .y = 10.0f };
+				mMonsterThicks[i] = {.x = 10.0f, .y = 10.0f};
 
 				float t = (mMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
-				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+				mMonsterThicks[i] = Math::LerpVector(mMonsterThicks[i], { 0.1f , 0.1f }, t);
 
 				if (t >= 1.0f)
 				{
@@ -1722,12 +1722,12 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mRunMonsterDieEffectTimer[i] += deltaTime;
 
-				mMonsterThicks = { .x = 10.0f, .y = 10.0f };
+				mRunMonsterThicks[i] = {.x = 10.0f, .y = 10.0f};
 
 				float t = (mRunMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
-				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+				mRunMonsterThicks[i] = Math::LerpVector(mRunMonsterThicks[i], { 0.1f , 0.1f }, t);
 
 				if (t >= 1.0f)
 				{
@@ -1770,12 +1770,12 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mSlowMonsterDieEffectTimer[i] += deltaTime;
 
-				mMonsterThicks = { .x = 6.0f, .y = 6.0f };
+				mSlowMonsterThicks[i] = {.x = 6.0f, .y = 6.0f};
 
 				float t = (mSlowMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
-				mMonsterThicks = Math::LerpVector(mMonsterThicks, { 0.1f , 0.1f }, t);
+				mSlowMonsterThicks[i] = Math::LerpVector(mSlowMonsterThicks[i], { 0.1f , 0.1f }, t);
 
 				if (t >= 1.0f)
 				{
@@ -1900,7 +1900,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks[i].x);
 		}
 	}
 
@@ -1928,7 +1928,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mRunMonsterThicks[i].x);
 		}
 	}
 
@@ -1956,7 +1956,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = OFFSET
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks.x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mSlowMonsterThicks[i].x);
 		}
 	}
 
