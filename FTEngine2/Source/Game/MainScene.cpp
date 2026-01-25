@@ -743,17 +743,17 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float SHIELD_SKILL_DURATION = 3.0f;
 			static float blinkTimer;
 
-			if (mShieldState == SHIELD_STATE::End
+			if (mShieldState == eShield_State::End
 				and Input::Get().GetKeyDown('R'))
 			{
 				mShieldLabel.SetActive(true);
-				mShieldState = SHIELD_STATE::Growing;
+				mShieldState = eShield_State::Growing;
 			}
 
 			mShieldTotalElapsedTimer += deltaTime;
 			const uint32_t seconds = uint32_t(mShieldTotalElapsedTimer) % 60;
 
-			if (mShieldState != SHIELD_STATE::End)
+			if (mShieldState != eShield_State::End)
 			{
 				mShieldLabel.SetText(std::to_wstring(8 - seconds));
 			}
@@ -764,7 +764,7 @@ bool MainScene::Update(const float deltaTime)
 
 			switch (mShieldState)
 			{
-			case SHIELD_STATE::Growing:
+			case eShield_State::Growing:
 			{
 				speed = 50.0f;
 
@@ -773,13 +773,13 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mShieldScale.width >= SHELD_MAX_RADIUS)
 				{
-					mShieldState = SHIELD_STATE::Waiting;
+					mShieldState = eShield_State::Waiting;
 				}
 
 				break;
 			}
 
-			case SHIELD_STATE::Waiting:
+			case eShield_State::Waiting:
 			{
 				speed = 0.0f;
 
@@ -811,26 +811,26 @@ bool MainScene::Update(const float deltaTime)
 					blinkTimer = 0.0f;
 					mShieldBlinkOn = true;
 
-					mShieldState = SHIELD_STATE::CoolTime;
+					mShieldState = eShield_State::CoolTime;
 				}
 
 				break;
 			}
 
-			case SHIELD_STATE::CoolTime:
+			case eShield_State::CoolTime:
 			{
 				shieldCoolTimer += deltaTime;
 
 				if (shieldCoolTimer >= 2.0f)
 				{
 					shieldCoolTimer = 0.0f;
-					mShieldState = SHIELD_STATE::End;
+					mShieldState = eShield_State::End;
 				}
 
 				break;
 			}
 
-			case SHIELD_STATE::End:
+			case eShield_State::End:
 				mShieldTotalElapsedTimer = 0.0f;
 				break;
 
@@ -842,9 +842,9 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어 주변을 공전하는 스킬을 업데이트한다.
 		{
 			if (Input::Get().GetKeyDown('Q')
-				and mOrbitState == ORBIT_STATE::End)
+				and mOrbitState == eOrbit_State::End)
 			{
-				mOrbitState = ORBIT_STATE::Rotating;
+				mOrbitState = eOrbit_State::Rotating;
 			}
 
 			static float orbitOnTimer;
@@ -857,7 +857,7 @@ bool MainScene::Update(const float deltaTime)
 			switch (mOrbitState)
 			{
 
-			case ORBIT_STATE::Rotating:
+			case eOrbit_State::Rotating:
 			{
 				orbitOnTimer += deltaTime;
 				mOrbitAngle += SPEED * deltaTime;
@@ -885,23 +885,23 @@ bool MainScene::Update(const float deltaTime)
 				if (orbitOnTimer >= ORBIT_ON_TIMER)
 				{
 					orbitOnTimer = 0.0f;
-					mOrbitState = ORBIT_STATE::CoolTime;
+					mOrbitState = eOrbit_State::CoolTime;
 				}
 
 				break;
 			}
-			case ORBIT_STATE::CoolTime:
+			case eOrbit_State::CoolTime:
 			{
 				orbitCoolTimer += deltaTime;
 
 				if (orbitCoolTimer >= ORBIT_COOL_TIMER)
 				{
 					orbitCoolTimer = 0.0f;
-					mOrbitState = ORBIT_STATE::End;
+					mOrbitState = eOrbit_State::End;
 				}
 				break;
 			}
-			case ORBIT_STATE::End:
+			case eOrbit_State::End:
 				break;
 			default:
 				break;
@@ -1926,7 +1926,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			.radiusY = mShieldScale.height * 0.5f
 		};
 
-		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting
+		if (mShieldState == eShield_State::Growing or mShieldState == eShield_State::Waiting
 			and mShieldBlinkOn)
 		{
 			renderTarget->DrawEllipse(ellipse, mYellowBrush, 10.0f);
@@ -1939,7 +1939,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
-		if (mOrbitState == ORBIT_STATE::Rotating
+		if (mOrbitState == eOrbit_State::Rotating
 			and mOrbitBlinkOn)
 		{
 			renderTarget->DrawEllipse(mOrbitEllipse, mYellowBrush, 5.0f);

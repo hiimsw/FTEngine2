@@ -7,7 +7,7 @@
 #include "Core/Label.h"
 #include "Core/Font.h"
 
-enum class SHIELD_STATE
+enum class eShield_State
 {
 	Growing,
 	Waiting,
@@ -15,7 +15,7 @@ enum class SHIELD_STATE
 	End
 };
 
-enum class ORBIT_STATE
+enum class eOrbit_State
 {
 	Rotating,
 	CoolTime,
@@ -151,8 +151,8 @@ private:
 
 	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
 
-	SHIELD_STATE mShieldState = SHIELD_STATE::End;
-	ORBIT_STATE mOrbitState = ORBIT_STATE::End;
+	eShield_State mShieldState = eShield_State::End;
+	eOrbit_State mOrbitState = eOrbit_State::End;
 	eSlow_Monster_State mSlowMonsterState[SLOW_MONSTER_COUNT] = { eSlow_Monster_State::End };
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
