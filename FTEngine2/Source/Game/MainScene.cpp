@@ -1405,7 +1405,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mMonsterDamageTimer += deltaTime;
+			mMonsterDamageTimer[i] += deltaTime;
 
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
@@ -1416,11 +1416,11 @@ bool MainScene::Update(const float deltaTime)
 				const float frequency = getRandom(50.0f, 60.0f);
 				initializeCameraShake(amplitude, duration, frequency);
 
-				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					monster.SetActive(false);
-					mMonsterDamageTimer = 0.0f;
+					mMonsterDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -1429,26 +1429,26 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
 			{
-				mInBoundaryToMonsterTimer += deltaTime;
+				mInBoundaryToMonsterTimer[i] += deltaTime;
 
 				D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
 				monster.SetScale({ startScale.x, startScale.y });
 
-				float t = (mInBoundaryToMonsterTimer - START_LERP_TIME) / DURING_TIME;
+				float t = (mInBoundaryToMonsterTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
 				if (t >= 1.0f)
 				{
 					monster.SetActive(false);
-					mInBoundaryToMonsterTimer = 0.0f;
+					mInBoundaryToMonsterTimer[i] = 0.0f;
 				}
 
-				if (mMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mMonsterDamageTimer = 0.0f;
+					mMonsterDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -1463,7 +1463,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mRunMonsterDamageTimer += deltaTime;
+			mRunMonsterDamageTimer[i] += deltaTime;
 
 			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
@@ -1474,11 +1474,11 @@ bool MainScene::Update(const float deltaTime)
 				const float frequency = getRandom(50.0f, 60.0f);
 				initializeCameraShake(amplitude, duration, frequency);
 
-				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					runMonster.SetActive(false);
-					mRunMonsterDamageTimer = 0.0f;
+					mRunMonsterDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -1487,26 +1487,26 @@ bool MainScene::Update(const float deltaTime)
 			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
-				mInBoundaryToRunMonsterTimer += deltaTime;
+				mInBoundaryToRunMonsterTimer[i] += deltaTime;
 
 				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
 				runMonster.SetScale({ startScale.x, startScale.y });
 
-				float t = (mInBoundaryToRunMonsterTimer - START_LERP_TIME) / DURING_TIME;
+				float t = (mInBoundaryToRunMonsterTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
 				if (t >= 1.0f)
 				{
 					runMonster.SetActive(false);
-					mInBoundaryToRunMonsterTimer = 0.0f;
+					mInBoundaryToRunMonsterTimer[i] = 0.0f;
 				}
 
-				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mRunMonsterDamageTimer = 0.0f;
+					mRunMonsterDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -1515,10 +1515,10 @@ bool MainScene::Update(const float deltaTime)
 			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
 			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
-				if (mRunMonsterDamageTimer >= DAMAGE_COOL_TIMER)
+				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					runMonster.SetActive(false);
-					mRunMonsterDamageTimer = 0.0f;
+					mRunMonsterDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -1647,14 +1647,14 @@ bool MainScene::Update(const float deltaTime)
 
 			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
-				mMonsterDieTimer += deltaTime;
+				mMonsterDieTimer[i] += deltaTime;
 
 				Sprite& monster = mMonsters[i];
 
 				D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-				float t = (mMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
+				float t = (mMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
@@ -1663,7 +1663,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					monster.SetActive(false);
 					mIsMonsterToBullets[i] = false;
-					mMonsterDieTimer = 0.0f;
+					mMonsterDieTimer[i] = 0.0f;
 				}
 
 				monster.SetScale({ startScale.x , startScale.y });
@@ -1696,14 +1696,14 @@ bool MainScene::Update(const float deltaTime)
 
 			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
-				mRunMonsterDieTimer += deltaTime;
+				mRunMonsterDieTimer[i] += deltaTime;
 
 				Sprite& runMonster = mRunMonsters[i];
 
 				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-				float t = (mRunMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
+				float t = (mRunMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
@@ -1712,7 +1712,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					runMonster.SetActive(false);
 					mIsRunMonsterToBullets[i] = false;
-					mRunMonsterDieTimer = 0.0f;
+					mRunMonsterDieTimer[i] = 0.0f;
 				}
 
 				runMonster.SetScale({ startScale.x , startScale.y });
@@ -1745,14 +1745,14 @@ bool MainScene::Update(const float deltaTime)
 			
 			// 몬스터가 사라지는 이펙트가 생성된다.
 			{
-				mSlowMonsterDieTimer += deltaTime;
+				mSlowMonsterDieTimer[i] += deltaTime;
 
 				Sprite& slowMonster = mSlowMonsters[i];
 
 				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
 				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-				float t = (mSlowMonsterDieTimer - START_LERP_TIME) / DURING_TIME;
+				float t = (mSlowMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
@@ -1760,7 +1760,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					slowMonster.SetActive(false);
 					mIsSlowMonsterToBullets[i] = false;
-					mSlowMonsterDieTimer = 0.0f;
+					mSlowMonsterDieTimer[i] = 0.0f;
 				}
 
 				slowMonster.SetScale({ startScale.x , startScale.y });
