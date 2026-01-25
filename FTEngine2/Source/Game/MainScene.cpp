@@ -1165,7 +1165,8 @@ bool MainScene::Update(const float deltaTime)
 		// 이동한다.
 		static float movingTimer[SLOW_MONSTER_COUNT];
 		static float stopTimer[SLOW_MONSTER_COUNT];
-		static float speed;
+		static float speed[SLOW_MONSTER_COUNT];
+		static float shadowCoolTime[SLOW_MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
@@ -1185,7 +1186,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 			case eSlow_Monster_State::Moving:
 				movingTimer[i] += deltaTime;
-				speed = 30.0f;
+				speed[i] = 30.0f;
 
 				if (movingTimer[i] >= 1.0f)
 				{
@@ -1196,7 +1197,7 @@ bool MainScene::Update(const float deltaTime)
 
 			case eSlow_Monster_State::Stop:
 				stopTimer[i] += deltaTime;
-				speed = 0.0f;
+				speed[i] = 0.0f;
 
 				if (stopTimer[i] >= 1.5f)
 				{
@@ -1209,26 +1210,55 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F position = slowMonster.GetPosition();
 			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
 			direction = Math::NormalizeVector(direction);
-			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed * deltaTime);
+			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
 
 			position = Math::AddVector(position, velocity);
 			slowMonster.SetPosition(position);
 
-			for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
-			{
-				Sprite& shadow = mSlowMonsterShadows[i][j];
+			// 그림자도 같이 이동한다.
+			shadowCoolTime[i] -= deltaTime;
 
-				if (mSlowMonsterState[i] == eSlow_Monster_State::Moving)
+			if (shadowCoolTime[i] <= 0.0f)
+			{
+				for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
 				{
-					shadow.SetPosition(Math::SubtractVector(position, Math::ScaleVector(direction, 5.0f * (j + 1))));
+					Sprite& shadow = mSlowMonsterShadows[i][j];
+
+					if (shadow.IsActive())
+					{
+						continue;
+					}
+
+					shadow.SetOpacity(1.0f);
+					shadow.SetPosition(position);
 					shadow.SetActive(true);
+
+					break;
 				}
-				else
+
+				shadowCoolTime[i] = 0.02f;
+			}
+		}
+
+		// 그림자를 세팅한다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			for (Sprite& shadow : mSlowMonsterShadows[i])
+			{
+				if (not shadow.IsActive())
+				{
+					continue;
+				}
+
+				float opacity = shadow.GetOpacity();
+				opacity -= 5.0f * deltaTime;
+				shadow.SetOpacity(opacity);
+
+				if (opacity <= 0.0f)
 				{
 					shadow.SetActive(false);
 				}
 			}
-
 		}
 	}
 
