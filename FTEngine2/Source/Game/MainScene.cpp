@@ -1581,7 +1581,7 @@ bool MainScene::Update(const float deltaTime)
 
 			mSlowMonsterDamageTimer[i] += deltaTime;
 
-			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
+			// 플레이어 - 느린 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(slowMonster)))
 			{
 				// 카메라 흔들기를 시작합니다.
@@ -1600,7 +1600,7 @@ bool MainScene::Update(const float deltaTime)
 				break;
 			}
 
-			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			// 내부 원과 충돌하면 느린 몬스터는 삭제된다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, slowMonster.GetPosition()))
 			{
 				mInBoundaryToSlowMonsterTimer[i] += deltaTime;
@@ -1615,25 +1615,14 @@ bool MainScene::Update(const float deltaTime)
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
 				if (t >= 1.0f)
 				{
-					slowMonster.SetActive(false);
 					mInBoundaryToSlowMonsterTimer[i] = 0.0f;
 				}
 
 				if (mSlowMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
-					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mSlowMonsterDamageTimer[i] = 0.0f;
-				}
-
-				break;
-			}
-
-			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
-			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, slowMonster.GetPosition()))
-			{
-				if (mSlowMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
-				{
 					slowMonster.SetActive(false);
+
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mSlowMonsterDamageTimer[i] = 0.0f;
 				}
 
