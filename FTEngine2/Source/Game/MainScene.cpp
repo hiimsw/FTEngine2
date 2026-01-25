@@ -1525,6 +1525,76 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+			if (not slowMonster.IsActive())
+			{
+				continue;
+			}
+
+			mSlowMonsterDamageTimer[i] += deltaTime;
+
+			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(slowMonster)))
+			{
+				// 카메라 흔들기를 시작합니다.
+				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
+				const float duration = getRandom(0.5f, 0.8f);
+				const float frequency = getRandom(50.0f, 60.0f);
+				initializeCameraShake(amplitude, duration, frequency);
+
+				if (mSlowMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
+					slowMonster.SetActive(false);
+					mSlowMonsterDamageTimer[i] = 0.0f;
+				}
+
+				break;
+			}
+
+			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, slowMonster.GetPosition()))
+			{
+				mInBoundaryToSlowMonsterTimer[i] += deltaTime;
+
+				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
+				slowMonster.SetScale({ startScale.x, startScale.y });
+
+				float t = (mInBoundaryToSlowMonsterTimer[i] - START_LERP_TIME) / DURING_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
+				if (t >= 1.0f)
+				{
+					slowMonster.SetActive(false);
+					mInBoundaryToSlowMonsterTimer[i] = 0.0f;
+				}
+
+				if (mSlowMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				{
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
+					mSlowMonsterDamageTimer[i] = 0.0f;
+				}
+
+				break;
+			}
+
+			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, slowMonster.GetPosition()))
+			{
+				if (mSlowMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				{
+					slowMonster.SetActive(false);
+					mSlowMonsterDamageTimer[i] = 0.0f;
+				}
+
+				break;
+			}
+		}
+
 		// 몬스터 - 총알에 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{

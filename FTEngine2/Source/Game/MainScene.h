@@ -185,6 +185,7 @@ private:
 	float mGameTimer{};
 	float mMonsterDamageTimer[MONSTER_COUNT]{};
 	float mRunMonsterDamageTimer[RUN_MONSTER_COUNT]{};
+	float mSlowMonsterDamageTimer[SLOW_MONSTER_COUNT]{};
 	float mShieldTotalElapsedTimer{};
 	float mOrbitAngle{};
 	float mMonsterDieTimer[MONSTER_COUNT]{};
@@ -192,6 +193,7 @@ private:
 	float mSlowMonsterDieTimer[SLOW_MONSTER_COUNT]{};
 	float mInBoundaryToMonsterTimer[MONSTER_COUNT]{};
 	float mInBoundaryToRunMonsterTimer[RUN_MONSTER_COUNT]{};
+	float mInBoundaryToSlowMonsterTimer[SLOW_MONSTER_COUNT]{};
 	float mCasingTimer[CASING_COUNT]{};
 	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
 	float mRunMonsterDieEffectTimer[RUN_MONSTER_COUNT]{};
