@@ -1792,6 +1792,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		// 총알과 돌진 몬스터가 충돌하면, 돌진 몬스터는 사라지고 이펙트가 생성된다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			if (not mIsRunMonsterToBullets[i])
@@ -1799,7 +1800,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			// 몬스터가 사라지는 이펙트가 생성된다.
+			// 돌진 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mRunMonsterDieTimer[i] += deltaTime;
 
@@ -1841,6 +1842,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		// 총알과 느린 몬스터가 충돌하면, 느린 몬스터는 사라지고 이펙트가 생성된다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			if (not mIsSlowMonsterToBullets[i])
@@ -1848,7 +1850,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 			
-			// 몬스터가 사라지는 이펙트가 생성된다.
+			// 느린 몬스터가 사라지는 이펙트가 생성된다.
 			{
 				mSlowMonsterDieTimer[i] += deltaTime;
 
@@ -1908,6 +1910,15 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, slowMonster.GetPosition()))
+			{
+				slowMonster.SetActive(false);
+			}
+		}
+
 		// 플레이어 주변을 공전하는 원과 몬스터가 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -1920,10 +1931,19 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mRunMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, monster.GetPosition()))
+			Sprite& runMonster = mRunMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, runMonster.GetPosition()))
 			{
-				monster.SetActive(false);
+				runMonster.SetActive(false);
+			}
+		}
+
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, slowMonster.GetPosition()))
+			{
+				slowMonster.SetActive(false);
 			}
 		}
 	}
