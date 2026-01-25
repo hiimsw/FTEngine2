@@ -107,8 +107,9 @@ private:
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
 	static constexpr int32_t MONSTER_ATTACK_VALUE = 10;
 	static constexpr int32_t HERO_MAX_HP = 1500;
-	static constexpr int32_t SHADOW_COUNT = 5;
+	static constexpr int32_t SHADOW_COUNT = 40;
 	static constexpr int32_t SLOW_MONSTER_COUNT = 5;
+	static constexpr int32_t MONSTER_MAX_HP = 20;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -137,6 +138,7 @@ private:
 	int32_t mDashCount = DASH_MAX_COUNT;
 	int32_t mBulletValue = BULLET_COUNT;
 	int32_t mCasingIndex = 0;
+	int32_t mMonsterHpValue = MONSTER_MAX_HP;
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};

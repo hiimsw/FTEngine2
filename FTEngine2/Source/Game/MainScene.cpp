@@ -60,20 +60,12 @@ void MainScene::Initialize()
 		mHero.SetTexture(&mRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
-		// 플레이어 dash 그림자를 초기화한다.
-		mDashShadow[0].SetOpacity(0.8f);
-		mDashShadow[1].SetOpacity(0.6f);
-		mDashShadow[2].SetOpacity(0.4f);
-		mDashShadow[3].SetOpacity(0.3f);
-		mDashShadow[4].SetOpacity(0.2f);
-
-		for (uint32_t i = 0; i < SHADOW_COUNT; ++i)
+		for (Sprite& shadow : mDashShadow)
 		{
-			mDashShadow[i].SetPosition(mHero.GetPosition());
-			mDashShadow[i].SetScale(mHero.GetScale());
-			mDashShadow[i].SetActive(false);
-			mDashShadow[i].SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Player)].push_back(&mDashShadow[i]);
+			shadow.SetScale(mHero.GetScale());
+			shadow.SetTexture(&mRectangleTexture);
+			shadow.SetActive(false);
+			mSpriteLayers[uint32_t(Layer::Player)].push_back(&shadow);
 		}
 	}
 
@@ -487,6 +479,7 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float DASH_ACC = 30.0f;
 			static float dashSpeed = 0.0f;
 			static bool bDashing = false;
+			static float dashShadowCoolTime = 0.0f;
 			static D2D1_POINT_2F dashDirection{};
 
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
@@ -504,6 +497,7 @@ bool MainScene::Update(const float deltaTime)
 					{
 						mDashCount--;
 						bDashing = true;
+						dashShadowCoolTime = 0.0f;
 					}
 				}
 
@@ -514,39 +508,57 @@ bool MainScene::Update(const float deltaTime)
 			static float dashScaleTimer;
 			static float dashTimer[SHADOW_COUNT];
 
-			for (uint32_t i = 0; i < SHADOW_COUNT; ++i)
+			if (bDashing)
 			{
-				if (bDashing)
+				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
+
+				if (dashSpeed >= MAX_DASH_SPEED)
 				{
-					mDashShadow[i].SetActive(true);
-
-					dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
-					const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
-
-					if (dashSpeed >= MAX_DASH_SPEED)
-					{
-						dashSpeed = 0.0f;
-						bDashing = false;
-					}
-
-					const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-					mHero.SetPosition(position);
-
-					const D2D1_POINT_2F heroPosition = mHero.GetPosition();
-					constexpr float OFFSET = 20.0f;
-					mDashShadow[i].SetPosition(Math::SubtractVector(heroPosition, Math::ScaleVector(dashDirection, OFFSET * (i + 1))));
+					dashSpeed = 0.0f;
+					bDashing = false;
 				}
-				else
+
+				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
+				mHero.SetPosition(position);
+
+				dashShadowCoolTime -= deltaTime;
+				if (dashShadowCoolTime <= 0.0f)
 				{
-					dashTimer[i] += deltaTime;
-					if (dashTimer[i] >= 0.13f)
+					for (Sprite& shadow : mDashShadow)
 					{
-						mDashShadow[i].SetActive(false);
-						dashTimer[i] = 0.0f;
+						if (shadow.IsActive())
+						{
+							continue;
+						}
+
+						shadow.SetOpacity(1.0f);
+						shadow.SetPosition(position);
+						shadow.SetActive(true);
+
+						break;
 					}
+					
+					dashShadowCoolTime = 0.05f;
 				}
 			}
 
+			for (Sprite& shadow : mDashShadow)
+			{
+				if (not shadow.IsActive())
+				{
+					continue;
+				}
+
+				float opacity = shadow.GetOpacity();
+				opacity -= 5.0f * deltaTime;
+				shadow.SetOpacity(opacity);
+				
+				if (opacity <= 0.0f)
+				{
+					shadow.SetActive(false);
+				}
+			}
 
 			if (mDashCount < DASH_MAX_COUNT)
 			{
@@ -614,8 +626,7 @@ bool MainScene::Update(const float deltaTime)
 						}
 
 						Sprite& casing = mCasings[mCasingIndex];
-
-						casing.SetOpacity(0.0f);
+						casing.SetOpacity(1.0f);
 						casing.SetActive(true);
 
 						constexpr float RANGE = 30.0f;
@@ -690,7 +701,7 @@ bool MainScene::Update(const float deltaTime)
 				bullet.SetOpacity(lerp.x);
 			}
 
-			// 탄피를 이동시킨다.
+			// 탄피를 업데이트한다.
 			{
 				constexpr float SPEED = 500.0f;
 
@@ -712,7 +723,7 @@ bool MainScene::Update(const float deltaTime)
 					float opacity = casing.GetOpacity();
 
 					D2D1_POINT_2F lerp = { opacity, opacity };
-					lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
+					lerp = Math::LerpVector(lerp, { 0.0f, 0.0f }, 10.0f * deltaTime);
 					casing.SetOpacity(lerp.x);
 
 					if (mCasingTimer[i] >= 0.5f)
@@ -1372,7 +1383,7 @@ bool MainScene::Update(const float deltaTime)
 				.Point1 = endPosition
 			};
 
-			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, endPosition))
+			if (not Collision::IsCollidedCircleWithLine({}, BOUNDARY_RADIUS, line))
 			{
 				bullet.SetActive(false);
 			}
