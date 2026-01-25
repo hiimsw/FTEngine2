@@ -1246,7 +1246,6 @@ bool MainScene::Update(const float deltaTime)
 
 					endPosition[i] = Math::AddVector(startPosition[i], Math::ScaleVector(direction, LENGTH));
 
-					slowMonster.SetPosition(Math::LerpVector(slowMonster.GetPosition(), endPosition[i], 0.02f));
 					mSlowMonsterState[i] = eSlow_Monster_State::Moving;
 				}
 
@@ -1274,7 +1273,7 @@ bool MainScene::Update(const float deltaTime)
 					break;
 				}
 
-				shadowCoolTime[i] = 0.05f;
+				shadowCoolTime[i] = 0.15f;
 			}
 		}
 	}
