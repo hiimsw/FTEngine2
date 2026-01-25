@@ -1156,17 +1156,43 @@ bool MainScene::Update(const float deltaTime)
 
 				mSlowMonsterSpawnTimer = 0.0f;
 
-				mSlowMonsterState[i] = eSlow_Monster_State::Moving;
+				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
 
 				break;
 			}
 		}
 
-		// 이동한다.
+		// 그림자를 업데이트한다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			for (Sprite& shadow : mSlowMonsterShadows[i])
+			{
+				if (not shadow.IsActive())
+				{
+					continue;
+				}
+
+				float opacity = shadow.GetOpacity();
+				opacity -= 5.0f * deltaTime;
+				shadow.SetOpacity(opacity);
+
+				if (opacity <= 0.0f)
+				{
+					shadow.SetActive(false);
+				}
+			}
+		}
+
+		// 느린 몬스터와 그림자가 이동한다.
 		static float movingTimer[SLOW_MONSTER_COUNT];
 		static float stopTimer[SLOW_MONSTER_COUNT];
 		static float speed[SLOW_MONSTER_COUNT];
 		static float shadowCoolTime[SLOW_MONSTER_COUNT];
+		constexpr float LENGTH = 100.0f;
+		constexpr float MOVE_TIME = 1.5f;
+		constexpr float STOP_TIME = 1.0f;
+		static D2D1_POINT_2F startPosition[SLOW_MONSTER_COUNT];
+		static D2D1_POINT_2F endPosition[SLOW_MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
@@ -1185,37 +1211,49 @@ bool MainScene::Update(const float deltaTime)
 			switch (mSlowMonsterState[i])
 			{
 			case eSlow_Monster_State::Moving:
+			{
 				movingTimer[i] += deltaTime;
-				speed[i] = 30.0f;
 
-				if (movingTimer[i] >= 1.0f)
+				float t = movingTimer[i] / MOVE_TIME;
+				t = std::clamp(t, 0.0f, 1.0f);
+
+				// 갈수록 느려지는 효과이다.
+				float easeOutT = 1.0f - (1.0f - t) * (1.0f - t);
+
+				D2D1_POINT_2F position = Math::LerpVector(startPosition[i], endPosition[i], easeOutT);
+				slowMonster.SetPosition(position);
+
+				if (easeOutT >= 1.0f)
 				{
 					mSlowMonsterState[i] = eSlow_Monster_State::Stop;
-					movingTimer[i] = 0.0f;
-				}
-				break;
-
-			case eSlow_Monster_State::Stop:
-				stopTimer[i] += deltaTime;
-				speed[i] = 0.0f;
-
-				if (stopTimer[i] >= 1.5f)
-				{
-					mSlowMonsterState[i] = eSlow_Monster_State::Moving;
 					stopTimer[i] = 0.0f;
 				}
+
 				break;
 			}
 
-			D2D1_POINT_2F position = slowMonster.GetPosition();
-			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
-			direction = Math::NormalizeVector(direction);
-			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
+			case eSlow_Monster_State::Stop:
+			{
+				stopTimer[i] += deltaTime;
+				if (stopTimer[i] >= STOP_TIME)
+				{
+					movingTimer[i] = 0.0f;
 
-			position = Math::AddVector(position, velocity);
-			slowMonster.SetPosition(position);
+					startPosition[i] = slowMonster.GetPosition();
 
-			// 그림자도 같이 이동한다.
+					D2D1_POINT_2F direction = Math::SubtractVector({}, startPosition[i]);
+					direction = Math::NormalizeVector(direction);
+
+					endPosition[i] = Math::AddVector(startPosition[i], Math::ScaleVector(direction, LENGTH));
+
+					slowMonster.SetPosition(Math::LerpVector(slowMonster.GetPosition(), endPosition[i], 0.02f));
+					mSlowMonsterState[i] = eSlow_Monster_State::Moving;
+				}
+
+				break;
+			}
+			}
+
 			shadowCoolTime[i] -= deltaTime;
 
 			if (shadowCoolTime[i] <= 0.0f)
@@ -1230,34 +1268,13 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					shadow.SetOpacity(1.0f);
-					shadow.SetPosition(position);
+					shadow.SetPosition(slowMonster.GetPosition());
 					shadow.SetActive(true);
 
 					break;
 				}
 
-				shadowCoolTime[i] = 0.02f;
-			}
-		}
-
-		// 그림자를 세팅한다.
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
-		{
-			for (Sprite& shadow : mSlowMonsterShadows[i])
-			{
-				if (not shadow.IsActive())
-				{
-					continue;
-				}
-
-				float opacity = shadow.GetOpacity();
-				opacity -= 5.0f * deltaTime;
-				shadow.SetOpacity(opacity);
-
-				if (opacity <= 0.0f)
-				{
-					shadow.SetActive(false);
-				}
+				shadowCoolTime[i] = 0.05f;
 			}
 		}
 	}
