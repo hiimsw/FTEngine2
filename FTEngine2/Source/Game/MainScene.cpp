@@ -100,8 +100,8 @@ void MainScene::Initialize()
 		mOrbitEllipse =
 		{
 			.point = {.x = 0.0f, .y = -80.0f },
-			.radiusX = 5.0f,
-			.radiusY = 5.0f,
+			.radiusX = 20.0f,
+			.radiusY = 20.0f,
 		};
 	}
 
@@ -1859,7 +1859,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		if (mShieldState == SHIELD_STATE::Growing or mShieldState == SHIELD_STATE::Waiting
 			and mShieldBlinkOn)
 		{
-			renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+			renderTarget->DrawEllipse(ellipse, mYellowBrush, 10.0f);
 		}
 	}
 
@@ -1872,7 +1872,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		if (mOrbitState == ORBIT_STATE::Rotating
 			and mOrbitBlinkOn)
 		{
-			renderTarget->DrawEllipse(mOrbitEllipse, mYellowBrush, 2.0f);
+			renderTarget->DrawEllipse(mOrbitEllipse, mYellowBrush, 5.0f);
 		}
 	}
 
