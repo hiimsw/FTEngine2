@@ -23,7 +23,10 @@ void Core::Initialize(HWND hWnd, Scene* scene)
 	D2D1_SIZE_U windowRect = { .width = UINT32(Constant::Get().GetWidth()), .height = UINT32(Constant::Get().GetHeight()) };
 	HR(mFactory->CreateHwndRenderTarget(D2D1::RenderTargetProperties(), D2D1::HwndRenderTargetProperties(hWnd, windowRect), &mRenderTarget));
 
-	mHelper._Initialize(mWICImagingFactory, mDwriteFactory, mRenderTarget);
+	FC(FMOD::System_Create(&mSoundSystem));
+	FC(mSoundSystem->init(32, FMOD_INIT_NORMAL, nullptr));
+
+	mHelper._Initialize(mWICImagingFactory, mDwriteFactory, mRenderTarget, mSoundSystem);
 
 	ChangeScene(scene);
 }

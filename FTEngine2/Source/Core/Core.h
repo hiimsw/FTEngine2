@@ -21,6 +21,7 @@ private:
 	IWICImagingFactory* mWICImagingFactory = nullptr;
 	IDWriteFactory* mDwriteFactory = nullptr;
 	ID2D1HwndRenderTarget* mRenderTarget = nullptr;
+	FMOD::System* mSoundSystem = nullptr;
 
 	Helper mHelper{};
 	Scene* mScene = nullptr;

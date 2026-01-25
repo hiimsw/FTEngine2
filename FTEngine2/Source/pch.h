@@ -13,6 +13,12 @@
 #include <unordered_map>
 #include <wincodec.h>
 
+#include <fmod/fmod.hpp>
+
+#if defined(_DEBUG)
+#include <fmod/fmod_errors.h>
+#endif
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -112,6 +118,19 @@ void(0)
 	((void)0)
 #endif
 
+#if !defined(FC)
+#define FC(x) \
+	{ \
+		FMOD_RESULT result = (x); \
+		if (result != FMOD_OK) \
+		{ \
+			DEBUG_LOG("FMOD Error: %s\n", FMOD_ErrorString(result)); \
+			DEBUG_BREAK(); \
+		} \
+	} \
+	((void)0)
+#endif
+
 #else
 
 #define DEBUG_LOG(...) ((void)0)
@@ -126,6 +145,10 @@ void(0)
 
 #if !defined(HR)
 #define HR(x) (x)
+#endif
+
+#if !defined(FC)
+#define FC(x) (x)
 #endif
 
 #endif
