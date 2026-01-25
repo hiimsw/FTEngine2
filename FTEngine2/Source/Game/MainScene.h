@@ -102,7 +102,7 @@ private:
 	static constexpr float DURING_TIME = 0.3f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
-	static constexpr uint32_t RUN_MONSTER_COUNT = 10;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr uint32_t BULLET_COUNT = 40;
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
 	static constexpr uint32_t DASH_MAX_COUNT = 3;
@@ -150,6 +150,9 @@ private:
 	D2D1_POINT_2F mSlowMonsterThicks[SLOW_MONSTER_COUNT]{};
 
 	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
+	D2D1_SIZE_F mMonsterBulletEffectScales[MONSTER_COUNT]{};
+	D2D1_SIZE_F mRunMonsterBulletEffectScales[RUN_MONSTER_COUNT]{};
+	D2D1_SIZE_F mSlowMonsterBulletEffectScales[SLOW_MONSTER_COUNT]{};
 
 	eShield_State mShieldState = eShield_State::End;
 	eOrbit_State mOrbitState = eOrbit_State::End;

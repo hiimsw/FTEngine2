@@ -945,6 +945,9 @@ bool MainScene::Update(const float deltaTime)
 
 				// 스폰할 때 속도도 같이 초기화한다.
 				speed[i] = getRandom(10.0f, 80.0f);
+
+				// 이펙트 크기도 초기화한다.
+				mMonsterBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 				break;
 			}
 		}
@@ -1046,6 +1049,8 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterSpawnTimer = 0.0f;
 
 				isMoveables[i] = false;
+
+				mRunMonsterBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 
 				if (mIsRunMonsterToBullets[i])
 				{
@@ -1157,6 +1162,8 @@ bool MainScene::Update(const float deltaTime)
 				mSlowMonsterSpawnTimer = 0.0f;
 
 				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+
+				mSlowMonsterBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 
 				break;
 			}
@@ -1778,11 +1785,15 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mMonsterDieEffectTimer[i] += deltaTime;
 
-				mMonsterThicks[i] = {.x = 10.0f, .y = 10.0f};
+				// 크기를 보간한다.
+				D2D1_POINT_2F scale = { mMonsterBulletEffectScales[i].width, mMonsterBulletEffectScales[i].height };
+				scale = Math::LerpVector(scale, { 100.0f , 100.0f }, 5.0f * deltaTime);
+				mMonsterBulletEffectScales[i] = { scale.x, scale.y };
 
+				// 두께를 보간한다.
+				mMonsterThicks[i] = { .x = 20.0f, .y = 20.0f };
 				float t = (mMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
-
 				mMonsterThicks[i] = Math::LerpVector(mMonsterThicks[i], { 0.1f , 0.1f }, t);
 
 				if (t >= 1.0f)
@@ -1828,11 +1839,15 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mRunMonsterDieEffectTimer[i] += deltaTime;
 
-				mRunMonsterThicks[i] = {.x = 10.0f, .y = 10.0f};
+				// 크기를 보간한다.
+				D2D1_POINT_2F scale = { mRunMonsterBulletEffectScales[i].width, mRunMonsterBulletEffectScales[i].height };
+				scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
+				mRunMonsterBulletEffectScales[i] = { scale.x, scale.y };
 
+				// 두께를 보간한다.
+				mRunMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
 				float t = (mRunMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
-
 				mRunMonsterThicks[i] = Math::LerpVector(mRunMonsterThicks[i], { 0.1f , 0.1f }, t);
 
 				if (t >= 1.0f)
@@ -1863,6 +1878,7 @@ bool MainScene::Update(const float deltaTime)
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
+				
 				if (t >= 1.0f)
 				{
 					slowMonster.SetActive(false);
@@ -1877,8 +1893,13 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mSlowMonsterDieEffectTimer[i] += deltaTime;
 
-				mSlowMonsterThicks[i] = {.x = 6.0f, .y = 6.0f};
+				// 크기를 보간한다.
+				D2D1_POINT_2F scale = { mSlowMonsterBulletEffectScales[i].width, mSlowMonsterBulletEffectScales[i].height };
+				scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
+				mSlowMonsterBulletEffectScales[i] = { scale.x, scale.y };
 
+				// 두께를 보간한다.
+				mSlowMonsterThicks[i] = {.x = 15.0f, .y = 15.0f };
 				float t = (mSlowMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
 				t = std::clamp(t, 0.0f, 1.0f);
 
@@ -1990,7 +2011,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Hero 공전 스킬을 그린다.
 	{
-
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
@@ -2003,8 +2023,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 50.0f;
-
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			if (not mIsMonsterToBullets[i])
@@ -2014,15 +2032,15 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& monster = mMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 30.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 50.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
 			{
 				.left = 0.0f,
 				.top = 0.0f,
-				.right = OFFSET,
-				.bottom = OFFSET
+				.right = mMonsterBulletEffectScales[i].width,
+				.bottom = mMonsterBulletEffectScales[i].height
 			};
 
 			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterThicks[i].x);
@@ -2031,8 +2049,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 돌진 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 40.0f;
-
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			if (not mIsRunMonsterToBullets[i])
@@ -2042,15 +2058,15 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& runMonster = mRunMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ runMonster.GetPosition().x, runMonster.GetPosition().y + 27.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ runMonster.GetPosition().x, runMonster.GetPosition().y + 35.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
 			{
 				.left = 0.0f,
 				.top = 0.0f,
-				.right = OFFSET,
-				.bottom = OFFSET
+				.right = mRunMonsterBulletEffectScales[i].width,
+				.bottom = mRunMonsterBulletEffectScales[i].height
 			};
 
 			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mRunMonsterThicks[i].x);
@@ -2059,8 +2075,6 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 총알과 느린 몬스터가 충돌하면, 이펙트를 그린다.
 	{
-		constexpr float OFFSET = 15.0f;
-
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			if (not mIsSlowMonsterToBullets[i])
@@ -2070,15 +2084,15 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 			Sprite& slowMonster = mSlowMonsters[i];
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 11.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 35.0f }, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
 			{
 				.left = 0.0f,
 				.top = 0.0f,
-				.right = OFFSET,
-				.bottom = OFFSET
+				.right = mSlowMonsterBulletEffectScales[i].width,
+				.bottom = mSlowMonsterBulletEffectScales[i].height
 			};
 
 			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mSlowMonsterThicks[i].x);
