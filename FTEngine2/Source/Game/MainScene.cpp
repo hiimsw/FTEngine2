@@ -1585,9 +1585,9 @@ bool MainScene::Update(const float deltaTime)
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
 			{
 				// 카메라 흔들기를 시작합니다.
-				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
-				const float duration = getRandom(0.5f, 0.8f);
-				const float frequency = getRandom(50.0f, 60.0f);
+				const float amplitude = Constant::Get().GetHeight() * getRandom(0.012f, 0.020f);
+				const float duration = getRandom(0.3f, 0.9f);
+				const float frequency = getRandom(70.0f, 90.0f);
 				initializeCameraShake(amplitude, duration, frequency);
 
 				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
