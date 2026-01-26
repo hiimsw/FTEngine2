@@ -191,14 +191,16 @@ void MainScene::Initialize()
 
 	// Dash 게이지를 초기화한다.
 	{
-		mDashUiBar.SetPosition({ .x = -380.0f, .y = -UI_CENTER_POSITION_Y });
+		mDashUiBar.SetPosition({ .x = -300.0f, .y = -UI_CENTER_POSITION_Y });
 		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 1.0f });
 		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashUiBar.SetUI(true);
 		mDashUiBar.SetTexture(&mWhiteBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashUiBar);
 
-		mDashValue.SetPosition(mDashUiBar.GetPosition());
+		D2D1_POINT_2F offset = { .x = mDashUiBar.GetPosition().x + 2.5f, .y = mDashUiBar.GetPosition().y };
+		mDashValue.SetPosition(offset);
+
 		mDashValue.SetScale(mDashUiBar.GetScale());
 		mDashValue.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashValue.SetUI(true);
@@ -208,14 +210,18 @@ void MainScene::Initialize()
 
 	// HP바를 초기화한다.
 	{
-		mHpUiBar.SetPosition({ .x = mDashUiBar.GetPosition().x, .y = mDashUiBar.GetPosition().y + 50.f });
+		constexpr float OFFSET_Y = 50.0f;
+		mHpUiBar.SetPosition({ .x = mDashUiBar.GetPosition().x, .y = mDashUiBar.GetPosition().y + OFFSET_Y });
+
 		mHpUiBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
 		mHpUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpUiBar.SetUI(true);
 		mHpUiBar.SetTexture(&mWhiteBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
 
-		mHpBar.SetPosition(mHpUiBar.GetPosition());
+		D2D1_POINT_2F offset = { .x = mHpUiBar.GetPosition().x + 2.5f, .y = mHpUiBar.GetPosition().y };
+		mHpBar.SetPosition(offset);
+
 		mHpBar.SetScale(mHpUiBar.GetScale());
 		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mHpBar.SetUI(true);
@@ -239,7 +245,7 @@ void MainScene::Initialize()
 			mDashValueLabel.SetUI(true);
 
 			const D2D1_POINT_2F dashBarPosition = mDashUiBar.GetPosition();
-			constexpr float OFFSET_X = 5.0f;
+			constexpr float OFFSET_X = 10.0f;
 			D2D1_POINT_2F offset = { .x = dashBarPosition.x - OFFSET_X, .y = dashBarPosition.y };
 			mDashValueLabel.SetPosition(offset);
 
@@ -255,7 +261,7 @@ void MainScene::Initialize()
 			mHpValueLabel.SetUI(true);
 
 			const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
-			constexpr float OFFSET_X = 5.0f;
+			constexpr float OFFSET_X = 10.0f;
 			D2D1_POINT_2F offset = { .x = hpBarPosition.x - OFFSET_X, .y = hpBarPosition.y };
 			mHpValueLabel.SetPosition(offset);
 
