@@ -2220,6 +2220,11 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어 주변을 공전하는 원과 몬스터가 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			if (mOrbitState != eOrbit_State::Rotating)
+			{
+				continue;
+			}
+
 			Sprite& monster = mMonsters[i];
 
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
@@ -2231,6 +2236,11 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
+			if (mOrbitState != eOrbit_State::Rotating)
+			{
+				continue;
+			}
+
 			Sprite& runMonster = mRunMonsters[i];
 
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
@@ -2242,6 +2252,11 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
+			if (mOrbitState != eOrbit_State::Rotating)
+			{
+				continue;
+			}
+
 			Sprite& slowMonster = mSlowMonsters[i];
 
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
