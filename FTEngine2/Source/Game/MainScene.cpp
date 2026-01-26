@@ -51,6 +51,10 @@ void MainScene::Initialize()
 
 		mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
 		mRedCircleTexture.Initialize(GetHelper(), L"Resource/RedCircle.png");
+
+		mWhiteBarTexture.Initialize(GetHelper(), L"Resource/WhiteBar.png");
+		mRedBarTexture.Initialize(GetHelper(), L"Resource/RedBar.png");
+		mYellowBarTexture.Initialize(GetHelper(), L"Resource/YellowBar.png");
 	}
 
 	// 플레이어를 초기화한다.
@@ -204,18 +208,18 @@ void MainScene::Initialize()
 
 	// Dash 게이지를 초기화한다.
 	{
-		mDashUiBar.SetPosition({ .x = -600.0f, .y = UI_CENTER_POSITION_Y });
-		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
+		mDashUiBar.SetPosition({ .x = -380.0f, .y = -250.f });
+		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 1.0f });
 		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashUiBar.SetUI(true);
-		mDashUiBar.SetTexture(&mRectangleTexture);
+		mDashUiBar.SetTexture(&mWhiteBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashUiBar);
 
 		mDashValue.SetPosition(mDashUiBar.GetPosition());
-		mDashValue.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 0.5f });
+		mDashValue.SetScale(mDashUiBar.GetScale());
 		mDashValue.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashValue.SetUI(true);
-		mDashValue.SetTexture(&mBlueRectangleTexture);
+		mDashValue.SetTexture(&mYellowBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashValue);
 	}
 
@@ -1315,7 +1319,7 @@ bool MainScene::Update(const float deltaTime)
 	// 플레이어 대쉬바를 업데이트한다.
 	{
 		D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
-		dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * float(mDashCount) / UI_DASH_SCALE_WIDTH,  dashScale.y }, 8.0f * deltaTime);
+		dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * (float(mDashCount) / float(DASH_MAX_COUNT)),  dashScale.y }, 8.0f * deltaTime);
 		mDashValue.SetScale({ dashScale.x, dashScale.y });
 	}
 
@@ -2217,6 +2221,10 @@ void MainScene::Finalize()
 
 	mCircleTexture.Finalize();
 	mRedCircleTexture.Finalize();
+
+	mWhiteBarTexture.Finalize();
+	mRedBarTexture.Finalize();
+	mYellowBarTexture.Finalize();
 }
 
 D2D1_RECT_F MainScene::getRectangleFromSprite(const Sprite& sprite)

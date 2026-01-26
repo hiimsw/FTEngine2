@@ -77,6 +77,10 @@ private:
 	Texture mCircleTexture{};
 	Texture mRedCircleTexture{};
 
+	Texture mWhiteBarTexture{};
+	Texture mRedBarTexture{};
+	Texture mYellowBarTexture{};
+
 	Camera mMainCamera{};
 	float mCameraShakeTime = 0.0f;
 	float mCameraShakeTimer = 0.0f;
@@ -91,7 +95,7 @@ private:
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
-	static constexpr float UI_DASH_SCALE_WIDTH = 3.0f;
+	static constexpr float UI_DASH_SCALE_WIDTH = 1.5f;
 	static constexpr float MIN_ANGLE = 0.0f;
 	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
 	static constexpr float TEST_RADIUS = 5.0f;
@@ -105,12 +109,12 @@ private:
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr uint32_t BULLET_COUNT = 40;
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
-	static constexpr uint32_t DASH_MAX_COUNT = 3;
-	static constexpr int32_t MONSTER_ATTACK_VALUE = 10;
-	static constexpr int32_t HERO_MAX_HP = 1500;
-	static constexpr int32_t SHADOW_COUNT = 40;
-	static constexpr int32_t SLOW_MONSTER_COUNT = 5;
-	static constexpr int32_t MONSTER_MAX_HP = 20;
+	static constexpr uint32_t MONSTER_ATTACK_VALUE = 10;
+	static constexpr uint32_t HERO_MAX_HP = 1500;
+	static constexpr uint32_t SHADOW_COUNT = 40;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
+	static constexpr uint32_t MONSTER_MAX_HP = 20;
+	static constexpr uint32_t DASH_MAX_COUNT = 10;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -136,10 +140,10 @@ private:
 	Sprite* mTargetBullet = nullptr;
 
 	int32_t mHeroHpValue = HERO_MAX_HP;
-	int32_t mDashCount = DASH_MAX_COUNT;
 	int32_t mBulletValue = BULLET_COUNT;
 	int32_t mCasingIndex = 0;
 	int32_t mMonsterHpValue = MONSTER_MAX_HP;
+	int32_t mDashCount = DASH_MAX_COUNT;
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
