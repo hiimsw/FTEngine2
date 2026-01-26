@@ -1980,49 +1980,7 @@ bool MainScene::Update(const float deltaTime)
 		{
 			Sprite& monster = mMonsters[i];
 
-			D2D1_RECT_F rect = getRectangleFromSprite(monster);
-
-			Line leftLine =
-			{
-				.Point0 = { .x = rect.left, .y = rect.top },
-				.Point1 = {.x = rect.right, .y = rect.bottom },
-			};
-
-			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, leftLine))
-			{
-				monster.SetActive(false);
-			}
-
-			Line topLine =
-			{
-				.Point0 = {.x = rect.left, .y = rect.top },
-				.Point1 = {.x = rect.right, .y = rect.top },
-			};
-
-			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, topLine))
-			{
-				monster.SetActive(false);
-
-			}
-
-			Line rightLine =
-			{
-				.Point0 = {.x = rect.right, .y = rect.top },
-				.Point1 = {.x = rect.right, .y = rect.bottom },
-			};
-
-			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, rightLine))
-			{
-				monster.SetActive(false);
-			}
-
-			Line bottomLine =
-			{
-				.Point0 = {.x = rect.left, .y = rect.bottom },
-				.Point1 = {.x = rect.right, .y = rect.bottom },
-			};
-
-			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, bottomLine))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				monster.SetActive(false);
 			}
@@ -2031,7 +1989,7 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			Sprite& runMonster = mRunMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, runMonster.GetPosition()))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				runMonster.SetActive(false);
 			}
@@ -2040,7 +1998,7 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			Sprite& slowMonster = mSlowMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, slowMonster.GetPosition()))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				slowMonster.SetActive(false);
 			}
@@ -2050,7 +2008,9 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, monster.GetPosition()))
+
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster), center, mOrbitEllipse.radiusX))
 			{
 				monster.SetActive(false);
 			}
@@ -2059,7 +2019,9 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			Sprite& runMonster = mRunMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, runMonster.GetPosition()))
+
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonster), center, mOrbitEllipse.radiusX))
 			{
 				runMonster.SetActive(false);
 			}
@@ -2068,7 +2030,9 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			Sprite& slowMonster = mSlowMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(Math::AddVector(mOrbitEllipse.point, mHero.GetPosition()), mOrbitEllipse.radiusX, slowMonster.GetPosition()))
+
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), center, mOrbitEllipse.radiusX))
 			{
 				slowMonster.SetActive(false);
 			}

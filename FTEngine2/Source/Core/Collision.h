@@ -5,6 +5,7 @@ namespace Collision
 	inline bool IsCollidedSqureWithPoint(const D2D1_RECT_F rect, const D2D1_POINT_2F point);
 	inline bool IsCollidedSqureWithSqure(const D2D1_RECT_F lhs, const D2D1_RECT_F rhs);
 	inline bool IsCollidedSqureWithLine(const D2D1_RECT_F rect, const Line line);
+	inline bool IsCollidedSqureWithCircle(const D2D1_RECT_F rect, const D2D1_POINT_2F center, const float radius);
 	inline bool IsCollidedCircleWithPoint(const D2D1_POINT_2F center, const float radius, const D2D1_POINT_2F point);
 	inline bool IsCollidedCircleWithLine(const D2D1_POINT_2F center, const float radius, const Line line);
 	inline bool IsCollidedCircleWithCircle(const D2D1_ELLIPSE lhs, const D2D1_ELLIPSE rhs);
@@ -58,6 +59,40 @@ namespace Collision
 			or DoLinesIntersect(rightLine, line)
 			or DoLinesIntersect(topLine, line)
 			or DoLinesIntersect(bottomLine, line);
+
+		return result;
+	}
+
+	bool IsCollidedSqureWithCircle(const D2D1_RECT_F rect, const D2D1_POINT_2F center, const float radius)
+	{
+		Line leftLine =
+		{
+			.Point0 = {.x = rect.left, .y = rect.top },
+			.Point1 = {.x = rect.right, .y = rect.bottom },
+		};
+
+		Line topLine =
+		{
+			.Point0 = {.x = rect.left, .y = rect.top },
+			.Point1 = {.x = rect.right, .y = rect.top },
+		};
+
+		Line rightLine =
+		{
+			.Point0 = {.x = rect.right, .y = rect.top },
+			.Point1 = {.x = rect.right, .y = rect.bottom },
+		};
+
+		Line bottomLine =
+		{
+			.Point0 = {.x = rect.left, .y = rect.bottom },
+			.Point1 = {.x = rect.right, .y = rect.bottom },
+		};
+
+		const bool result = IsCollidedCircleWithLine(center, radius, leftLine)
+			or IsCollidedCircleWithLine(center, radius, topLine)
+			or IsCollidedCircleWithLine(center, radius, rightLine)
+			or IsCollidedCircleWithLine(center, radius, bottomLine);
 
 		return result;
 	}
