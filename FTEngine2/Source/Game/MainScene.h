@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Core/Camera.h"
 #include "Core/Scene.h"
 #include "Core/Sprite.h"
@@ -93,7 +92,7 @@ private:
 	static constexpr float SHELD_MAX_RADIUS = 150.0f;
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
-	static constexpr float UI_HP_SCALE_WIDTH = 10.0f;
+	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 	static constexpr float RUN_MONSTER_WIDTH = 0.4f;
 	static constexpr float UI_DASH_SCALE_WIDTH = 1.5f;
 	static constexpr float MIN_ANGLE = 0.0f;

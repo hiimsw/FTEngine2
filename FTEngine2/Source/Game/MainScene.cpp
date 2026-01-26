@@ -189,26 +189,9 @@ void MainScene::Initialize()
 		mMainCamera.SetPosition(cameraPosition);
 	}
 
-	// HP바를 초기화한다.
-	{
-		mHpUiBar.SetPosition({ .x = -UI_HP_SCALE_WIDTH * 0.5f * mRectangleTexture.GetWidth(), .y = -UI_CENTER_POSITION_Y });
-		mHpUiBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
-		mHpUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mHpUiBar.SetUI(true);
-		mHpUiBar.SetTexture(&mRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
-
-		mHpBar.SetPosition(mHpUiBar.GetPosition());
-		mHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
-		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mHpBar.SetUI(true);
-		mHpBar.SetTexture(&mRedRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
-	}
-
 	// Dash 게이지를 초기화한다.
 	{
-		mDashUiBar.SetPosition({ .x = -380.0f, .y = -250.f });
+		mDashUiBar.SetPosition({ .x = -380.0f, .y = -UI_CENTER_POSITION_Y });
 		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 1.0f });
 		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 		mDashUiBar.SetUI(true);
@@ -221,6 +204,23 @@ void MainScene::Initialize()
 		mDashValue.SetUI(true);
 		mDashValue.SetTexture(&mYellowBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashValue);
+	}
+
+	// HP바를 초기화한다.
+	{
+		mHpUiBar.SetPosition({ .x = mDashUiBar.GetPosition().x, .y = mDashUiBar.GetPosition().y + 50.f });
+		mHpUiBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mHpUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mHpUiBar.SetUI(true);
+		mHpUiBar.SetTexture(&mWhiteBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
+
+		mHpBar.SetPosition(mHpUiBar.GetPosition());
+		mHpBar.SetScale(mHpUiBar.GetScale());
+		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mHpBar.SetUI(true);
+		mHpBar.SetTexture(&mRedBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
 	}
 
 	// 라벨을 초기화한다.
@@ -239,11 +239,11 @@ void MainScene::Initialize()
 			mHpValueLabel.SetUI(true);
 
 			const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
-			constexpr float OFFSET_Y = 50.0f;
-			D2D1_POINT_2F offset = { .x = hpBarPosition.x, .y = hpBarPosition.y + OFFSET_Y };
+			constexpr float OFFSET_X = 5.0f;
+			D2D1_POINT_2F offset = { .x = hpBarPosition.x - OFFSET_X, .y = hpBarPosition.y };
 			mHpValueLabel.SetPosition(offset);
 
-			mHpValueLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mHpValueLabel.SetCenter({ .x = 0.5f, .y = 0.0f });
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 			mLabels.push_back(&mHpValueLabel);
 		}
@@ -1301,26 +1301,29 @@ bool MainScene::Update(const float deltaTime)
 			mHero.SetActive(false);
 		}
 
+		// 플레이어 체력 라벨을 업데이트 한다.
 		static int32_t prevHp = mHeroHpValue;
 
-		// 플레이어 체력바를 업데이트한다.
 		if (prevHp != mHeroHpValue)
 		{
-			D2D1_POINT_2F scale = { mHpBar.GetScale().width, mHpBar.GetScale().height };
-			scale = Math::LerpVector(scale, { UI_HP_SCALE_WIDTH * float(mHeroHpValue) / HERO_MAX_HP, 1.0f }, 10.0f * deltaTime);
-			mHpBar.SetScale({ scale.x, scale.y });
-
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 
 			prevHp = mHeroHpValue;
 		}
+
+		// 플레이어 체력바를 업데이트한다.
+		D2D1_POINT_2F scale = { mHpBar.GetScale().width, mHpBar.GetScale().height };
+		scale = Math::LerpVector(scale,
+			{ UI_HP_SCALE_WIDTH * (float(mHeroHpValue) / float(HERO_MAX_HP)), scale.y },
+			10.0f * deltaTime);
+		mHpBar.SetScale({ scale.x, scale.y });
 	}
 
 	// 플레이어 대쉬바를 업데이트한다.
 	{
-		D2D1_POINT_2F dashScale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
-		dashScale = Math::LerpVector(dashScale, { UI_DASH_SCALE_WIDTH * (float(mDashCount) / float(DASH_MAX_COUNT)),  dashScale.y }, 8.0f * deltaTime);
-		mDashValue.SetScale({ dashScale.x, dashScale.y });
+		D2D1_POINT_2F scale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
+		scale = Math::LerpVector(scale, { UI_DASH_SCALE_WIDTH * (float(mDashCount) / float(DASH_MAX_COUNT)),  scale.y }, 8.0f * deltaTime);
+		mDashValue.SetScale({ scale.x, scale.y });
 	}
 
 	// 총알 라벨을 업데이트한다.
