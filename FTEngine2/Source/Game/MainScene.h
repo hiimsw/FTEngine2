@@ -72,6 +72,7 @@ private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
 	Texture mBlueRectangleTexture{};
+	Texture mPinkRectangleTexture{};
 
 	Texture mCircleTexture{};
 	Texture mRedCircleTexture{};
@@ -114,6 +115,8 @@ private:
 	static constexpr uint32_t SHADOW_COUNT = 40;
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
 	static constexpr uint32_t DASH_MAX_COUNT = 10;
+	static constexpr uint32_t MONSTER_MAX_HP = 20;
+	static constexpr uint32_t BULLET_ATTACK_VALUE = 10;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -143,6 +146,7 @@ private:
 	int32_t mHeroHpValue = HERO_MAX_HP;
 	int32_t mBulletValue = BULLET_COUNT;
 	int32_t mDashCount = DASH_MAX_COUNT;
+	int32_t mMonsterHpValue[MONSTER_COUNT]{};
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
@@ -176,6 +180,7 @@ private:
 	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
 	bool mIsSlowMonsterSpawns[SLOW_MONSTER_COUNT]{};
 	bool misKeyDownReload = false;
+	bool mMonsterDeads[MONSTER_COUNT]{};
 
 	Font mDefaultFont{};
 	Font mTimerFont{};
@@ -205,7 +210,7 @@ private:
 	float mInBoundaryToRunMonsterTimer[RUN_MONSTER_COUNT]{};
 	float mInBoundaryToSlowMonsterTimer[SLOW_MONSTER_COUNT]{};
 	float mCasingTimer[CASING_COUNT]{};
-	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
+	float mMonsterEffectTimer[MONSTER_COUNT]{};
 	float mRunMonsterDieEffectTimer[RUN_MONSTER_COUNT]{};
 	float mSlowMonsterDieEffectTimer[SLOW_MONSTER_COUNT]{};
 	float mMonsterGrowingTimer[MONSTER_COUNT]{};
