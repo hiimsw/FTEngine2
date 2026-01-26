@@ -2191,6 +2191,12 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어 쉴드와 몬스터가 충돌하면 몬스터는 삭제된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			if (mShieldState != eShield_State::Growing
+				and mShieldState != eShield_State::Waiting)
+			{
+				continue;
+			}
+
 			Sprite& monster = mMonsters[i];
 
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster), mHero.GetPosition(), mShieldScale.width * 0.5f))
@@ -2201,6 +2207,12 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
+			if (mShieldState != eShield_State::Growing
+				and mShieldState != eShield_State::Waiting)
+			{
+				continue;
+			}
+
 			Sprite& runMonster = mRunMonsters[i];
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
@@ -2210,6 +2222,12 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
+			if (mShieldState != eShield_State::Growing
+				and mShieldState != eShield_State::Waiting)
+			{
+				continue;
+			}
+
 			Sprite& slowMonster = mSlowMonsters[i];
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
