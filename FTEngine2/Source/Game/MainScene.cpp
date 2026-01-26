@@ -91,7 +91,7 @@ void MainScene::Initialize()
 		for (Sprite& casing : mCasings)
 		{
 			casing.SetScale({ .width = 0.2f, .height = 0.2f });
-			casing.SetCenter({ -0.5, 0.0f });
+			casing.SetCenter({ -0.5f, 0.0f });
 			casing.SetOpacity(0.3f);
 			casing.SetActive(false);
 			casing.SetTexture(&mRedRectangleTexture);
@@ -117,6 +117,24 @@ void MainScene::Initialize()
 			monster.SetActive(false);
 			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
+		}
+
+		for (Sprite& background : mMonsterBackgroundHpBars)
+		{
+			background.SetScale({ .width = 0.1f, .height = 0.7f });
+			background.SetCenter({ -0.5f, 0.0f });
+			background.SetActive(false);
+			background.SetTexture(&mWhiteBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
+		}
+
+		for (Sprite& hpBar : mMonsterHpBars)
+		{
+			hpBar.SetScale({ .width = 0.1f, .height = 0.7f });
+			hpBar.SetCenter({ -0.5f, 0.0f });
+			hpBar.SetActive(false);
+			hpBar.SetTexture(&mRedBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
 	}
 
@@ -191,42 +209,42 @@ void MainScene::Initialize()
 
 	// Dash 게이지를 초기화한다.
 	{
-		mDashUiBar.SetPosition({ .x = -300.0f, .y = -UI_CENTER_POSITION_Y });
-		mDashUiBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 1.0f });
-		mDashUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mDashUiBar.SetUI(true);
-		mDashUiBar.SetTexture(&mWhiteBarTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashUiBar);
+		mUiBackgroundDashBar.SetPosition({ .x = -300.0f, .y = -UI_CENTER_POSITION_Y });
+		mUiBackgroundDashBar.SetScale({ .width = UI_DASH_SCALE_WIDTH, .height = 1.0f });
+		mUiBackgroundDashBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiBackgroundDashBar.SetUI(true);
+		mUiBackgroundDashBar.SetTexture(&mWhiteBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiBackgroundDashBar);
 
-		D2D1_POINT_2F offset = { .x = mDashUiBar.GetPosition().x + 2.5f, .y = mDashUiBar.GetPosition().y };
-		mDashValue.SetPosition(offset);
+		D2D1_POINT_2F offset = { .x = mUiBackgroundDashBar.GetPosition().x + 2.5f, .y = mUiBackgroundDashBar.GetPosition().y };
+		mUiDashBar.SetPosition(offset);
 
-		mDashValue.SetScale(mDashUiBar.GetScale());
-		mDashValue.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mDashValue.SetUI(true);
-		mDashValue.SetTexture(&mYellowBarTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mDashValue);
+		mUiDashBar.SetScale(mUiBackgroundDashBar.GetScale());
+		mUiDashBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiDashBar.SetUI(true);
+		mUiDashBar.SetTexture(&mYellowBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiDashBar);
 	}
 
 	// HP바를 초기화한다.
 	{
 		constexpr float OFFSET_Y = 50.0f;
-		mHpUiBar.SetPosition({ .x = mDashUiBar.GetPosition().x, .y = mDashUiBar.GetPosition().y + OFFSET_Y });
+		mUiBackgroundHpBar.SetPosition({ .x = mUiBackgroundDashBar.GetPosition().x, .y = mUiBackgroundDashBar.GetPosition().y + OFFSET_Y });
 
-		mHpUiBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
-		mHpUiBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mHpUiBar.SetUI(true);
-		mHpUiBar.SetTexture(&mWhiteBarTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpUiBar);
+		mUiBackgroundHpBar.SetScale({ .width = UI_HP_SCALE_WIDTH, .height = 1.0f });
+		mUiBackgroundHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiBackgroundHpBar.SetUI(true);
+		mUiBackgroundHpBar.SetTexture(&mWhiteBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiBackgroundHpBar);
 
-		D2D1_POINT_2F offset = { .x = mHpUiBar.GetPosition().x + 2.5f, .y = mHpUiBar.GetPosition().y };
-		mHpBar.SetPosition(offset);
+		D2D1_POINT_2F offset = { .x = mUiBackgroundHpBar.GetPosition().x + 2.5f, .y = mUiBackgroundHpBar.GetPosition().y };
+		mUiHpBar.SetPosition(offset);
 
-		mHpBar.SetScale(mHpUiBar.GetScale());
-		mHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-		mHpBar.SetUI(true);
-		mHpBar.SetTexture(&mRedBarTexture);
-		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mHpBar);
+		mUiHpBar.SetScale(mUiBackgroundHpBar.GetScale());
+		mUiHpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiHpBar.SetUI(true);
+		mUiHpBar.SetTexture(&mRedBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiHpBar);
 	}
 
 	// 라벨을 초기화한다.
@@ -244,7 +262,7 @@ void MainScene::Initialize()
 			mDashValueLabel.SetFont(&mDefaultFont);
 			mDashValueLabel.SetUI(true);
 
-			const D2D1_POINT_2F dashBarPosition = mDashUiBar.GetPosition();
+			const D2D1_POINT_2F dashBarPosition = mUiBackgroundDashBar.GetPosition();
 			constexpr float OFFSET_X = 10.0f;
 			D2D1_POINT_2F offset = { .x = dashBarPosition.x - OFFSET_X, .y = dashBarPosition.y };
 			mDashValueLabel.SetPosition(offset);
@@ -252,7 +270,6 @@ void MainScene::Initialize()
 			mDashValueLabel.SetCenter({ .x = 0.5f, .y = 0.0f });
 			mDashValueLabel.SetText(L"Dash: " + std::to_wstring(mDashCount) + L" / " + std::to_wstring(DASH_MAX_COUNT));
 			mLabels.push_back(&mDashValueLabel);
-
 		}
 
 		// 현재 체력
@@ -260,7 +277,7 @@ void MainScene::Initialize()
 			mHpValueLabel.SetFont(&mDefaultFont);
 			mHpValueLabel.SetUI(true);
 
-			const D2D1_POINT_2F hpBarPosition = mHpBar.GetPosition();
+			const D2D1_POINT_2F hpBarPosition = mUiHpBar.GetPosition();
 			constexpr float OFFSET_X = 10.0f;
 			D2D1_POINT_2F offset = { .x = hpBarPosition.x - OFFSET_X, .y = hpBarPosition.y };
 			mHpValueLabel.SetPosition(offset);
@@ -994,7 +1011,7 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 				monster.SetActive(true);
-
+							
 				mMonsterSpawnTimer = 0.0f;
 
 				mIsMonsterSpawns[i] = true;
@@ -1065,6 +1082,15 @@ bool MainScene::Update(const float deltaTime)
 
 			position = Math::AddVector(position, velocity);
 			monster.SetPosition(position);
+
+			// hp를 좌표를 업데이트한다.
+			Sprite& background = mMonsterBackgroundHpBars[i];
+			background.SetPosition(monster.GetPosition());
+			background.SetActive(true);
+
+			Sprite& hpBar = mMonsterHpBars[i];
+			hpBar.SetPosition(monster.GetPosition());
+			hpBar.SetActive(true);
 		}
 	}
 
@@ -1440,11 +1466,11 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 플레이어 체력바를 업데이트한다.
-		D2D1_POINT_2F scale = { mHpBar.GetScale().width, mHpBar.GetScale().height };
+		D2D1_POINT_2F scale = { mUiHpBar.GetScale().width, mUiHpBar.GetScale().height };
 		scale = Math::LerpVector(scale,
 			{ UI_HP_SCALE_WIDTH * (float(mHeroHpValue) / float(HERO_MAX_HP)), scale.y },
 			10.0f * deltaTime);
-		mHpBar.SetScale({ scale.x, scale.y });
+		mUiHpBar.SetScale({ scale.x, scale.y });
 	}
 
 	// 플레이어 대쉬바를 업데이트한다.
@@ -1458,9 +1484,9 @@ bool MainScene::Update(const float deltaTime)
 			prevDashCount = mDashCount;
 		}
 
-		D2D1_POINT_2F scale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
+		D2D1_POINT_2F scale = { mUiDashBar.GetScale().width, mUiDashBar.GetScale().height };
 		scale = Math::LerpVector(scale, { UI_DASH_SCALE_WIDTH * (float(mDashCount) / float(DASH_MAX_COUNT)),  scale.y }, 8.0f * deltaTime);
-		mDashValue.SetScale({ scale.x, scale.y });
+		mUiDashBar.SetScale({ scale.x, scale.y });
 	}
 
 	// 총알 라벨을 업데이트한다.
