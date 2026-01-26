@@ -1584,6 +1584,64 @@ bool MainScene::Update(const float deltaTime)
 				shadowCoolTime[i] = 0.15f;
 			}
 		}
+
+		// 느린 몬스터가 사라지는 이펙트가 생성된다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			if (not mIsSlowMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			mSlowMonsterDieTimer[i] += deltaTime;
+
+			Sprite& slowMonster = mSlowMonsters[i];
+
+			D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+			startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
+
+			float t = (mSlowMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
+
+			if (t >= 1.0f)
+			{
+				slowMonster.SetActive(false);
+				mIsSlowMonsterToBullets[i] = false;
+				mSlowMonsterDieTimer[i] = 0.0f;
+			}
+
+			slowMonster.SetScale({ startScale.x , startScale.y });
+		}
+
+		// 총알 이펙트가 생성된다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			if (not mIsSlowMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			mSlowMonsterEffectTimer[i] += deltaTime;
+
+			// 크기를 보간한다.
+			D2D1_POINT_2F scale = { mSlowMonsterBulletEffectScales[i].width, mSlowMonsterBulletEffectScales[i].height };
+			scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
+			mSlowMonsterBulletEffectScales[i] = { scale.x, scale.y };
+
+			// 두께를 보간한다.
+			mSlowMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
+			float t = (mSlowMonsterEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			mSlowMonsterThicks[i] = Math::LerpVector(mSlowMonsterThicks[i], { 0.1f , 0.1f }, t);
+
+			if (t >= 1.0f)
+			{
+				mSlowMonsterEffectTimer[i] = 0.0f;
+			}
+		}
 	}
 
 	// 플레이어 체력에 관련된 부분을 업데이트한다.
@@ -2066,61 +2124,6 @@ bool MainScene::Update(const float deltaTime)
 				or targetSlowMonster != nullptr)
 			{
 				bullet.SetActive(false);
-			}
-		}
-
-		// 총알과 느린 몬스터가 충돌하면, 느린 몬스터는 사라지고 이펙트가 생성된다.
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
-		{
-			if (not mIsSlowMonsterToBullets[i])
-			{
-				continue;
-			}
-			
-			// 느린 몬스터가 사라지는 이펙트가 생성된다.
-			{
-				mSlowMonsterDieTimer[i] += deltaTime;
-
-				Sprite& slowMonster = mSlowMonsters[i];
-
-				D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
-				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
-
-				float t = (mSlowMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-
-				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
-				
-				if (t >= 1.0f)
-				{
-					slowMonster.SetActive(false);
-					mIsSlowMonsterToBullets[i] = false;
-					mSlowMonsterDieTimer[i] = 0.0f;
-				}
-
-				slowMonster.SetScale({ startScale.x , startScale.y });
-			}
-
-			// 총알 이펙트가 생성된다.
-			{
-				mSlowMonsterDieEffectTimer[i] += deltaTime;
-
-				// 크기를 보간한다.
-				D2D1_POINT_2F scale = { mSlowMonsterBulletEffectScales[i].width, mSlowMonsterBulletEffectScales[i].height };
-				scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
-				mSlowMonsterBulletEffectScales[i] = { scale.x, scale.y };
-
-				// 두께를 보간한다.
-				mSlowMonsterThicks[i] = {.x = 15.0f, .y = 15.0f };
-				float t = (mSlowMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-
-				mSlowMonsterThicks[i] = Math::LerpVector(mSlowMonsterThicks[i], { 0.1f , 0.1f }, t);
-
-				if (t >= 1.0f)
-				{
-					mSlowMonsterDieEffectTimer[i] = 0.0f;
-				}
 			}
 		}
 
