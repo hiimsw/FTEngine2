@@ -107,7 +107,7 @@ private:
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr uint32_t BULLET_COUNT = 80;
-	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
+	static constexpr uint32_t CASING_COUNT = 80;
 	static constexpr uint32_t MONSTER_ATTACK_VALUE = 10;
 	static constexpr uint32_t HERO_MAX_HP = 1500;
 	static constexpr uint32_t SHADOW_COUNT = 40;
@@ -131,7 +131,7 @@ private:
 	Sprite mDashShadow[SHADOW_COUNT]{};
 	Sprite mSlowMonsters[SLOW_MONSTER_COUNT]{};
 	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
-	Sprite mCasings[BULLET_COUNT]{};
+	Sprite mCasings[CASING_COUNT]{};
 
 	GizmoLine mLine{};
 
@@ -140,14 +140,13 @@ private:
 
 	int32_t mHeroHpValue = HERO_MAX_HP;
 	int32_t mBulletValue = BULLET_COUNT;
-	int32_t mCasingIndex = 0;
 	int32_t mMonsterHpValue = MONSTER_MAX_HP;
 	int32_t mDashCount = DASH_MAX_COUNT;
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
 	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
-	D2D1_POINT_2F mCasingDirections[BULLET_COUNT]{};
+	D2D1_POINT_2F mCasingDirections[CASING_COUNT]{};
 	D2D1_POINT_2F mMonsterThicks[MONSTER_COUNT]{};
 	D2D1_POINT_2F mRunMonsterThicks[RUN_MONSTER_COUNT]{};
 	D2D1_POINT_2F mSlowMonsterThicks[SLOW_MONSTER_COUNT]{};

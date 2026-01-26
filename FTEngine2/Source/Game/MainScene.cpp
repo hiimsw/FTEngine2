@@ -90,7 +90,7 @@ void MainScene::Initialize()
 	{
 		for (Sprite& casing : mCasings)
 		{
-			casing.SetScale({ .width = 0.3f, .height = 0.05f });
+			casing.SetScale({ .width = 0.2f, .height = 0.2f });
 			casing.SetCenter({ -0.5, 0.0f });
 			casing.SetOpacity(0.3f);
 			casing.SetActive(false);
@@ -594,8 +594,11 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static float opacity[BULLET_COUNT];
 			static float shootingCoolTimer = 0.0f;
+
+			static D2D1_POINT_2F startPosition[CASING_COUNT];
+			static D2D1_POINT_2F endPosition[CASING_COUNT];
+			constexpr float LENGTH = 100.0f;
 
 			shootingCoolTimer = max(shootingCoolTimer - deltaTime, 0.0f);
 
@@ -640,35 +643,34 @@ bool MainScene::Update(const float deltaTime)
 
 					// 탄피를 생성한다.
 					{
-						if (mCasingIndex == BULLET_COUNT)
+						for (uint32_t j = 0; j < CASING_COUNT; ++j)
 						{
-							mCasingIndex = 0;
+							Sprite& casing = mCasings[j];
+							
+							if (casing.IsActive())
+							{
+								continue;
+							}
+
+							casing.SetOpacity(1.0f);
+							casing.SetActive(true);
+
+							D2D1_POINT_2F& casingDirection = mCasingDirections[j];
+							casingDirection = Math::NormalizeVector(mBulletDirections[i]);
+							casingDirection = Math::RotateVector(casingDirection, getRandom(-30.0f, 30.0f));
+							casingDirection = Math::ScaleVector(casingDirection, -1.0f);	// 뒤로 가도록 조정한다.
+
+							D2D1_POINT_2F spawnPosition = mHero.GetPosition();
+							constexpr float OFFSET = 50.0f;
+							spawnPosition = Math::AddVector(spawnPosition, Math::ScaleVector(casingDirection, OFFSET));
+							casing.SetPosition((spawnPosition));
+
+							// 탄피의 이동 좌표를 생성한다.
+							startPosition[j] = casing.GetPosition();
+							endPosition[j] = Math::AddVector(startPosition[i], Math::ScaleVector(casingDirection, LENGTH));
+
+							break;
 						}
-
-						Sprite& casing = mCasings[mCasingIndex];
-						casing.SetOpacity(1.0f);
-						casing.SetActive(true);
-
-						constexpr float RANGE = 30.0f;
-						const D2D1_POINT_2F offset =
-						{
-							.x = getRandom(-RANGE, RANGE),
-							.y = getRandom(-RANGE, RANGE)
-						};
-
-						const D2D1_POINT_2F spawnPosition =
-						{
-							.x = mHero.GetPosition().x + offset.x,
-							.y = mHero.GetPosition().y + offset.y
-						};
-
-						mCasingDirections[mCasingIndex] = Math::RotateVector(mBulletDirections[i], getRandom(-30.0f, 30.0f));
-						casing.SetPosition(Math::SubtractVector(spawnPosition, mCasingDirections[i]));
-
-						const float angle = Math::ConvertRadianToDegree(atan2f(mCasingDirections[mCasingIndex].y, mCasingDirections[mCasingIndex].x));
-						casing.SetAngle(-angle);
-
-						mCasingIndex++;
 					}
 
 					// 카메라 흔들기를 시작합니다.
@@ -683,6 +685,65 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				shootingCoolTimer = 0.12f;
+			}
+
+			// 총알을 이동시킨다.
+			{
+				constexpr float MOVE_SPEED = 1500.0f;
+
+				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
+				{
+					Sprite& bullet = mBullets[i];
+					if (not bullet.IsActive())
+					{
+						continue;
+					}
+
+					const D2D1_POINT_2F velocity = Math::ScaleVector(mBulletDirections[i], MOVE_SPEED * deltaTime);
+					const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
+
+					mPrevBulletPosition[i] = bullet.GetPosition();
+					bullet.SetPosition(position);
+
+					float opacity = bullet.GetOpacity();
+
+					D2D1_POINT_2F lerp = { opacity, opacity };
+					lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
+					bullet.SetOpacity(lerp.x);
+				}
+			}
+
+			// 탄피를 이동시킨다.
+			{
+				constexpr float SPEED = 400.0f;
+				constexpr float MOVE_TIME = 1.0f;
+
+				for (uint32_t i = 0; i < CASING_COUNT; ++i)
+				{
+					Sprite& casing = mCasings[i];
+					if (not casing.IsActive())
+					{
+						continue;
+					}
+
+					mCasingTimer[i] += deltaTime;
+
+					float t = mCasingTimer[i] / MOVE_TIME;
+					t = std::clamp(t, 0.0f, 1.0f);
+
+					D2D1_POINT_2F position = Math::LerpVector(startPosition[i], endPosition[i], t);
+					casing.SetPosition(position);
+
+					if (t >= 1.0f)
+					{
+						casing.SetActive(false);
+						mCasingTimer[i] = 0.0f;
+					}
+
+					float opacity = casing.GetOpacity();
+					opacity -= 0.8f * deltaTime;
+					casing.SetOpacity(opacity);
+				}
 			}
 
 			// 재장전을 한다.
@@ -708,7 +769,7 @@ bool MainScene::Update(const float deltaTime)
 						misKeyDownReload = true;
 					}
 				}
-				
+
 				static float reloadKeyDownCoolTimer = 0.0f;
 
 				if (misKeyDownReload)
@@ -720,63 +781,6 @@ bool MainScene::Update(const float deltaTime)
 						mBulletValue = BULLET_COUNT;
 						reloadKeyDownCoolTimer = 0.0f;
 						misKeyDownReload = false;
-					}
-				}
-			}
-
-			// 총알을 이동시킨다.
-			constexpr float MOVE_SPEED = 1500.0f;
-
-			for (uint32_t i = 0; i < BULLET_COUNT; ++i)
-			{
-				Sprite& bullet = mBullets[i];
-				if (not bullet.IsActive())
-				{
-					continue;
-				}
-
-				const D2D1_POINT_2F velocity = Math::ScaleVector(mBulletDirections[i], bullet.GetScale().width * 0.5f * MOVE_SPEED * deltaTime);
-				const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
-
-				mPrevBulletPosition[i] = bullet.GetPosition();
-				bullet.SetPosition(position);
-
-				float opacity = bullet.GetOpacity();
-
-				D2D1_POINT_2F lerp = { opacity, opacity };
-				lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
-				bullet.SetOpacity(lerp.x);
-			}
-
-			// 탄피를 업데이트한다.
-			{
-				constexpr float SPEED = 500.0f;
-
-				for (uint32_t i = 0; i < CASING_COUNT; ++i)
-				{
-					Sprite& casing = mCasings[i];
-					if (not casing.IsActive())
-					{
-						continue;
-					}
-
-					mCasingTimer[i] += deltaTime;
-
-					const D2D1_POINT_2F velocity = Math::ScaleVector(mCasingDirections[i], -SPEED * deltaTime);
-					const D2D1_POINT_2F position = Math::AddVector(casing.GetPosition(), velocity);
-					casing.SetPosition(position);
-
-
-					float opacity = casing.GetOpacity();
-
-					D2D1_POINT_2F lerp = { opacity, opacity };
-					lerp = Math::LerpVector(lerp, { 0.0f, 0.0f }, 10.0f * deltaTime);
-					casing.SetOpacity(lerp.x);
-
-					if (mCasingTimer[i] >= 0.5f)
-					{
-						casing.SetActive(false);
-						mCasingTimer[i] = 0.0f;
 					}
 				}
 			}
