@@ -172,6 +172,7 @@ private:
 	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
 	bool mIsSlowMonsterToBullets[SLOW_MONSTER_COUNT]{};
 	bool mIsMonsterSpawns[MONSTER_COUNT]{};
+	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
 	bool misKeyDownReload = false;
 
 	Font mDefaultFont{};
