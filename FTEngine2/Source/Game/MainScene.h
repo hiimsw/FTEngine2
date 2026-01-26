@@ -206,6 +206,8 @@ private:
 	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
 	float mRunMonsterDieEffectTimer[RUN_MONSTER_COUNT]{};
 	float mSlowMonsterDieEffectTimer[SLOW_MONSTER_COUNT]{};
+	float mMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
+	float mRunMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
 
 	D2D1_ELLIPSE mOrbitEllipse{};
 };
