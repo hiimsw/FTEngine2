@@ -1247,6 +1247,8 @@ bool MainScene::Update(const float deltaTime)
 				slowMonster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
 				slowMonster.SetActive(true);
 
+				mIsSlowMonsterSpawns[i] = true;
+
 				mSlowMonsterSpawnTimer = 0.0f;
 
 				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
@@ -1276,6 +1278,42 @@ bool MainScene::Update(const float deltaTime)
 					shadow.SetActive(false);
 				}
 			}
+		}
+
+		// 느린 몬스터가 스폰되면, 커졌다가 작아진다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			Sprite& slowMonster = mSlowMonsters[i];
+
+			if (not slowMonster.IsActive())
+			{
+				continue;
+			}
+
+			if (not mIsSlowMonsterSpawns[i])
+			{
+				continue;
+			}
+
+			mSlowMonsterGrowingTimer[i] += deltaTime;
+
+			D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
+
+			float t = (mSlowMonsterGrowingTimer[i] - START_LERP_TIME) / DURING_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			startScale = Math::LerpVector(startScale, { SLOW_MONSTER_SCALE , SLOW_MONSTER_SCALE }, t);
+
+			if (t >= 1.0f)
+			{
+				mSlowMonsterGrowingTimer[i] = 0.0f;
+				mIsSlowMonsterSpawns[i] = false;
+			}
+
+			slowMonster.SetScale({ startScale.x , startScale.y });
+
+			break;
 		}
 
 		// 느린 몬스터와 그림자가 이동한다.

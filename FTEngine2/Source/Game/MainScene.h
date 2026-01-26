@@ -173,6 +173,7 @@ private:
 	bool mIsSlowMonsterToBullets[SLOW_MONSTER_COUNT]{};
 	bool mIsMonsterSpawns[MONSTER_COUNT]{};
 	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
+	bool mIsSlowMonsterSpawns[SLOW_MONSTER_COUNT]{};
 	bool misKeyDownReload = false;
 
 	Font mDefaultFont{};
@@ -206,8 +207,9 @@ private:
 	float mMonsterDieEffectTimer[MONSTER_COUNT]{};
 	float mRunMonsterDieEffectTimer[RUN_MONSTER_COUNT]{};
 	float mSlowMonsterDieEffectTimer[SLOW_MONSTER_COUNT]{};
-	float mMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
+	float mMonsterGrowingTimer[MONSTER_COUNT]{};
 	float mRunMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
+	float mSlowMonsterGrowingTimer[SLOW_MONSTER_COUNT]{};
 
 	D2D1_ELLIPSE mOrbitEllipse{};
 };
