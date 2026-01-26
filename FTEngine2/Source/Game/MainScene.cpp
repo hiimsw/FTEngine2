@@ -600,7 +600,7 @@ bool MainScene::Update(const float deltaTime)
 
 						break;
 					}
-					
+
 					dashShadowCoolTime = 0.05f;
 				}
 			}
@@ -615,7 +615,7 @@ bool MainScene::Update(const float deltaTime)
 				float opacity = shadow.GetOpacity();
 				opacity -= 5.0f * deltaTime;
 				shadow.SetOpacity(opacity);
-				
+
 				if (opacity <= 0.0f)
 				{
 					shadow.SetActive(false);
@@ -647,7 +647,7 @@ bool MainScene::Update(const float deltaTime)
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButton(Input::eMouseButton::Left)
 				and shootingCoolTimer <= 0.001f
-				and mBulletValue != 0 
+				and mBulletValue != 0
 				and not misKeyDownReload)
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
@@ -688,7 +688,7 @@ bool MainScene::Update(const float deltaTime)
 						for (uint32_t j = 0; j < CASING_COUNT; ++j)
 						{
 							Sprite& casing = mCasings[j];
-							
+
 							if (casing.IsActive())
 							{
 								continue;
@@ -1030,7 +1030,7 @@ bool MainScene::Update(const float deltaTime)
 				monster.SetPosition(spawnPositionCircle);
 				monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 				monster.SetActive(true);
-							
+
 				mMonsterSpawnTimer = 0.0f;
 
 				mIsMonsterSpawns[i] = true;
@@ -1117,8 +1117,8 @@ bool MainScene::Update(const float deltaTime)
 
 			const D2D1_POINT_2F monsterPosition = monster.GetPosition();
 
-			const D2D1_POINT_2F offset = 
-			{ 
+			const D2D1_POINT_2F offset =
+			{
 				.x = monsterPosition.x - scaleOffset.width + HP_OFFSET.x,
 				.y = monsterPosition.y - scaleOffset.height - HP_OFFSET.y
 			};
@@ -1130,9 +1130,15 @@ bool MainScene::Update(const float deltaTime)
 		// 체력 업데이트를 한다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			if (mMonsterHpValue[i] <= 0)
+			{
+				mMonsterHpValue[i] = 0;
+				mMonsterDeads[i] = true;
+			}
+
 			Sprite& hpBar = mMonsterHpBars[i];
 			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
-			scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(mMonsterHpValue[i]) / float(MONSTER_MAX_HP)), hpBar.GetScale().height}, 10.0f * deltaTime);
+			scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(mMonsterHpValue[i]) / float(MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
 			hpBar.SetScale({ scale.x, scale.y });
 		}
 
@@ -1186,11 +1192,12 @@ bool MainScene::Update(const float deltaTime)
 
 			if (t >= 1.0f)
 			{
-				mMonsterDeads[i] = false;
-				monster.SetActive(false);
+				mMonsters[i].SetActive(false);
 
 				mMonsterBackgroundHpBars[i].SetActive(false);
 				mMonsterHpBars[i].SetActive(false);
+
+				mMonsterDeads[i] = false;
 
 				mMonsterDieTimer[i] = 0.0f;
 			}
@@ -1316,7 +1323,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 				else
-				{					
+				{
 					scale.width = RUN_MONSTER_WIDTH;
 					mRunMonsterBars[i].SetScale(scale);
 
@@ -1396,7 +1403,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				continue;
 			}
-			
+
 			mRunMonsterEffectTimer[i] += deltaTime;
 
 			// 크기를 보간한다.
@@ -1858,7 +1865,7 @@ bool MainScene::Update(const float deltaTime)
 				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
 			};
 
-			Line line = 
+			Line line =
 			{
 				.Point0 = mPrevBulletPosition[i],
 				.Point1 = endPosition
@@ -1900,7 +1907,7 @@ bool MainScene::Update(const float deltaTime)
 				if (mMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					monster.SetActive(false);
+					mMonsterHpValue[i] -= PLAYER_ATTACK_VALUE * 2;
 					mMonsterDamageTimer[i] = 0.0f;
 				}
 
@@ -1920,16 +1927,19 @@ bool MainScene::Update(const float deltaTime)
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
+
 				if (t >= 1.0f)
 				{
-					monster.SetActive(false);
 					mInBoundaryToMonsterTimer[i] = 0.0f;
 				}
 
-				if (mMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				mMonsterInBoundryDamageTimer[i] += deltaTime;
+
+				if (mMonsterInBoundryDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mMonsterDamageTimer[i] = 0.0f;
+					mMonsterHpValue[i] -= PLAYER_ATTACK_VALUE * 2;
+					mMonsterInBoundryDamageTimer[i] = 0.0f;
 				}
 
 				break;
@@ -2111,17 +2121,11 @@ bool MainScene::Update(const float deltaTime)
 				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], monster.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
-					mMonsterHpValue[j] -= BULLET_ATTACK_VALUE;					
+					mMonsterHpValue[j] -= BULLET_ATTACK_VALUE;
 					mIsMonsterToBullets[j] = true;
 
 					targetMonster = &monster;
 					targetMonsterDistance = distance;
-				}
-
-				if (mMonsterHpValue[j] <= 0)
-				{
-					mMonsterHpValue[j] = 0;
-					mMonsterDeads[j] = true;
 				}
 			}
 
