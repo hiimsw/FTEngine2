@@ -1091,7 +1091,6 @@ bool MainScene::Update(const float deltaTime)
 			monster.SetPosition(position);
 
 			// hp를 좌표를 업데이트한다.
-
 			const D2D1_SIZE_F scaleOffset =
 			{
 				.width = monster.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
@@ -1181,7 +1180,6 @@ bool MainScene::Update(const float deltaTime)
 			monster.SetScale({ startScale.x , startScale.y });
 		}
 	}
-
 
 	// 돌진 몬스터를 업데이트한다.
 	{
@@ -1332,6 +1330,63 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F position = monster.GetPosition();
 			position = Math::AddVector(position, velocity);
 			monster.SetPosition(position);
+		}
+
+		// 총알 이펙트가 생성된다.
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			if (not mIsRunMonsterToBullets[i])
+			{
+				continue;
+			}
+			
+			mRunMonsterEffectTimer[i] += deltaTime;
+
+			// 크기를 보간한다.
+			D2D1_POINT_2F scale = { mRunMonsterBulletEffectScales[i].width, mRunMonsterBulletEffectScales[i].height };
+			scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
+			mRunMonsterBulletEffectScales[i] = { scale.x, scale.y };
+
+			// 두께를 보간한다.
+			mRunMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
+			float t = (mRunMonsterEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+			mRunMonsterThicks[i] = Math::LerpVector(mRunMonsterThicks[i], { 0.1f , 0.1f }, t);
+
+			if (t >= 1.0f)
+			{
+				mRunMonsterEffectTimer[i] = 0.0f;
+			}
+		}
+
+		// 총알과 몬스터가 충돌하면, 몬스터가 사라지는 이펙트가 생성된다.
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			if (not mIsRunMonsterToBullets[i])
+			{
+				continue;
+			}
+
+			mRunMonsterDieTimer[i] += deltaTime;
+
+			Sprite& runMonster = mRunMonsters[i];
+
+			D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
+			startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
+
+			float t = (mRunMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
+
+			if (t >= 1.0f)
+			{
+				runMonster.SetActive(false);
+				mIsRunMonsterToBullets[i] = false;
+				mRunMonsterDieTimer[i] = 0.0f;
+			}
+
+			runMonster.SetScale({ startScale.x , startScale.y });
 		}
 	}
 
@@ -2011,60 +2066,6 @@ bool MainScene::Update(const float deltaTime)
 				or targetSlowMonster != nullptr)
 			{
 				bullet.SetActive(false);
-			}
-		}
-
-		// 총알과 돌진 몬스터가 충돌하면, 돌진 몬스터는 사라지고 이펙트가 생성된다.
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
-		{
-			if (not mIsRunMonsterToBullets[i])
-			{
-				continue;
-			}
-
-			// 돌진 몬스터가 사라지는 이펙트가 생성된다.
-			{
-				mRunMonsterDieTimer[i] += deltaTime;
-
-				Sprite& runMonster = mRunMonsters[i];
-
-				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
-				startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
-
-				float t = (mRunMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-
-				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
-
-				if (t >= 1.0f)
-				{
-					runMonster.SetActive(false);
-					mIsRunMonsterToBullets[i] = false;
-					mRunMonsterDieTimer[i] = 0.0f;
-				}
-
-				runMonster.SetScale({ startScale.x , startScale.y });
-			}
-
-			// 총알 이펙트가 생성된다.
-			{
-				mRunMonsterDieEffectTimer[i] += deltaTime;
-
-				// 크기를 보간한다.
-				D2D1_POINT_2F scale = { mRunMonsterBulletEffectScales[i].width, mRunMonsterBulletEffectScales[i].height };
-				scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
-				mRunMonsterBulletEffectScales[i] = { scale.x, scale.y };
-
-				// 두께를 보간한다.
-				mRunMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
-				float t = (mRunMonsterDieEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-				mRunMonsterThicks[i] = Math::LerpVector(mRunMonsterThicks[i], { 0.1f , 0.1f }, t);
-
-				if (t >= 1.0f)
-				{
-					mRunMonsterDieEffectTimer[i] = 0.0f;
-				}
 			}
 		}
 

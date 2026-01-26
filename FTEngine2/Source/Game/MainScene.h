@@ -211,7 +211,7 @@ private:
 	float mInBoundaryToSlowMonsterTimer[SLOW_MONSTER_COUNT]{};
 	float mCasingTimer[CASING_COUNT]{};
 	float mMonsterEffectTimer[MONSTER_COUNT]{};
-	float mRunMonsterDieEffectTimer[RUN_MONSTER_COUNT]{};
+	float mRunMonsterEffectTimer[RUN_MONSTER_COUNT]{};
 	float mSlowMonsterDieEffectTimer[SLOW_MONSTER_COUNT]{};
 	float mMonsterGrowingTimer[MONSTER_COUNT]{};
 	float mRunMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
