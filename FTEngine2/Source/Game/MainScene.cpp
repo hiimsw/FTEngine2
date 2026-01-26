@@ -122,7 +122,7 @@ void MainScene::Initialize()
 
 		for (Sprite& background : mMonsterBackgroundHpBars)
 		{
-			background.SetScale({ .width = 0.1f, .height = 0.7f });
+			background.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			background.SetCenter({ -0.5f, 0.0f });
 			background.SetActive(false);
 			background.SetTexture(&mWhiteBarTexture);
@@ -131,7 +131,7 @@ void MainScene::Initialize()
 
 		for (Sprite& hpBar : mMonsterHpBars)
 		{
-			hpBar.SetScale({ .width = 0.1f, .height = 0.7f });
+			hpBar.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			hpBar.SetCenter({ -0.5f, 0.0f });
 			hpBar.SetActive(false);
 			hpBar.SetTexture(&mRedBarTexture);
@@ -159,6 +159,24 @@ void MainScene::Initialize()
 			bar.SetActive(false);
 			bar.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&bar);
+		}
+
+		for (Sprite& background : mRunMonsterBackgroundHpBars)
+		{
+			background.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			background.SetCenter({ -0.5f, 0.0f });
+			background.SetActive(false);
+			background.SetTexture(&mWhiteBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
+		}
+
+		for (Sprite& hpBar : mRunMonsterHpBars)
+		{
+			hpBar.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			hpBar.SetCenter({ -0.5f, 0.0f });
+			hpBar.SetActive(false);
+			hpBar.SetTexture(&mRedBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
 	}
 
@@ -1231,6 +1249,8 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
 				mRunMonsterBars[i].SetActive(true);
 
+				mRunMonsterHpValue[i] = RUN_MONSTER_MAX_HP;
+
 				break;
 			}
 		}
@@ -1296,7 +1316,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 				else
-				{
+				{					
 					scale.width = RUN_MONSTER_WIDTH;
 					mRunMonsterBars[i].SetScale(scale);
 
@@ -1315,6 +1335,10 @@ bool MainScene::Update(const float deltaTime)
 
 					mRunMonsterBars[i].SetActive(false);
 					isMoveables[i] = true;
+
+					// hp바를 생성한다.
+					mRunMonsterBackgroundHpBars[i].SetActive(true);
+					mRunMonsterHpBars[i].SetActive(true);
 				}
 			}
 
@@ -1330,6 +1354,39 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F position = monster.GetPosition();
 			position = Math::AddVector(position, velocity);
 			monster.SetPosition(position);
+
+			// hp를 좌표를 업데이트한다.
+			const D2D1_SIZE_F scaleOffset =
+			{
+				.width = monster.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+				.height = monster.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+			};
+
+			const D2D1_POINT_2F offset =
+			{
+				.x = monster.GetPosition().x - scaleOffset.width,
+				.y = monster.GetPosition().y - scaleOffset.height - 10.0f
+			};
+
+			mRunMonsterBackgroundHpBars[i].SetPosition(offset);
+			mRunMonsterHpBars[i].SetPosition(offset);
+		}
+
+		// 체력 업데이트를 한다.
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Sprite& hpBar = mRunMonsterHpBars[i];
+
+			if (mRunMonsterHpValue[i] <= 0)
+			{
+				mRunMonsterHpValue[i] = 0;
+				hpBar.SetActive(false);
+				mMonsterBackgroundHpBars[i].SetActive(false);
+			}
+
+			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
+			scale = Math::LerpVector(scale, { RUN_MONSTER_HP_BAR_WIDTH * (float(mRunMonsterHpValue[i]) / float(RUN_MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
+			hpBar.SetScale({ scale.x, scale.y });
 		}
 
 		// 총알 이펙트가 생성된다.
@@ -1818,7 +1875,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		constexpr float DAMAGE_COOL_TIMER = 0.5f;
+		constexpr float DAMAGE_COOL_TIMER = 0.05f;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -1829,11 +1886,11 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mMonsterDamageTimer[i] += deltaTime;
-
 			// 플레이어 - 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
 			{
+				mMonsterDamageTimer[i] += deltaTime;
+
 				// 카메라 흔들기를 시작합니다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
 				const float duration = getRandom(0.5f, 0.8f);
@@ -1887,8 +1944,6 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mRunMonsterDamageTimer[i] += deltaTime;
-
 			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
 			{
@@ -1898,9 +1953,12 @@ bool MainScene::Update(const float deltaTime)
 				const float frequency = getRandom(70.0f, 90.0f);
 				initializeCameraShake(amplitude, duration, frequency);
 
+				mRunMonsterDamageTimer[i] += deltaTime;
+
 				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
+					mRunMonsterHpValue[i] -= PLAYER_ATTACK_VALUE;
 					runMonster.SetActive(false);
 					mRunMonsterDamageTimer[i] = 0.0f;
 				}
@@ -1930,6 +1988,7 @@ bool MainScene::Update(const float deltaTime)
 				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
+					mRunMonsterHpValue[i] -= BOUNDRY_ATTACK_VALUE;
 					mRunMonsterDamageTimer[i] = 0.0f;
 				}
 
@@ -1941,6 +2000,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
 				{
+					mRunMonsterHpValue[i] -= BOUNDRY_ATTACK_VALUE;
 					runMonster.SetActive(false);
 					mRunMonsterDamageTimer[i] = 0.0f;
 				}
@@ -2085,6 +2145,7 @@ bool MainScene::Update(const float deltaTime)
 				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], runMonster.GetPosition()));
 				if (distance < targetRunMonsterDistance)
 				{
+					mRunMonsterHpValue[j] -= BULLET_ATTACK_VALUE;
 					mIsRunMonsterToBullets[j] = true;
 
 					targetRunMonster = &runMonster;

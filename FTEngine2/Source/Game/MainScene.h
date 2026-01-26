@@ -105,6 +105,7 @@ private:
 	static constexpr float START_LERP_TIME = 0.2f;
 	static constexpr float DURING_TIME = 0.3f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
+	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
 
 	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
@@ -116,7 +117,10 @@ private:
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
 	static constexpr uint32_t DASH_MAX_COUNT = 10;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
+	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
 	static constexpr uint32_t BULLET_ATTACK_VALUE = 10;
+	static constexpr uint32_t PLAYER_ATTACK_VALUE = 10;
+	static constexpr uint32_t BOUNDRY_ATTACK_VALUE = 10;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
@@ -136,7 +140,9 @@ private:
 	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
 	Sprite mCasings[CASING_COUNT]{};
 	Sprite mMonsterBackgroundHpBars[MONSTER_COUNT]{};
+	Sprite mRunMonsterBackgroundHpBars[RUN_MONSTER_COUNT]{};
 	Sprite mMonsterHpBars[MONSTER_COUNT]{};
+	Sprite mRunMonsterHpBars[RUN_MONSTER_COUNT]{};
 
 	GizmoLine mLine{};
 
@@ -147,6 +153,7 @@ private:
 	int32_t mBulletValue = BULLET_COUNT;
 	int32_t mDashCount = DASH_MAX_COUNT;
 	int32_t mMonsterHpValue[MONSTER_COUNT]{};
+	int32_t mRunMonsterHpValue[RUN_MONSTER_COUNT]{};
 
 	D2D1_POINT_2F mHeroVelocity{};
 	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
