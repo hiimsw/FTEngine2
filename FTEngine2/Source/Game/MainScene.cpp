@@ -596,14 +596,14 @@ bool MainScene::Update(const float deltaTime)
 		{
 			static float opacity[BULLET_COUNT];
 			static float shootingCoolTimer = 0.0f;
-			static float coolTimer = 0.0f;
 
 			shootingCoolTimer = max(shootingCoolTimer - deltaTime, 0.0f);
 
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButton(Input::eMouseButton::Left)
 				and shootingCoolTimer <= 0.001f
-				and mBulletValue != 0)
+				and mBulletValue != 0 
+				and not misKeyDownReload)
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
@@ -686,14 +686,41 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 재장전을 한다.
-			if (mBulletValue <= 0)
 			{
-				coolTimer += deltaTime;
+				static float reloadCoolTimer = 0.0f;
+				constexpr float RELOAD_TIME = 1.5f;
 
-				if (coolTimer >= 1.5f)
+				if (mBulletValue <= 0)
 				{
-					mBulletValue = BULLET_COUNT;
-					coolTimer = 0.0f;
+					reloadCoolTimer += deltaTime;
+
+					if (reloadCoolTimer >= RELOAD_TIME)
+					{
+						mBulletValue = BULLET_COUNT;
+						reloadCoolTimer = 0.0f;
+					}
+				}
+
+				if (Input::Get().GetKeyDown('R'))
+				{
+					if (mBulletValue != BULLET_COUNT)
+					{
+						misKeyDownReload = true;
+					}
+				}
+				
+				static float reloadKeyDownCoolTimer = 0.0f;
+
+				if (misKeyDownReload)
+				{
+					reloadKeyDownCoolTimer += deltaTime;
+
+					if (reloadKeyDownCoolTimer >= RELOAD_TIME)
+					{
+						mBulletValue = BULLET_COUNT;
+						reloadKeyDownCoolTimer = 0.0f;
+						misKeyDownReload = false;
+					}
 				}
 			}
 
@@ -764,7 +791,7 @@ bool MainScene::Update(const float deltaTime)
 			static float blinkTimer;
 
 			if (mShieldState == eShield_State::End
-				and Input::Get().GetKeyDown('R'))
+				and Input::Get().GetKeyDown('E'))
 			{
 				mShieldLabel.SetActive(true);
 				mShieldState = eShield_State::Growing;
