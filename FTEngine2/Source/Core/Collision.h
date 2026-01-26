@@ -30,10 +30,29 @@ namespace Collision
 
 	bool IsCollidedSqureWithLine(const D2D1_RECT_F rect, const Line line)
 	{
-		const Line leftLine = { .Point0 = {.x = rect.left, .y = rect.top }, .Point1 = {.x = rect.left, .y = rect.bottom } };
-		const Line rightLine = { .Point0 = {.x = rect.right, .y = rect.top }, .Point1 = {.x = rect.right, .y = rect.bottom } };
-		const Line topLine = { .Point0 = {.x = rect.left, .y = rect.top }, .Point1 = {.x = rect.right, .y = rect.top } };
-		const Line bottomLine = { .Point0 = {.x = rect.left, .y = rect.bottom }, .Point1 = {.x = rect.right, .y = rect.bottom } };
+		const Line leftLine = 
+		{ 
+			.Point0 = {.x = rect.left, .y = rect.top }, 
+			.Point1 = {.x = rect.left, .y = rect.bottom } 
+		};
+
+		const Line rightLine = 
+		{ 
+			.Point0 = {.x = rect.right, .y = rect.top }, 
+			.Point1 = {.x = rect.right, .y = rect.bottom } 
+		};
+
+		const Line topLine = 
+		{ 
+			.Point0 = {.x = rect.left, .y = rect.top }, 
+			.Point1 = {.x = rect.right, .y = rect.top } 
+		};
+
+		const Line bottomLine = 
+		{ 
+			.Point0 = {.x = rect.left, .y = rect.bottom }, 
+			.Point1 = {.x = rect.right, .y = rect.bottom } 
+		};
 
 		const bool result = DoLinesIntersect(leftLine, line)
 			or DoLinesIntersect(rightLine, line)
@@ -57,25 +76,19 @@ namespace Collision
 		const D2D1_POINT_2F ac = Math::SubtractVector(center, line.Point0);
 		const D2D1_POINT_2F ab = Math::SubtractVector(line.Point1, line.Point0);
 		
-		const float abLength = Math::GetVectorLength(ab);
-
-		if (abLength == 0.0f)	// 선이 아니라 점일 때
-		{
-			return Math::GetVectorLength(ac) <= radius;
-		}
-
 		const D2D1_POINT_2F abDirection = Math::NormalizeVector(ab);
+		const float abLength = Math::GetVectorLength(ab);
 
 		float t = Math::DotProduct2D(ac, abDirection);
 		t = std::clamp(t, 0.0f, abLength);
 
-		const D2D1_POINT_2F cPoint = 
+		const D2D1_POINT_2F dPoint = 
 		{
 			line.Point0.x + abDirection.x * t,
 			line.Point0.y + abDirection.y * t
 		};
 
-		const D2D1_POINT_2F diff = Math::SubtractVector(center, cPoint);
+		const D2D1_POINT_2F diff = Math::SubtractVector(center, dPoint);
 		
 		bool result = Math::DotProduct2D(diff, diff) <= radius * radius;
 

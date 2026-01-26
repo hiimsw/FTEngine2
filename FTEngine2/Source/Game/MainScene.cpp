@@ -1493,7 +1493,7 @@ bool MainScene::Update(const float deltaTime)
 				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
 			};
 
-			const Line line =
+			Line line = 
 			{
 				.Point0 = mPrevBulletPosition[i],
 				.Point1 = endPosition
@@ -1504,7 +1504,7 @@ bool MainScene::Update(const float deltaTime)
 				bullet.SetActive(false);
 			}
 
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, endPosition))
+			if (Collision::IsCollidedCircleWithLine({}, IN_BOUNDARY_RADIUS, line))
 			{
 				bullet.SetActive(false);
 			}
@@ -1979,7 +1979,50 @@ bool MainScene::Update(const float deltaTime)
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mMonsters[i];
-			if (Collision::IsCollidedCircleWithPoint(mHero.GetPosition(), mShieldScale.width * 0.5f, monster.GetPosition()))
+
+			D2D1_RECT_F rect = getRectangleFromSprite(monster);
+
+			Line leftLine =
+			{
+				.Point0 = { .x = rect.left, .y = rect.top },
+				.Point1 = {.x = rect.right, .y = rect.bottom },
+			};
+
+			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, leftLine))
+			{
+				monster.SetActive(false);
+			}
+
+			Line topLine =
+			{
+				.Point0 = {.x = rect.left, .y = rect.top },
+				.Point1 = {.x = rect.right, .y = rect.top },
+			};
+
+			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, topLine))
+			{
+				monster.SetActive(false);
+
+			}
+
+			Line rightLine =
+			{
+				.Point0 = {.x = rect.right, .y = rect.top },
+				.Point1 = {.x = rect.right, .y = rect.bottom },
+			};
+
+			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, rightLine))
+			{
+				monster.SetActive(false);
+			}
+
+			Line bottomLine =
+			{
+				.Point0 = {.x = rect.left, .y = rect.bottom },
+				.Point1 = {.x = rect.right, .y = rect.bottom },
+			};
+
+			if (Collision::IsCollidedCircleWithLine(mHero.GetPosition(), mShieldScale.width * 0.5f, bottomLine))
 			{
 				monster.SetActive(false);
 			}
