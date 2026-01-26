@@ -233,6 +233,22 @@ void MainScene::Initialize()
 			mLabels.push_back(&mTimerLabel);
 		}
 
+		// 현재 대쉬 개수
+		{
+			mDashValueLabel.SetFont(&mDefaultFont);
+			mDashValueLabel.SetUI(true);
+
+			const D2D1_POINT_2F dashBarPosition = mDashUiBar.GetPosition();
+			constexpr float OFFSET_X = 5.0f;
+			D2D1_POINT_2F offset = { .x = dashBarPosition.x - OFFSET_X, .y = dashBarPosition.y };
+			mDashValueLabel.SetPosition(offset);
+
+			mDashValueLabel.SetCenter({ .x = 0.5f, .y = 0.0f });
+			mDashValueLabel.SetText(L"Dash: " + std::to_wstring(mDashCount) + L" / " + std::to_wstring(DASH_MAX_COUNT));
+			mLabels.push_back(&mDashValueLabel);
+
+		}
+
 		// 현재 체력
 		{
 			mHpValueLabel.SetFont(&mDefaultFont);
@@ -568,7 +584,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				dashScaleTimer += deltaTime;
 
-				if (dashScaleTimer >= 3.0f)
+				if (dashScaleTimer >= 2.0f)
 				{
 					mDashCount++;
 					dashScaleTimer = 0.0f;
@@ -1321,6 +1337,15 @@ bool MainScene::Update(const float deltaTime)
 
 	// 플레이어 대쉬바를 업데이트한다.
 	{
+		static int32_t prevDashCount = mDashCount;
+
+		if (prevDashCount != mDashCount)
+		{
+			mDashValueLabel.SetText(L"Dash: " + std::to_wstring(mDashCount) + L" / " + std::to_wstring(DASH_MAX_COUNT));
+
+			prevDashCount = mDashCount;
+		}
+
 		D2D1_POINT_2F scale = { mDashValue.GetScale().width, mDashValue.GetScale().height };
 		scale = Math::LerpVector(scale, { UI_DASH_SCALE_WIDTH * (float(mDashCount) / float(DASH_MAX_COUNT)),  scale.y }, 8.0f * deltaTime);
 		mDashValue.SetScale({ scale.x, scale.y });

@@ -181,6 +181,7 @@ private:
 
 	Label mTimerLabel{};
 	Label mHpValueLabel{};
+	Label mDashValueLabel{};
 	Label mEndingLabel{};
 	Label mShieldLabel{};
 	Label mBulletLabel{};
