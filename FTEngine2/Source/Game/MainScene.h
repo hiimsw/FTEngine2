@@ -203,8 +203,10 @@ private:
 
 	// 충돌 관련
 	bool mIsMonsterToBulletCollidings[MONSTER_COUNT]{};
-	float mMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
 	float mMonsterToPlayerEnterCollidingTimers[MONSTER_COUNT]{};
+	float mMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
+
+	bool mIsMonsterDeads[MONSTER_COUNT]{};
 	float mMonsterDieTimers[MONSTER_COUNT]{};
 
 	D2D1_POINT_2F mMonsterToBulletThicks[MONSTER_COUNT]{};
@@ -214,7 +216,6 @@ private:
 	Sprite mMonsterBackgroundHpBars[MONSTER_COUNT]{};
 	Sprite mMonsterHpBars[MONSTER_COUNT]{};
 	int32_t mMonsterHpValues[MONSTER_COUNT]{};
-	bool mMonsterDeads[MONSTER_COUNT]{};
 
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
@@ -226,25 +227,29 @@ private:
 
 	Sprite mRunMonsters[RUN_MONSTER_COUNT]{};
 
+	// 바가 다 차면, 이동한다.
 	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
 
 	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
 	float mRunMonsterSpawnTimer{};
+	float mRunMonsterGrowingTimers[RUN_MONSTER_COUNT]{};
 
-	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
+	// 충돌 관련
+	bool mIsRunMonsterToBulletCollidings[RUN_MONSTER_COUNT]{};
+	float mRunMonsterToPlayerEnterCollidingTimers[RUN_MONSTER_COUNT]{};
+	float mRunMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
+	float mRunMonsterToBoundryEnterCollidingTimers[MONSTER_COUNT]{};
+
+	float mRunMonsterDieTimers[RUN_MONSTER_COUNT]{};
+	bool mIsRunMonsterDeads[RUN_MONSTER_COUNT]{};
 
 	Sprite mRunMonsterBackgroundHpBars[RUN_MONSTER_COUNT]{};
 	Sprite mRunMonsterHpBars[RUN_MONSTER_COUNT]{};
 	int32_t mRunMonsterHpValue[RUN_MONSTER_COUNT]{};
 
-	D2D1_POINT_2F mRunMonsterThicks[RUN_MONSTER_COUNT]{};
+	D2D1_POINT_2F mRunMonsterToThicks[RUN_MONSTER_COUNT]{};
 	D2D1_SIZE_F mRunMonsterToBulletEffectScales[RUN_MONSTER_COUNT]{};
-
-	float mRunMonsterDamageTimer[RUN_MONSTER_COUNT]{};
-	float mRunMonsterDieTimer[RUN_MONSTER_COUNT]{};
-	float mInBoundaryToRunMonsterTimer[RUN_MONSTER_COUNT]{};
-	float mRunMonsterEffectTimer[RUN_MONSTER_COUNT]{};
-	float mRunMonsterGrowingTimer[RUN_MONSTER_COUNT]{};
+	float mRunMonsterToBulletEffectTimers[RUN_MONSTER_COUNT]{};
 
 	// 느린 몬스터
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;

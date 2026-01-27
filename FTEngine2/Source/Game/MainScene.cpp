@@ -1127,7 +1127,7 @@ bool MainScene::Update(const float deltaTime)
 			mMonsterHpBars[i].SetPosition(offset);
 		}
 
-		// 체력 업데이트를 한다.
+		// 몬스터의 체력을 업데이트를 한다.
 		static float prevHp[MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
@@ -1135,21 +1135,19 @@ bool MainScene::Update(const float deltaTime)
 			if (mMonsterHpValues[i] <= 0)
 			{
 				mMonsterHpValues[i] = 0;
-				mMonsterDeads[i] = true;
+				mIsMonsterDeads[i] = true;
 			}
 
-			prevHp[i] = mMonsterHpValues[i];
-
-			if (prevHp[i] != mMonsterHpValues[i])
-			{
+			if (prevHp[i] > mMonsterHpValues[i])
+			{		
 				// 카메라 흔들기를 시작한다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
 				const float duration = getRandom(0.5f, 0.8f);
 				const float frequency = getRandom(50.0f, 60.0f);
 				initializeCameraShake(amplitude, duration, frequency);
-
-				prevHp[i] = mMonsterHpValues[i];
 			}
+
+			prevHp[i] = mMonsterHpValues[i];
 
 			Sprite& hpBar = mMonsterHpBars[i];
 			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
@@ -1188,7 +1186,7 @@ bool MainScene::Update(const float deltaTime)
 		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (not mMonsterDeads[i])
+			if (not mIsMonsterDeads[i])
 			{
 				continue;
 			}
@@ -1212,8 +1210,7 @@ bool MainScene::Update(const float deltaTime)
 				mMonsterBackgroundHpBars[i].SetActive(false);
 				mMonsterHpBars[i].SetActive(false);
 
-				mMonsterDeads[i] = false;
-
+				mIsMonsterDeads[i] = false;
 				mMonsterDieTimers[i] = 0.0f;
 			}
 
@@ -1262,7 +1259,7 @@ bool MainScene::Update(const float deltaTime)
 
 				mRunMonsterToBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 
-				if (mIsRunMonsterToBullets[i])
+				if (mIsRunMonsterToBulletCollidings[i])
 				{
 					continue;
 				}
@@ -1292,19 +1289,19 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			mRunMonsterGrowingTimer[i] += deltaTime;
+			mRunMonsterGrowingTimers[i] += deltaTime;
 
 			D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-			float t = (mRunMonsterGrowingTimer[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (mRunMonsterGrowingTimers[i] - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { RUN_MONSTER_SCALE , RUN_MONSTER_SCALE }, t);
 
 			if (t >= 1.0f)
 			{
-				mRunMonsterGrowingTimer[i] = 0.0f;
+				mRunMonsterGrowingTimers[i] = 0.0f;
 				mIsRunMonsterSpawns[i] = false;
 			}
 
@@ -1313,7 +1310,7 @@ bool MainScene::Update(const float deltaTime)
 			break;
 		}
 
-		// 이동한다.
+		// 돌진 몬스터가 이동한다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			Sprite& monster = mRunMonsters[i];
@@ -1364,7 +1361,7 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			if (mIsRunMonsterToBullets[i])
+			if (mIsRunMonsterDeads[i])
 			{
 				continue;
 			}
@@ -1394,7 +1391,9 @@ bool MainScene::Update(const float deltaTime)
 			mRunMonsterHpBars[i].SetPosition(offset);
 		}
 
-		// 체력 업데이트를 한다.
+		// 돌진 몬스터의 체력 업데이트를 한다.
+		static float prevHp[RUN_MONSTER_COUNT];
+
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			Sprite& hpBar = mRunMonsterHpBars[i];
@@ -1402,24 +1401,34 @@ bool MainScene::Update(const float deltaTime)
 			if (mRunMonsterHpValue[i] <= 0)
 			{
 				mRunMonsterHpValue[i] = 0;
-				hpBar.SetActive(false);
-				mMonsterBackgroundHpBars[i].SetActive(false);
+				mIsRunMonsterDeads[i] = true;
 			}
+
+			if (prevHp[i] > mRunMonsterHpValue[i])
+			{
+				// 카메라 흔들기를 시작한다.
+				const float amplitude = Constant::Get().GetHeight() * getRandom(0.012f, 0.02f);
+				const float duration = getRandom(0.3f, 0.9f);
+				const float frequency = getRandom(70.0f, 90.0f);
+				initializeCameraShake(amplitude, duration, frequency);
+			}
+
+			prevHp[i] = mRunMonsterHpValue[i];
 
 			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
 			scale = Math::LerpVector(scale, { RUN_MONSTER_HP_BAR_WIDTH * (float(mRunMonsterHpValue[i]) / float(RUN_MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
 			hpBar.SetScale({ scale.x, scale.y });
 		}
 
-		// 총알 이펙트가 생성된다.
+		// 돌진 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			if (not mIsRunMonsterToBullets[i])
+			if (not mIsRunMonsterToBulletCollidings[i])
 			{
 				continue;
 			}
 
-			mRunMonsterEffectTimer[i] += deltaTime;
+			mRunMonsterToBulletEffectTimers[i] += deltaTime;
 
 			// 크기를 보간한다.
 			D2D1_POINT_2F scale = { mRunMonsterToBulletEffectScales[i].width, mRunMonsterToBulletEffectScales[i].height };
@@ -1427,33 +1436,34 @@ bool MainScene::Update(const float deltaTime)
 			mRunMonsterToBulletEffectScales[i] = { scale.x, scale.y };
 
 			// 두께를 보간한다.
-			mRunMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
-			float t = (mRunMonsterEffectTimer[i] - START_LERP_TIME) / DURING_TIME;
+			mRunMonsterToThicks[i] = { .x = 15.0f, .y = 15.0f };
+			float t = (mRunMonsterToBulletEffectTimers[i] - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
-			mRunMonsterThicks[i] = Math::LerpVector(mRunMonsterThicks[i], { 0.1f , 0.1f }, t);
+			mRunMonsterToThicks[i] = Math::LerpVector(mRunMonsterToThicks[i], { 0.1f , 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
-				mRunMonsterEffectTimer[i] = 0.0f;
+				mIsRunMonsterToBulletCollidings[i] = false;
+				mRunMonsterToBulletEffectTimers[i] = 0.0f;
 			}
 		}
 
-		// 총알과 몬스터가 충돌하면, 몬스터가 사라지는 이펙트가 생성된다.
+		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			if (not mIsRunMonsterToBullets[i])
+			if (not mIsRunMonsterDeads[i])
 			{
 				continue;
 			}
 
-			mRunMonsterDieTimer[i] += deltaTime;
+			mRunMonsterDieTimers[i] += deltaTime;
 
 			Sprite& runMonster = mRunMonsters[i];
 
 			D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-			float t = (mRunMonsterDieTimer[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (mRunMonsterDieTimers[i] - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
@@ -1461,8 +1471,12 @@ bool MainScene::Update(const float deltaTime)
 			if (t >= 1.0f)
 			{
 				runMonster.SetActive(false);
-				mIsRunMonsterToBullets[i] = false;
-				mRunMonsterDieTimer[i] = 0.0f;
+
+				mRunMonsterBackgroundHpBars[i].SetActive(false);
+				mRunMonsterHpBars[i].SetActive(false);
+
+				mIsRunMonsterDeads[i] = false;
+				mRunMonsterDieTimers[i] = 0.0f;
 			}
 
 			runMonster.SetScale({ startScale.x , startScale.y });
@@ -1917,6 +1931,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE * 2;
+
 					mMonsterToPlayerEnterCollidingTimers[i] = 0.0f;
 				}
 
@@ -1932,6 +1947,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE * 2;
+
 					mMonsterToInBoundryEnterCollidingTimers[i] = 0.0f;
 				}
 
@@ -1947,52 +1963,33 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			// 플레이어 - 돌진 몬스터가 충돌하면 몬스터는 삭제된다.
+			// 돌진 몬스터와 플레이어 충돌을 검사한다.
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonster)))
 			{
-				// 카메라 흔들기를 시작합니다.
-				const float amplitude = Constant::Get().GetHeight() * getRandom(0.012f, 0.020f);
-				const float duration = getRandom(0.3f, 0.9f);
-				const float frequency = getRandom(70.0f, 90.0f);
-				initializeCameraShake(amplitude, duration, frequency);
+				mRunMonsterToPlayerEnterCollidingTimers[i] += deltaTime;
 
-				mRunMonsterDamageTimer[i] += deltaTime;
-
-				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				if (mRunMonsterToPlayerEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mRunMonsterHpValue[i] -= PLAYER_ATTACK_VALUE;
-					runMonster.SetActive(false);
-					mRunMonsterDamageTimer[i] = 0.0f;
+
+					mRunMonsterToPlayerEnterCollidingTimers[i] = 0.0f;
 				}
 
 				break;
 			}
 
-			// 내부 원과 충돌하면 돌진 몬스터는 삭제된다.
+			// 돌진 몬스터와 내부 원 충돌을 검사한다.
 			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
-				mInBoundaryToRunMonsterTimer[i] += deltaTime;
+				mRunMonsterToInBoundryEnterCollidingTimers[i] += deltaTime;
 
-				D2D1_POINT_2F startScale = { runMonster.GetScale().width, runMonster.GetScale().height };
-				startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, 8.0f * deltaTime);
-				runMonster.SetScale({ startScale.x, startScale.y });
-
-				float t = (mInBoundaryToRunMonsterTimer[i] - START_LERP_TIME) / DURING_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-
-				startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
-				if (t >= 1.0f)
-				{
-					runMonster.SetActive(false);
-					mInBoundaryToRunMonsterTimer[i] = 0.0f;
-				}
-
-				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				if (mRunMonsterToInBoundryEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mRunMonsterHpValue[i] -= BOUNDRY_ATTACK_VALUE;
-					mRunMonsterDamageTimer[i] = 0.0f;
+
+					mRunMonsterToInBoundryEnterCollidingTimers[i] = 0.0f;
 				}
 
 				break;
@@ -2001,11 +1998,14 @@ bool MainScene::Update(const float deltaTime)
 			// 외부 원과 충돌하면 돌진 몬스터는 삭제된다.
 			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, runMonster.GetPosition()))
 			{
-				if (mRunMonsterDamageTimer[i] >= DAMAGE_COOL_TIMER)
+				mRunMonsterToBoundryEnterCollidingTimers[i] += deltaTime;
+
+				if (mRunMonsterToBoundryEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
 				{
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					mRunMonsterHpValue[i] -= BOUNDRY_ATTACK_VALUE;
-					runMonster.SetActive(false);
-					mRunMonsterDamageTimer[i] = 0.0f;
+
+					mRunMonsterToBoundryEnterCollidingTimers[i] = 0.0f;
 				}
 
 				break;
@@ -2143,7 +2143,7 @@ bool MainScene::Update(const float deltaTime)
 				if (distance < targetRunMonsterDistance)
 				{
 					mRunMonsterHpValue[j] -= BULLET_ATTACK_VALUE;
-					mIsRunMonsterToBullets[j] = true;
+					mIsRunMonsterToBulletCollidings[j] = true;
 
 					targetRunMonster = &runMonster;
 					targetRunMonsterDistance = distance;
@@ -2364,7 +2364,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
-			if (not mIsRunMonsterToBullets[i])
+			if (not mIsRunMonsterToBulletCollidings[i])
 			{
 				continue;
 			}
@@ -2382,7 +2382,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = mRunMonsterToBulletEffectScales[i].height
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mRunMonsterThicks[i].x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mRunMonsterToThicks[i].x);
 		}
 	}
 
