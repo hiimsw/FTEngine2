@@ -201,16 +201,15 @@ private:
 	bool mIsMonsterSpawns[MONSTER_COUNT]{};
 	float mMonsterGrowingTimers[MONSTER_COUNT]{};
 
+	// 충돌 관련
 	bool mIsMonsterToBulletCollidings[MONSTER_COUNT]{};
-	float mMonsterToBulletEnterCollidingTimers[MONSTER_COUNT]{};
-
-	D2D1_POINT_2F mMonsterThicks[MONSTER_COUNT]{};
-	D2D1_SIZE_F mMonsterToBulletEffectScales[MONSTER_COUNT]{};
-	float mMonsterToBulletEffectTimers[MONSTER_COUNT]{};
-
-	float mMonsterToInBoundaryEffectTimers[MONSTER_COUNT]{};
 	float mMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
 	float mMonsterToPlayerEnterCollidingTimers[MONSTER_COUNT]{};
+	float mMonsterDieTimers[MONSTER_COUNT]{};
+
+	D2D1_POINT_2F mMonsterToBulletThicks[MONSTER_COUNT]{};
+	D2D1_SIZE_F mMonsterToBulletEffectScales[MONSTER_COUNT]{};
+	float mMonsterToBulletEffectTimers[MONSTER_COUNT]{};
 
 	Sprite mMonsterBackgroundHpBars[MONSTER_COUNT]{};
 	Sprite mMonsterHpBars[MONSTER_COUNT]{};
@@ -220,16 +219,20 @@ private:
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
-	Sprite mRunMonsters[RUN_MONSTER_COUNT]{};
-
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
-	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
-
-	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
-	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
 
 	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
 	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
+
+	Sprite mRunMonsters[RUN_MONSTER_COUNT]{};
+
+	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
+
+	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
+	float mRunMonsterSpawnTimer{};
+
+	bool mIsRunMonsterToBullets[RUN_MONSTER_COUNT]{};
+
 	Sprite mRunMonsterBackgroundHpBars[RUN_MONSTER_COUNT]{};
 	Sprite mRunMonsterHpBars[RUN_MONSTER_COUNT]{};
 	int32_t mRunMonsterHpValue[RUN_MONSTER_COUNT]{};
@@ -237,7 +240,6 @@ private:
 	D2D1_POINT_2F mRunMonsterThicks[RUN_MONSTER_COUNT]{};
 	D2D1_SIZE_F mRunMonsterToBulletEffectScales[RUN_MONSTER_COUNT]{};
 
-	float mRunMonsterSpawnTimer{};
 	float mRunMonsterDamageTimer[RUN_MONSTER_COUNT]{};
 	float mRunMonsterDieTimer[RUN_MONSTER_COUNT]{};
 	float mInBoundaryToRunMonsterTimer[RUN_MONSTER_COUNT]{};
@@ -247,7 +249,9 @@ private:
 	// 느린 몬스터
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
+
 	Sprite mSlowMonsters[SLOW_MONSTER_COUNT]{};
+
 	eSlow_Monster_State mSlowMonsterState[SLOW_MONSTER_COUNT] = { eSlow_Monster_State::End };
 
 	// 스폰
