@@ -1278,11 +1278,6 @@ bool MainScene::Update(const float deltaTime)
 
 				mRunMonsterToBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 
-				if (mIsRunMonsterToBulletCollidings[i])
-				{
-					continue;
-				}
-
 				mRunMonsterStartBars[i].SetPosition({ .x = spawnPositionCircle.x - 10.0f, .y = spawnPositionCircle.y - 20.0f });
 				mRunMonsterStartBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
 				mRunMonsterStartBars[i].SetActive(true);
@@ -1378,11 +1373,6 @@ bool MainScene::Update(const float deltaTime)
 					mRunMonsterBackgroundHpBars[i].SetActive(true);
 					mRunMonsterHpBars[i].SetActive(true);
 				}
-			}
-
-			if (mIsRunMonsterDeads[i])
-			{
-				continue;
 			}
 
 			constexpr float MOVE_ACC = 5.0f;
@@ -1765,6 +1755,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (t >= 1.0f)
 			{
+				mIsSlowMonsterToBulletCollidings[i] = false;
 				mSlowMonsterToBulletEffectTimers[i] = 0.0f;
 			}
 		}
@@ -1978,7 +1969,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		constexpr float DAMAGE_COOL_TIMER = 0.05f;
+		constexpr float DAMAGE_COOL_TIMER = 0.5f;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -2219,6 +2210,7 @@ bool MainScene::Update(const float deltaTime)
 				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], slowMonster.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
+					mSlowMonsterHpValues[j] -= BULLET_ATTACK_VALUE;
 					mIsSlowMonsterToBulletCollidings[j] = true;
 
 					targetSlowMonster = &slowMonster;
@@ -2243,11 +2235,10 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& monster = mMonsters[i];
-
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i]), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				monster.SetActive(false);
+				mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 
@@ -2259,10 +2250,10 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& runMonster = mRunMonsters[i];
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mRunMonsters[i]), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				runMonster.SetActive(false);
+				mRunMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 
@@ -2277,7 +2268,8 @@ bool MainScene::Update(const float deltaTime)
 			Sprite& slowMonster = mSlowMonsters[i];
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				slowMonster.SetActive(false);
+				mSlowMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 
@@ -2289,12 +2281,11 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& monster = mMonsters[i];
-
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster), center, mOrbitEllipse.radiusX))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i]), center, mOrbitEllipse.radiusX))
 			{
-				monster.SetActive(false);
+				mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 
@@ -2305,12 +2296,11 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& runMonster = mRunMonsters[i];
-
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonster), center, mOrbitEllipse.radiusX))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mRunMonsters[i]), center, mOrbitEllipse.radiusX))
 			{
-				runMonster.SetActive(false);
+				mRunMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 
@@ -2321,12 +2311,11 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& slowMonster = mSlowMonsters[i];
-
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), center, mOrbitEllipse.radiusX))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i]), center, mOrbitEllipse.radiusX))
 			{
-				slowMonster.SetActive(false);
+				mSlowMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				break;
 			}
 		}
 	}
