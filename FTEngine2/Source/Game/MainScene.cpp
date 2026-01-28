@@ -1037,6 +1037,11 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
+				if (mIsMonsterDeads[i])
+				{
+					continue;
+				}
+
 				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 				const D2D1_POINT_2F spawnDirection =
 				{
@@ -1071,6 +1076,11 @@ bool MainScene::Update(const float deltaTime)
 			Sprite& monster = mMonsters[i];
 
 			if (not monster.IsActive())
+			{
+				continue;
+			}
+
+			if (mIsMonsterDeads[i])
 			{
 				continue;
 			}
@@ -1151,7 +1161,8 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (mMonsterHpValues[i] <= 0)
+			if (not mIsMonsterDeads[i] 
+				and mMonsterHpValues[i] <= 0)
 			{
 				mMonsterHpValues[i] = 0;
 				mIsMonsterDeads[i] = true;
@@ -1200,6 +1211,8 @@ bool MainScene::Update(const float deltaTime)
 				mIsMonsterToBulletCollidings[i] = false;
 				mMonsterToBulletEffectTimers[i] = 0.0f;
 			}
+
+			break;
 		}
 
 		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
@@ -1256,6 +1269,11 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
+				if (mIsRunMonsterDeads[i])
+				{
+					continue;
+				}
+
 				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 				const D2D1_POINT_2F spawnDirection =
 				{
@@ -1283,7 +1301,6 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterStartBars[i].SetActive(true);
 
 				mRunMonsterHpValues[i] = RUN_MONSTER_MAX_HP;
-
 				break;
 			}
 		}
@@ -1294,6 +1311,11 @@ bool MainScene::Update(const float deltaTime)
 			Sprite& runMonster = mRunMonsters[i];
 
 			if (not runMonster.IsActive())
+			{
+				continue;
+			}
+
+			if (mIsRunMonsterDeads[i])
 			{
 				continue;
 			}
@@ -1320,7 +1342,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			runMonster.SetScale({ startScale.x , startScale.y });
-
 			break;
 		}
 
@@ -1331,6 +1352,11 @@ bool MainScene::Update(const float deltaTime)
 			if (not monster.IsActive())
 			{
 				mRunMonsterStartBars[i].SetActive(false);
+				continue;
+			}
+
+			if (mIsRunMonsterDeads[i])
+			{
 				continue;
 			}
 
@@ -1407,7 +1433,8 @@ bool MainScene::Update(const float deltaTime)
 		{
 			Sprite& hpBar = mRunMonsterHpBars[i];
 
-			if (mRunMonsterHpValues[i] <= 0)
+			if (not mIsRunMonsterDeads[i]
+				and mRunMonsterHpValues[i] <= 0)
 			{
 				mRunMonsterHpValues[i] = 0;
 				mIsRunMonsterDeads[i] = true;
@@ -1455,6 +1482,8 @@ bool MainScene::Update(const float deltaTime)
 				mIsRunMonsterToBulletCollidings[i] = false;
 				mRunMonsterToBulletEffectTimers[i] = 0.0f;
 			}
+
+			break;
 		}
 
 		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
@@ -1510,6 +1539,11 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
+				if (mIsSlowMonsterDeads[i])
+				{
+					continue;
+				}
+
 				const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 				const D2D1_POINT_2F spawnDirection =
 				{
@@ -1532,6 +1566,7 @@ bool MainScene::Update(const float deltaTime)
 
 				mSlowMonsterBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
 
+				mSlowMonsterHpValues[i] = SLOW_MONSTER_MAX_HP;
 				break;
 			}
 		}
@@ -1567,6 +1602,11 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
+			if (mIsSlowMonsterDeads[i])
+			{
+				continue;
+			}
+
 			if (not mIsSlowMonsterSpawns[i])
 			{
 				continue;
@@ -1584,16 +1624,14 @@ bool MainScene::Update(const float deltaTime)
 
 			if (t >= 1.0f)
 			{
-				mSlowMonsterGrowingTimerss[i] = 0.0f;
 				mIsSlowMonsterSpawns[i] = false;
+				mSlowMonsterGrowingTimerss[i] = 0.0f;
 			}
 
 			slowMonster.SetScale({ startScale.x , startScale.y });
 
 			mSlowMonsterBackgroundHpBars[i].SetActive(true);
 			mSlowMonsterHpBars[i].SetActive(true);
-			mSlowMonsterHpValues[i] = SLOW_MONSTER_MAX_HP;
-
 			break;
 		}
 
@@ -1613,6 +1651,11 @@ bool MainScene::Update(const float deltaTime)
 					mSlowMonsterShadows[i][j].SetActive(false);
 				}
 
+				continue;
+			}
+
+			if (mIsSlowMonsterDeads[i])
+			{
 				continue;
 			}
 
@@ -1702,14 +1745,15 @@ bool MainScene::Update(const float deltaTime)
 			mSlowMonsterHpBars[i].SetPosition(offset);
 		}
 
-		// 돌진 몬스터의 체력 업데이트를 한다.
+		// 느린 몬스터의 체력 업데이트를 한다.
 		static float prevHp[SLOW_MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			Sprite& hpBar = mSlowMonsterHpBars[i];
 
-			if (mSlowMonsterHpValues[i] <= 0)
+			if (not mIsSlowMonsterDeads[i]
+				and mSlowMonsterHpValues[i] <= 0)
 			{
 				mSlowMonsterHpValues[i] = 0;
 				mIsSlowMonsterDeads[i] = true;
@@ -1758,6 +1802,8 @@ bool MainScene::Update(const float deltaTime)
 				mIsSlowMonsterToBulletCollidings[i] = false;
 				mSlowMonsterToBulletEffectTimers[i] = 0.0f;
 			}
+
+			break;
 		}
 
 		// 느린 몬스터가 사라지는 이펙트가 생성된다.
