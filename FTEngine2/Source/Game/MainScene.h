@@ -222,6 +222,7 @@ private:
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
+	
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
@@ -230,31 +231,17 @@ private:
 	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
 	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
 
-	Sprite mRunMonsters[RUN_MONSTER_COUNT]{};
+	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
+	float mRunMonsterSpawnTimer{};
+	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
+	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
+	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
 
 	// 바가 다 차면, 이동한다.
 	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
 
-	bool mIsRunMonsterSpawns[RUN_MONSTER_COUNT]{};
-	float mRunMonsterSpawnTimer{};
-	float mRunMonsterGrowingTimers[RUN_MONSTER_COUNT]{};
-
 	// 충돌 관련
-	bool mIsRunMonsterToBulletCollidings[RUN_MONSTER_COUNT]{};
-	float mRunMonsterToPlayerEnterCollidingTimers[RUN_MONSTER_COUNT]{};
-	float mRunMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
 	float mRunMonsterToBoundryEnterCollidingTimers[MONSTER_COUNT]{};
-
-	float mRunMonsterDieTimers[RUN_MONSTER_COUNT]{};
-	bool mIsRunMonsterDeads[RUN_MONSTER_COUNT]{};
-
-	Sprite mRunMonsterBackgroundHpBars[RUN_MONSTER_COUNT]{};
-	Sprite mRunMonsterHpBars[RUN_MONSTER_COUNT]{};
-	int32_t mRunMonsterHpValues[RUN_MONSTER_COUNT]{};
-
-	D2D1_POINT_2F mRunMonsterToThicks[RUN_MONSTER_COUNT]{};
-	D2D1_SIZE_F mRunMonsterToBulletEffectScales[RUN_MONSTER_COUNT]{};
-	float mRunMonsterToBulletEffectTimers[RUN_MONSTER_COUNT]{};
 
 	// 느린 몬스터
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
