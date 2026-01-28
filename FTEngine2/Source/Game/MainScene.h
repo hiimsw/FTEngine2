@@ -233,12 +233,12 @@ private:
 
 	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
 	float mRunMonsterSpawnTimer{};
-	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
-	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
-	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
 
 	// 바가 다 차면, 이동한다.
 	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
+	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
+	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
+	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
 
 	// 충돌 관련
 	float mRunMonsterToBoundryEnterCollidingTimers[MONSTER_COUNT]{};
@@ -250,11 +250,8 @@ private:
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
 	static constexpr uint32_t SLOW_MONSTER_MAX_HP = 10;
 
-	Sprite mSlowMonsters[SLOW_MONSTER_COUNT]{};
-
-	float mSlowMonsterSpawnTimers{};
-	bool mIsSlowMonsterSpawns[SLOW_MONSTER_COUNT]{};
-	float mSlowMonsterGrowingTimerss[SLOW_MONSTER_COUNT]{};
+	Monster mSlowMonsters[SLOW_MONSTER_COUNT]{};
+	float mSlowMonsterSpawnTimer{};
 
 	// 이동 관련
 	eSlow_Monster_State mSlowMonsterState[SLOW_MONSTER_COUNT] = { eSlow_Monster_State::End };
@@ -265,28 +262,14 @@ private:
 	D2D1_POINT_2F mSlowMonsterStartPositions[SLOW_MONSTER_COUNT]{};
 	D2D1_POINT_2F mSlowMonsterEndPositions[SLOW_MONSTER_COUNT]{};
 
+	// 그림자 관련
 	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
 	float mSlowMonsterShadowCoolTimers[SLOW_MONSTER_COUNT]{};
 
 	// 충돌 관련
-	bool mIsSlowMonsterToBulletCollidings[SLOW_MONSTER_COUNT]{};
-	float mSlowMonsterToPlayerEnterCollidingTimers[SLOW_MONSTER_COUNT]{};
-	float mSlowMonsterToInBoundaryEnterCollidingTimers[SLOW_MONSTER_COUNT]{};
-
-	float mSlowMonsterDieTimers[SLOW_MONSTER_COUNT]{};
-	bool mIsSlowMonsterDeads[SLOW_MONSTER_COUNT]{};
-
-	Sprite mSlowMonsterBackgroundHpBars[SLOW_MONSTER_COUNT]{};
-	Sprite mSlowMonsterHpBars[SLOW_MONSTER_COUNT]{};
-	int32_t mSlowMonsterHpValues[SLOW_MONSTER_COUNT]{};
-
-	D2D1_POINT_2F mSlowMonsterThicks[SLOW_MONSTER_COUNT]{};
-	D2D1_SIZE_F mSlowMonsterBulletEffectScales[SLOW_MONSTER_COUNT]{};
-	float mSlowMonsterToBulletEffectTimers[SLOW_MONSTER_COUNT]{};
-
-	GizmoLine mLine{};
-
-	// 충돌 관련
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
+
+	// 기타
+	GizmoLine mLine{};
 };

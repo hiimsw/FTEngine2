@@ -194,8 +194,10 @@ void MainScene::Initialize()
 
 	// 느린 몬스터를 초기화한다.
 	{
-		for (Sprite& monster : mSlowMonsters)
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
+			Sprite& monster = mSlowMonsters[i].Sprite;
+
 			monster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
 			monster.SetActive(false);
 			monster.SetTexture(&mRectangleTexture);
@@ -221,8 +223,10 @@ void MainScene::Initialize()
 			}
 		}
 
-		for (Sprite& background : mSlowMonsterBackgroundHpBars)
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
+			Sprite& background = mSlowMonsters[i].BackgroundHpBar;
+
 			background.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
 			background.SetCenter({ -0.5f, 0.0f });
 			background.SetActive(false);
@@ -230,8 +234,10 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
 		}
 
-		for (Sprite& hpBar : mSlowMonsterHpBars)
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
+			Sprite& hpBar = mSlowMonsters[i].HpBar;
+
 			hpBar.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
 			hpBar.SetCenter({ -0.5f, 0.0f });
 			hpBar.SetActive(false);
@@ -1543,23 +1549,21 @@ bool MainScene::Update(const float deltaTime)
 
 	// 느린 몬스터를 업데이트한다.
 	{
-		static D2D1_POINT_2F moveDirection[SLOW_MONSTER_COUNT];
-		static float moveSpeed[SLOW_MONSTER_COUNT];
-
 		// 몬스터를 일정 시간마다 스폰한다.
-		mSlowMonsterSpawnTimers += deltaTime;
-
-		if (mSlowMonsterSpawnTimers >= 0.5f)
+		mSlowMonsterSpawnTimer += deltaTime;
+		if (mSlowMonsterSpawnTimer >= 0.5f)
 		{
 			for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 			{
-				Sprite& slowMonster = mSlowMonsters[i];
-				if (slowMonster.IsActive())
+				Monster& slowMonster = mSlowMonsters[i];
+				Sprite& slowMonsterSprite = slowMonster.Sprite;
+
+				if (slowMonsterSprite.IsActive())
 				{
 					continue;
 				}
 
-				if (mIsSlowMonsterDeads[i])
+				if (slowMonster.IsDead)
 				{
 					continue;
 				}
@@ -1574,19 +1578,18 @@ bool MainScene::Update(const float deltaTime)
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 
-				slowMonster.SetPosition(spawnPositionCircle);
-				slowMonster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
-				slowMonster.SetActive(true);
+				slowMonsterSprite.SetPosition(spawnPositionCircle);
+				slowMonsterSprite.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
+				slowMonsterSprite.SetActive(true);
 
-				mIsSlowMonsterSpawns[i] = true;
-
-				mSlowMonsterSpawnTimers = 0.0f;
-
+				// 스폰할 때 필요한 데이터를 업데이트한다.
+				slowMonster.IsSpawn = true;
 				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
 
-				mSlowMonsterBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
+				slowMonster.BulletEffectScale = { .width = 10.0f, .height = 10.0f };
+				slowMonster.HpValue = SLOW_MONSTER_MAX_HP;
 
-				mSlowMonsterHpValues[i] = SLOW_MONSTER_MAX_HP;
+				mSlowMonsterSpawnTimer = 0.0f;
 				break;
 			}
 		}
@@ -1615,43 +1618,44 @@ bool MainScene::Update(const float deltaTime)
 		// 느린 몬스터가 스폰되면, 커졌다가 작아진다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			Sprite& slowMonster = mSlowMonsters[i];
+			Monster& slowMonster = mSlowMonsters[i];
+			Sprite& slowMonsterSprite = slowMonster.Sprite;
 
-			if (not slowMonster.IsActive())
+			if (not slowMonsterSprite.IsActive())
 			{
 				continue;
 			}
 
-			if (mIsSlowMonsterDeads[i])
+			if (slowMonster.IsDead)
 			{
 				continue;
 			}
 
-			if (not mIsSlowMonsterSpawns[i])
+			if (not slowMonster.IsSpawn)
 			{
 				continue;
 			}
 
-			mSlowMonsterGrowingTimerss[i] += deltaTime;
+			slowMonster.GrowingTimer += deltaTime;
 
-			D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+			D2D1_POINT_2F startScale = { slowMonsterSprite.GetScale().width, slowMonsterSprite.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-			float t = (mSlowMonsterGrowingTimerss[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (slowMonster.GrowingTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { SLOW_MONSTER_SCALE , SLOW_MONSTER_SCALE }, t);
 
 			if (t >= 1.0f)
 			{
-				mIsSlowMonsterSpawns[i] = false;
-				mSlowMonsterGrowingTimerss[i] = 0.0f;
+				slowMonster.IsSpawn = false;
+				slowMonster.GrowingTimer = 0.0f;
 			}
 
-			slowMonster.SetScale({ startScale.x , startScale.y });
+			slowMonsterSprite.SetScale({ startScale.x , startScale.y });
 
-			mSlowMonsterBackgroundHpBars[i].SetActive(true);
-			mSlowMonsterHpBars[i].SetActive(true);
+			slowMonster.BackgroundHpBar.SetActive(true);
+			slowMonster.HpBar.SetActive(true);
 			break;
 		}
 
@@ -1662,9 +1666,10 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			Sprite& slowMonster = mSlowMonsters[i];
+			Monster& slowMonster = mSlowMonsters[i];
+			Sprite& slowMonsterSprite = slowMonster.Sprite;
 
-			if (not slowMonster.IsActive())
+			if (not slowMonsterSprite.IsActive())
 			{
 				for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
 				{
@@ -1674,7 +1679,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (mIsSlowMonsterDeads[i])
+			if (slowMonster.IsDead)
 			{
 				continue;
 			}
@@ -1692,7 +1697,7 @@ bool MainScene::Update(const float deltaTime)
 				float easeOutT = 1.0f - (1.0f - t) * (1.0f - t);
 
 				D2D1_POINT_2F position = Math::LerpVector(mSlowMonsterStartPositions[i], mSlowMonsterEndPositions[i], easeOutT);
-				slowMonster.SetPosition(position);
+				slowMonsterSprite.SetPosition(position);
 
 				if (easeOutT >= 1.0f)
 				{
@@ -1711,7 +1716,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					mSlowMonsterMovingTimers[i] = 0.0f;
 
-					mSlowMonsterStartPositions[i] = slowMonster.GetPosition();
+					mSlowMonsterStartPositions[i] = slowMonsterSprite.GetPosition();
 
 					D2D1_POINT_2F direction = Math::SubtractVector({}, mSlowMonsterStartPositions[i]);
 					direction = Math::NormalizeVector(direction);
@@ -1739,7 +1744,7 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					shadow.SetOpacity(1.0f);
-					shadow.SetPosition(slowMonster.GetPosition());
+					shadow.SetPosition(slowMonsterSprite.GetPosition());
 					shadow.SetActive(true);
 
 					break;
@@ -1751,18 +1756,18 @@ bool MainScene::Update(const float deltaTime)
 			// hp를 좌표를 업데이트한다.
 			const D2D1_SIZE_F scaleOffset =
 			{
-				.width = slowMonster.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-				.height = slowMonster.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+				.width = slowMonsterSprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+				.height = slowMonsterSprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
 			};
 
 			const D2D1_POINT_2F offset =
 			{
-				.x = slowMonster.GetPosition().x - scaleOffset.width + 2.0f,
-				.y = slowMonster.GetPosition().y - scaleOffset.height - 10.0f
+				.x = slowMonsterSprite.GetPosition().x - scaleOffset.width + 2.0f,
+				.y = slowMonsterSprite.GetPosition().y - scaleOffset.height - 10.0f
 			};
 
-			mSlowMonsterBackgroundHpBars[i].SetPosition(offset);
-			mSlowMonsterHpBars[i].SetPosition(offset);
+			slowMonster.BackgroundHpBar.SetPosition(offset);
+			slowMonster.HpBar.SetPosition(offset);
 		}
 
 		// 느린 몬스터의 체력 업데이트를 한다.
@@ -1770,16 +1775,16 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			Sprite& hpBar = mSlowMonsterHpBars[i];
+			Monster& slowMonster = mSlowMonsters[i];
 
-			if (not mIsSlowMonsterDeads[i]
-				and mSlowMonsterHpValues[i] <= 0)
+			if (not slowMonster.IsDead
+				and slowMonster.HpValue <= 0)
 			{
-				mSlowMonsterHpValues[i] = 0;
-				mIsSlowMonsterDeads[i] = true;
+				slowMonster.HpValue = 0;
+				slowMonster.IsDead = true;
 			}
 
-			if (prevHp[i] > mSlowMonsterHpValues[i])
+			if (prevHp[i] > slowMonster.HpValue)
 			{
 				// 카메라 흔들기를 시작한다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.012f, 0.02f);
@@ -1788,39 +1793,47 @@ bool MainScene::Update(const float deltaTime)
 				initializeCameraShake(amplitude, duration, frequency);
 			}
 
-			prevHp[i] = mSlowMonsterHpValues[i];
+			prevHp[i] = slowMonster.HpValue;
+
+			Sprite& hpBar = mSlowMonsters[i].HpBar;
 
 			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
-			scale = Math::LerpVector(scale, { SLOW_MONSTER_HP_BAR_WIDTH * (float(mSlowMonsterHpValues[i]) / float(SLOW_MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
+			scale = Math::LerpVector(scale, 
+				{ 
+					.x = SLOW_MONSTER_HP_BAR_WIDTH * (float(slowMonster.HpValue) / float(SLOW_MONSTER_MAX_HP)), 
+					.y = hpBar.GetScale().height 
+				}, 10.0f * deltaTime);
 			hpBar.SetScale({ scale.x, scale.y });
 		}
 
 		// 총알 이펙트가 생성된다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			if (not mIsSlowMonsterToBulletCollidings[i])
+			Monster& slowMonster = mSlowMonsters[i];
+
+			if (not slowMonster.IsBulletColliding)
 			{
 				continue;
 			}
 
-			mSlowMonsterToBulletEffectTimers[i] += deltaTime;
+			slowMonster.BulletEffectTimer += deltaTime;
 
 			// 크기를 보간한다.
-			D2D1_POINT_2F scale = { mSlowMonsterBulletEffectScales[i].width, mSlowMonsterBulletEffectScales[i].height };
+			D2D1_POINT_2F scale = { slowMonster.BulletEffectScale.width, slowMonster.BulletEffectScale.height };
 			scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
-			mSlowMonsterBulletEffectScales[i] = { scale.x, scale.y };
+			slowMonster.BulletEffectScale = { scale.x, scale.y };
 
 			// 두께를 보간한다.
-			mSlowMonsterThicks[i] = { .x = 15.0f, .y = 15.0f };
-			float t = (mSlowMonsterToBulletEffectTimers[i] - START_LERP_TIME) / DURING_TIME;
+			slowMonster.BulletThick = { .x = 15.0f, .y = 15.0f };
+			float t = (slowMonster.BulletEffectTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
-			mSlowMonsterThicks[i] = Math::LerpVector(mSlowMonsterThicks[i], { 0.1f , 0.1f }, t);
+			slowMonster.BulletThick = Math::LerpVector(slowMonster.BulletThick, { 0.1f , 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
-				mIsSlowMonsterToBulletCollidings[i] = false;
-				mSlowMonsterToBulletEffectTimers[i] = 0.0f;
+				slowMonster.IsBulletColliding = false;
+				slowMonster.BulletEffectTimer = 0.0f;
 			}
 
 			break;
@@ -1829,35 +1842,37 @@ bool MainScene::Update(const float deltaTime)
 		// 느린 몬스터가 사라지는 이펙트가 생성된다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			if (not mIsSlowMonsterDeads[i])
+			Monster& slowMonster = mSlowMonsters[i];
+
+			if (not slowMonster.IsDead)
 			{
 				continue;
 			}
 
-			mSlowMonsterDieTimers[i] += deltaTime;
+			slowMonster.DieTimer += deltaTime;
 
-			Sprite& slowMonster = mSlowMonsters[i];
+			Sprite& slowMonsterSprite = slowMonster.Sprite;
 
-			D2D1_POINT_2F startScale = { slowMonster.GetScale().width, slowMonster.GetScale().height };
+			D2D1_POINT_2F startScale = { slowMonsterSprite.GetScale().width, slowMonsterSprite.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 1.5f, 1.5f }, 8.0f * deltaTime);
 
-			float t = (mSlowMonsterDieTimers[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (slowMonster.DieTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { 0.1f, 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
-				slowMonster.SetActive(false);
+				slowMonsterSprite.SetActive(false);
 
-				mSlowMonsterBackgroundHpBars[i].SetActive(false);
-				mSlowMonsterHpBars[i].SetActive(false);
+				slowMonster.BackgroundHpBar.SetActive(false);
+				slowMonster.HpBar.SetActive(false);
 
-				mIsSlowMonsterDeads[i] = false;
-				mSlowMonsterDieTimers[i] = 0.0f;
+				slowMonster.IsDead = false;
+				slowMonster.DieTimer = 0.0f;
 			}
 
-			slowMonster.SetScale({ startScale.x , startScale.y });
+			slowMonsterSprite.SetScale({ startScale.x , startScale.y });
 		}
 	}
 
@@ -2141,39 +2156,41 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			Sprite& slowMonster = mSlowMonsters[i];
-			if (not slowMonster.IsActive())
+			Monster& slowMonster = mSlowMonsters[i];
+			Sprite& slowMonsterSprite = mSlowMonsters[i].Sprite;
+
+			if (not slowMonsterSprite.IsActive())
 			{
 				continue;
 			}
 
 			// 느린 몬스터와 플레이어 충돌을 검사한다.
-			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(slowMonster)))
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(slowMonsterSprite)))
 			{
-				mSlowMonsterToPlayerEnterCollidingTimers[i] += deltaTime;
+				slowMonster.PlayerEnterCollidingTimer += deltaTime;
 
-				if (mSlowMonsterToPlayerEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
+				if (slowMonster.PlayerEnterCollidingTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mSlowMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+					slowMonster.HpValue -= PLAYER_ATTACK_VALUE;
 
-					mSlowMonsterToPlayerEnterCollidingTimers[i] = 0.0f;
+					slowMonster.PlayerEnterCollidingTimer = 0.0f;
 				}
 
 				break;
 			}
 
 			// 느린 몬스터와 내부 원 충돌을 검사한다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, slowMonster.GetPosition()))
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, slowMonsterSprite.GetPosition()))
 			{
-				mSlowMonsterToInBoundaryEnterCollidingTimers[i] += deltaTime;
+				slowMonster.InBoundryEnterCollidingTimer += deltaTime;
 
-				if (mSlowMonsterToInBoundaryEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
+				if (slowMonster.InBoundryEnterCollidingTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mSlowMonsterHpValues[i] -= BOUNDRY_ATTACK_VALUE;
+					slowMonster.HpValue -= BOUNDRY_ATTACK_VALUE;
 
-					mSlowMonsterToPlayerEnterCollidingTimers[i] = 0.0f;
+					slowMonster.InBoundryEnterCollidingTimer = 0.0f;
 				}
 
 				break;
@@ -2269,24 +2286,26 @@ bool MainScene::Update(const float deltaTime)
 
 			for (uint32_t j = 0; j < SLOW_MONSTER_COUNT; ++j)
 			{
-				Sprite& slowMonster = mSlowMonsters[j];
-				if (not slowMonster.IsActive())
+				Monster& slowMonster = mSlowMonsters[j];
+				Sprite& slowMonsterSprite = slowMonster.Sprite;
+
+				if (not slowMonsterSprite.IsActive())
 				{
 					continue;
 				}
 
-				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(slowMonster), line))
+				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(slowMonsterSprite), line))
 				{
 					continue;
 				}
 
-				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], slowMonster.GetPosition()));
+				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], slowMonsterSprite.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
-					mSlowMonsterHpValues[j] -= BULLET_ATTACK_VALUE;
-					mIsSlowMonsterToBulletCollidings[j] = true;
+					slowMonster.HpValue -= BULLET_ATTACK_VALUE;
+					slowMonster.IsBulletColliding = true;
 
-					targetSlowMonster = &slowMonster;
+					targetSlowMonster = &slowMonsterSprite;
 					targetSlowMonsterDistance = distance;
 				}
 			}
@@ -2341,10 +2360,9 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& slowMonster = mSlowMonsters[i];
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonster), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].Sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				mSlowMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				mSlowMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
 				break;
 			}
 		}
@@ -2388,9 +2406,9 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i]), center, mOrbitEllipse.radiusX))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].Sprite), center, mOrbitEllipse.radiusX))
 			{
-				mSlowMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				mSlowMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
 				break;
 			}
 		}
@@ -2518,25 +2536,32 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
-			if (not mIsSlowMonsterToBulletCollidings[i])
+			Monster& slowMonster = mSlowMonsters[i];
+
+			if (not slowMonster.IsBulletColliding)
 			{
 				continue;
 			}
 
-			Sprite& slowMonster = mSlowMonsters[i];
+			Sprite& slowMonsterSprite = mSlowMonsters[i].Sprite;
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ slowMonster.GetPosition().x, slowMonster.GetPosition().y + 35.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = 
+				Transformation::getWorldMatrix(
+					{ 
+						.x = slowMonsterSprite.GetPosition().x, 
+						.y = slowMonsterSprite.GetPosition().y + 35.0f 
+					}, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
 			{
 				.left = 0.0f,
 				.top = 0.0f,
-				.right = mSlowMonsterBulletEffectScales[i].width,
-				.bottom = mSlowMonsterBulletEffectScales[i].height
+				.right = slowMonster.BulletEffectScale.width,
+				.bottom = slowMonster.BulletEffectScale.height
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mSlowMonsterThicks[i].x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, slowMonster.BulletThick.x);
 		}
 	}
 
