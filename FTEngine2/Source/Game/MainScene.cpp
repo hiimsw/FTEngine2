@@ -112,16 +112,20 @@ void MainScene::Initialize()
 
 	// 몬스터를 초기화한다.
 	{
-		for (Sprite& monster : mMonsters)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			Sprite& monster = mMonsters[i].Sprite;
+
 			monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 			monster.SetActive(false);
 			monster.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
 		}
 
-		for (Sprite& background : mMonsterBackgroundHpBars)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			Sprite& background = mMonsters[i].BackgroundHpBar;
+
 			background.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			background.SetCenter({ -0.5f, 0.0f });
 			background.SetActive(false);
@@ -129,8 +133,10 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
 		}
 
-		for (Sprite& hpBar : mMonsterHpBars)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			Sprite& hpBar = mMonsters[i].HpBar;
+
 			hpBar.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			hpBar.SetCenter({ -0.5f, 0.0f });
 			hpBar.SetActive(false);
@@ -1031,13 +1037,14 @@ bool MainScene::Update(const float deltaTime)
 		{
 			for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 			{
-				Sprite& monster = mMonsters[i];
-				if (monster.IsActive())
+				Monster& monster = mMonsters[i];
+				Sprite& monsterSprite = monster.Sprite;
+				if (monsterSprite.IsActive())
 				{
 					continue;
 				}
 
-				if (mIsMonsterDeads[i])
+				if (monster.IsDead)
 				{
 					continue;
 				}
@@ -1051,21 +1058,17 @@ bool MainScene::Update(const float deltaTime)
 
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
-				monster.SetPosition(spawnPositionCircle);
-				monster.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
-				monster.SetActive(true);
+				monsterSprite.SetPosition(spawnPositionCircle);
+				monsterSprite.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
+				monsterSprite.SetActive(true);
 
-				mMonsterSpawnTimer = 0.0f;
-
-				mIsMonsterSpawns[i] = true;
-
-				// 스폰할 때 속도도 같이 초기화한다.
+				// 스폰할 때 필요한 데이터를 업데이트한다.
+				monster.IsSpawn = true;
 				speed[i] = getRandom(10.0f, 80.0f);
+				monster.BulletEffectScale = { .width = 10.0f, .height = 10.0f };
+				monster.HpValue = MONSTER_MAX_HP;
 
-				// 이펙트 크기도 초기화한다.
-				mMonsterToBulletEffectScales[i] = { .width = 10.0f, .height = 10.0f };
-
-				mMonsterHpValues[i] = MONSTER_MAX_HP;
+				mMonsterSpawnTimer = 0.0f;				
 				break;
 			}
 		}
@@ -1073,48 +1076,45 @@ bool MainScene::Update(const float deltaTime)
 		// 몬스터가 스폰되면, 커졌다가 작아진다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mMonsters[i];
+			Monster& monster = mMonsters[i];
+			Sprite& monsterSprite = monster.Sprite;
 
-			if (not monster.IsActive())
+			if (not monsterSprite.IsActive())
 			{
 				continue;
 			}
 
-			if (mIsMonsterDeads[i])
+			if (monster.IsDead)
 			{
 				continue;
 			}
 
-			if (not mIsMonsterSpawns[i])
+			if (not monster.IsSpawn)
 			{
 				continue;
 			}
 
-			mMonsterGrowingTimers[i] += deltaTime;
+			monster.GrowingTimer += deltaTime;
 
-			D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
+			D2D1_POINT_2F startScale = { monsterSprite.GetScale().width, monsterSprite.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-			float t = (mMonsterGrowingTimers[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (monster.GrowingTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { MONSTER_SCALE , MONSTER_SCALE }, t);
 
 			if (t >= 1.0f)
 			{
-				mMonsterGrowingTimers[i] = 0.0f;
-				mIsMonsterSpawns[i] = false;
+				monster.GrowingTimer = 0.0f;
+				monster.IsSpawn = false;
 			}
 
-			monster.SetScale({ startScale.x , startScale.y });
+			monsterSprite.SetScale({ startScale.x , startScale.y });
 
 			// hp를 생성한다.
-			Sprite& background = mMonsterBackgroundHpBars[i];
-			background.SetActive(true);
-
-			Sprite& hpBar = mMonsterHpBars[i];
-			hpBar.SetActive(true);
-
+			monster.BackgroundHpBar.SetActive(true);
+			monster.HpBar.SetActive(true);
 			break;
 		}
 
@@ -1122,29 +1122,30 @@ bool MainScene::Update(const float deltaTime)
 		constexpr D2D1_POINT_2F HP_OFFSET = { .x = 3.5f, .y = 10.0f };
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mMonsters[i];
+			Monster& monster = mMonsters[i];
+			Sprite& monsterSprite = monster.Sprite;
 
-			if (not monster.IsActive())
+			if (not monsterSprite.IsActive())
 			{
 				continue;
 			}
 
-			D2D1_POINT_2F position = monster.GetPosition();
+			D2D1_POINT_2F position = monsterSprite.GetPosition();
 			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
 			direction = Math::NormalizeVector(direction);
 			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
 
 			position = Math::AddVector(position, velocity);
-			monster.SetPosition(position);
+			monsterSprite.SetPosition(position);
 
 			// hp를 좌표를 업데이트한다.
 			const D2D1_SIZE_F scaleOffset =
 			{
-				.width = monster.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-				.height = monster.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+				.width = monsterSprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+				.height = monsterSprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
 			};
 
-			const D2D1_POINT_2F monsterPosition = monster.GetPosition();
+			const D2D1_POINT_2F monsterPosition = monsterSprite.GetPosition();
 
 			const D2D1_POINT_2F offset =
 			{
@@ -1152,8 +1153,8 @@ bool MainScene::Update(const float deltaTime)
 				.y = monsterPosition.y - scaleOffset.height - HP_OFFSET.y
 			};
 
-			mMonsterBackgroundHpBars[i].SetPosition(offset);
-			mMonsterHpBars[i].SetPosition(offset);
+			monster.BackgroundHpBar.SetPosition(offset);
+			monster.HpBar.SetPosition(offset);
 		}
 
 		// 몬스터의 체력을 업데이트를 한다.
@@ -1161,14 +1162,16 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (not mIsMonsterDeads[i] 
-				and mMonsterHpValues[i] <= 0)
+			Monster& monster = mMonsters[i];
+
+			if (not monster.IsDead
+				and monster.HpValue <= 0)
 			{
-				mMonsterHpValues[i] = 0;
-				mIsMonsterDeads[i] = true;
+				monster.HpValue = 0;
+				monster.IsDead = true;
 			}
 
-			if (prevHp[i] > mMonsterHpValues[i])
+			if (prevHp[i] > monster.HpValue)
 			{		
 				// 카메라 흔들기를 시작한다.
 				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
@@ -1177,39 +1180,41 @@ bool MainScene::Update(const float deltaTime)
 				initializeCameraShake(amplitude, duration, frequency);
 			}
 
-			prevHp[i] = mMonsterHpValues[i];
+			prevHp[i] = monster.HpValue;
 
-			Sprite& hpBar = mMonsterHpBars[i];
+			Sprite& hpBar = monster.HpBar;
 			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
-			scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(mMonsterHpValues[i]) / float(MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
+			scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(monster.HpValue) / float(MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
 			hpBar.SetScale({ scale.x, scale.y });
 		}
 
 		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (not mIsMonsterToBulletCollidings[i])
+			Monster& monster = mMonsters[i];
+
+			if (not monster.IsBulletColliding)
 			{
 				continue;
 			}
 
-			mMonsterToBulletEffectTimers[i] += deltaTime;
+			monster.BulletEffectTimer += deltaTime;
 
 			// 크기를 보간한다.
-			D2D1_POINT_2F scale = { mMonsterToBulletEffectScales[i].width, mMonsterToBulletEffectScales[i].height };
+			D2D1_POINT_2F scale = { monster.BulletEffectScale.width, monster.BulletEffectScale.height };
 			scale = Math::LerpVector(scale, { 100.0f , 100.0f }, 5.0f * deltaTime);
-			mMonsterToBulletEffectScales[i] = { scale.x, scale.y };
+			monster.BulletEffectScale = { scale.x, scale.y };
 
 			// 두께를 보간한다.
-			mMonsterToBulletThicks[i] = { .x = 20.0f, .y = 20.0f };
-			float t = (mMonsterToBulletEffectTimers[i] - START_LERP_TIME) / DURING_TIME;
+			monster.BulletThick = { .x = 20.0f, .y = 20.0f };
+			float t = (monster.BulletEffectTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
-			mMonsterToBulletThicks[i] = Math::LerpVector(mMonsterToBulletThicks[i], { 0.1f , 0.1f }, t);
+			monster.BulletThick = Math::LerpVector(monster.BulletThick, { 0.1f , 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
-				mIsMonsterToBulletCollidings[i] = false;
-				mMonsterToBulletEffectTimers[i] = 0.0f;
+				monster.IsBulletColliding = false;
+				monster.BulletEffectTimer = 0.0f;
 			}
 
 			break;
@@ -1218,35 +1223,36 @@ bool MainScene::Update(const float deltaTime)
 		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (not mIsMonsterDeads[i])
+			Monster& monster = mMonsters[i];
+			Sprite& monsterSprite = monster.Sprite;
+
+			if (not monster.IsDead)
 			{
 				continue;
 			}
 
-			mMonsterDieTimers[i] += deltaTime;
+			monster.DieTimer += deltaTime;
 
-			Sprite& monster = mMonsters[i];
-
-			D2D1_POINT_2F startScale = { monster.GetScale().width, monster.GetScale().height };
+			D2D1_POINT_2F startScale = { monsterSprite.GetScale().width, monsterSprite.GetScale().height };
 			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
 
-			float t = (mMonsterDieTimers[i] - START_LERP_TIME) / DURING_TIME;
+			float t = (monster.DieTimer - START_LERP_TIME) / DURING_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
-				mMonsters[i].SetActive(false);
+				monsterSprite.SetActive(false);
 
-				mMonsterBackgroundHpBars[i].SetActive(false);
-				mMonsterHpBars[i].SetActive(false);
+				monster.BackgroundHpBar.SetActive(false);
+				monster.HpBar.SetActive(false);
 
-				mIsMonsterDeads[i] = false;
-				mMonsterDieTimers[i] = 0.0f;
+				monster.IsDead = false;
+				monster.DieTimer = 0.0f;
 			}
 
-			monster.SetScale({ startScale.x , startScale.y });
+			monsterSprite.SetScale({ startScale.x , startScale.y });
 		}
 	}
 
@@ -2019,40 +2025,41 @@ bool MainScene::Update(const float deltaTime)
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mMonsters[i];
+			Monster& monster = mMonsters[i];
+			Sprite& monsterSprite = monster.Sprite;
 
-			if (not monster.IsActive())
+			if (not monsterSprite.IsActive())
 			{
 				continue;
 			}
 
 			// 몬스터와 플레이어 충돌을 검사한다.
-			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monster)))
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monsterSprite)))
 			{
-				mMonsterToPlayerEnterCollidingTimers[i] += deltaTime;
+				monster.PlayerEnterCollidingTimer += deltaTime;
 
-				if (mMonsterToPlayerEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
+				if (monster.PlayerEnterCollidingTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE * 2;
+					monster.HpValue -= PLAYER_ATTACK_VALUE * 2;
 
-					mMonsterToPlayerEnterCollidingTimers[i] = 0.0f;
+					monster.PlayerEnterCollidingTimer = 0.0f;
 				}
 
 				break;
 			}
 
 			// 몬스터와 내부 원 충돌을 검사한다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monster.GetPosition()))
+			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monsterSprite.GetPosition()))
 			{
-				mMonsterToInBoundryEnterCollidingTimers[i] += deltaTime;
+				monster.InBoundryEnterCollidingTimer += deltaTime;
 
-				if (mMonsterToInBoundryEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
+				if (monster.InBoundryEnterCollidingTimer >= DAMAGE_COOL_TIMER)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE * 2;
+					monster.HpValue -= PLAYER_ATTACK_VALUE * 2;
 
-					mMonsterToInBoundryEnterCollidingTimers[i] = 0.0f;
+					monster.InBoundryEnterCollidingTimer = 0.0f;
 				}
 
 				break;
@@ -2186,24 +2193,26 @@ bool MainScene::Update(const float deltaTime)
 
 			for (uint32_t j = 0; j < MONSTER_COUNT; ++j)
 			{
-				Sprite& monster = mMonsters[j];
-				if (not monster.IsActive())
+				Monster& monster = mMonsters[j];
+				Sprite& monsterSprite = monster.Sprite;
+
+				if (not monsterSprite.IsActive())
 				{
 					continue;
 				}
 
-				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monster), line))
+				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monsterSprite), line))
 				{
 					continue;
 				}
 
-				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], monster.GetPosition()));
+				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], monsterSprite.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
-					mMonsterHpValues[j] -= BULLET_ATTACK_VALUE;
-					mIsMonsterToBulletCollidings[j] = true;
+					monster.HpValue -= BULLET_ATTACK_VALUE;
+					monster.IsBulletColliding = true;
 
-					targetMonster = &monster;
+					targetMonster = &monsterSprite;
 					targetMonsterDistance = distance;
 				}
 			}
@@ -2281,9 +2290,9 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i]), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].Sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				mMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
 				break;
 			}
 		}
@@ -2328,9 +2337,9 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i]), center, mOrbitEllipse.radiusX))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].Sprite), center, mOrbitEllipse.radiusX))
 			{
-				mMonsterHpValues[i] -= PLAYER_ATTACK_VALUE;
+				mMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
 				break;
 			}
 		}
@@ -2422,25 +2431,32 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			if (not mIsMonsterToBulletCollidings[i])
+			Monster& monster = mMonsters[i];
+
+			if (not monster.IsBulletColliding)
 			{
 				continue;
 			}
 
-			Sprite& monster = mMonsters[i];
+			Sprite& monsterSprite = monster.Sprite;
 
-			const Matrix3x2F worldView = Transformation::getWorldMatrix({ monster.GetPosition().x, monster.GetPosition().y + 50.0f }, 45.0f) * view;
+			const Matrix3x2F worldView = 
+				Transformation::getWorldMatrix(
+					{ 
+						.x = monsterSprite.GetPosition().x, 
+						.y = monsterSprite.GetPosition().y + 50.0f
+					},	45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
 			const D2D1_RECT_F colliderSize =
 			{
 				.left = 0.0f,
 				.top = 0.0f,
-				.right = mMonsterToBulletEffectScales[i].width,
-				.bottom = mMonsterToBulletEffectScales[i].height
+				.right = monster.BulletEffectScale.width,
+				.bottom = monster.BulletEffectScale.height
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, mMonsterToBulletThicks[i].x);
+			renderTarget->DrawRectangle(colliderSize, mCyanBrush, monster.BulletThick.x);
 		}
 	}
 
@@ -2540,14 +2556,18 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
-			Sprite& monster = mMonsters[i];
+			Sprite& monsterSprite = mMonsters[i].Sprite;
 
-			if (mIsColliderKeyDown and monster.IsActive())
+			if (mIsColliderKeyDown and monsterSprite.IsActive())
 			{
-				const Matrix3x2F worldView = Transformation::getWorldMatrix({ .x = getRectangleFromSprite(monster).left, .y = getRectangleFromSprite(monster).top }) * view;
+				const Matrix3x2F worldView = Transformation::getWorldMatrix(
+					{ 
+						.x = getRectangleFromSprite(monsterSprite).left, 
+						.y = getRectangleFromSprite(monsterSprite).top 
+					}) * view;
 				renderTarget->SetTransform(worldView);
 
-				const D2D1_SIZE_F scale = monster.GetScale();
+				const D2D1_SIZE_F scale = monsterSprite.GetScale();
 
 				const D2D1_RECT_F colliderSize =
 				{

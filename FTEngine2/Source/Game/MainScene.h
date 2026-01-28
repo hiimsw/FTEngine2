@@ -34,6 +34,31 @@ struct GizmoLine
 	D2D1_POINT_2F Point1;
 };
 
+struct Monster
+{
+	Sprite BackgroundHpBar;
+	Sprite HpBar;
+
+	Sprite Sprite;
+
+	bool IsSpawn;
+	float GrowingTimer;
+
+	// 충돌 관련
+	bool IsBulletColliding;
+	float BulletEffectTimer;
+	float PlayerEnterCollidingTimer;
+	float InBoundryEnterCollidingTimer;
+
+	bool IsDead;
+	float DieTimer;
+
+	D2D1_POINT_2F BulletThick;
+	D2D1_SIZE_F BulletEffectScale;
+
+	int32_t HpValue;
+};
+
 class MainScene final : public Scene
 {
 	enum class Layer
@@ -42,7 +67,7 @@ class MainScene final : public Scene
 		Monster,
 		Player,
 		UI,
-		Count
+		End
 	};
 
 public:
@@ -88,7 +113,7 @@ private:
 	float mCameraShakeDuration = 0.0f;
 	float mCameraShakeFrequency = 0.0f;
 
-	std::array<std::vector<Sprite*>, uint32_t(Layer::Count)> mSpriteLayers{};
+	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
 
 	// 공용
@@ -195,28 +220,8 @@ private:
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
 
-	Sprite mMonsters[MONSTER_COUNT]{};
-
+	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
-	bool mIsMonsterSpawns[MONSTER_COUNT]{};
-	float mMonsterGrowingTimers[MONSTER_COUNT]{};
-
-	// 충돌 관련
-	bool mIsMonsterToBulletCollidings[MONSTER_COUNT]{};
-	float mMonsterToPlayerEnterCollidingTimers[MONSTER_COUNT]{};
-	float mMonsterToInBoundryEnterCollidingTimers[MONSTER_COUNT]{};
-
-	bool mIsMonsterDeads[MONSTER_COUNT]{};
-	float mMonsterDieTimers[MONSTER_COUNT]{};
-
-	D2D1_POINT_2F mMonsterToBulletThicks[MONSTER_COUNT]{};
-	D2D1_SIZE_F mMonsterToBulletEffectScales[MONSTER_COUNT]{};
-	float mMonsterToBulletEffectTimers[MONSTER_COUNT]{};
-
-	Sprite mMonsterBackgroundHpBars[MONSTER_COUNT]{};
-	Sprite mMonsterHpBars[MONSTER_COUNT]{};
-	int32_t mMonsterHpValues[MONSTER_COUNT]{};
-
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
