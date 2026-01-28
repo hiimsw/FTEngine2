@@ -34,11 +34,6 @@ struct GizmoLine
 	D2D1_POINT_2F Point1;
 };
 
-struct Player
-{
-
-};
-
 struct Monster
 {
 	Sprite BackgroundHpBar;
@@ -50,10 +45,13 @@ struct Monster
 	float GrowingTimer;
 
 	// 충돌 관련
+	D2D1_POINT_2F PrevPosition;
+	float BoundryDistance;
+	float InBoundryDistance;
+	float PlayerDistance;
+
 	bool IsBulletColliding;
 	float BulletEffectTimer;
-	float PlayerEnterCollidingTimer;
-	float InBoundryEnterCollidingTimer;
 
 	bool IsDead;
 	float DieTimer;
@@ -75,6 +73,8 @@ struct Casing
 {
 	Sprite Sprite;
 	D2D1_POINT_2F CasingDirection;
+	D2D1_POINT_2F StartPosition;
+	D2D1_POINT_2F EndPosition;
 	float CasingTimer;
 };
 
@@ -182,10 +182,13 @@ private:
 	int32_t mDashCount = DASH_MAX_COUNT;
 	float mDashCountTimer{};
 	float mDashShadowCoolTimer{};
+	float mDashSpeed = 0.0f;
+	bool mIsDashing = false;
 
 	// 플레이어 총알
 	static constexpr uint32_t BULLET_COUNT = 80;
 	Bullet mBullets[BULLET_COUNT]{};
+	float mBulletShootingCoolTimer{};
 	int32_t mBulletValue = BULLET_COUNT;
 
 	// 플레이어 탄피
@@ -232,16 +235,16 @@ private:
 	Label mEndingLabel{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 10;
+	static constexpr uint32_t MONSTER_COUNT = 1;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
-	
+
 	// 돌진 몬스터
-	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
 
@@ -257,11 +260,8 @@ private:
 	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
 	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
 
-	// 충돌 관련
-	float mRunMonsterToBoundryEnterCollidingTimers[MONSTER_COUNT]{};
-
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;

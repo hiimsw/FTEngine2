@@ -208,8 +208,14 @@ namespace Math
 
 	D2D1_POINT_2F NormalizeVector(const D2D1_POINT_2F vector)
 	{
-		float lenght = GetVectorLength(vector);
-		D2D1_POINT_2F result{ .x = vector.x / lenght, .y = vector.y / lenght };
+		float length = GetVectorLength(vector);
+
+		if (length <= 0.0001f)
+		{
+			return { 0.0f, 0.0f };
+		}
+
+		D2D1_POINT_2F result{ .x = vector.x / length, .y = vector.y / length };
 		return result;
 	}
 

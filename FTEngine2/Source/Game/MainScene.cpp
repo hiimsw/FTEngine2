@@ -68,7 +68,7 @@ void MainScene::Initialize()
 		for (Sprite& shadow : mDashShadows)
 		{
 			shadow.SetScale(mHero.GetScale());
-			shadow.SetTexture(&mRectangleTexture);
+			shadow.SetTexture(&mPinkRectangleTexture);
 			shadow.SetActive(false);
 			mSpriteLayers[uint32_t(Layer::Player)].push_back(&shadow);
 		}
@@ -477,62 +477,8 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 플레이어를 업데이트한다.
-	{
-		// Case 0) 가속도 없는 단순한 이동
-		//{
-		//	// 누르면 1, 안 누르면 0
-		//	int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
-		//	int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
-
-		//	if (moveX != 0 or moveY != 0)
-		//	{
-		//		float speed = 180.0f * deltaTime;
-
-		//		D2D1_POINT_2F direction = Math::GetNormalizeVector({ .x = float(moveX), .y = float(moveY) });
-		//		D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed);
-
-		//		D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-		//		mHero.SetPosition(position);
-		//	}
-		//}
-
-		//  Case 1) X축만 가속도 반영하여 이동 구현
-		{
-			//int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
-			//D2D1_POINT_2F position = mHero.GetPosition();
-
-			//constexpr float MAX_VELOCITY = 250.0f;
-			//constexpr float ACC = 4.0f;
-
-			//static int32_t previousMoveX;
-			//static float velocity = 0.0f;
-
-			//if (moveX != 0)
-			//{
-			//	velocity += ACC * moveX;
-			//	velocity = std::clamp(velocity, -MAX_VELOCITY, MAX_VELOCITY);
-
-			//	previousMoveX = moveX;
-			//}
-			//else
-			//{
-			//	if (previousMoveX > 0)
-			//	{
-			//		velocity = max(velocity - ACC, 0.0f);
-			//	}
-			//	else
-			//	{
-			//		velocity = min(velocity + ACC, 0.0f);
-			//	}
-			//}
-
-			//DEBUG_LOG("%f", velocity);
-
-			//position.x += velocity * deltaTime;
-			//mHero.SetPosition(position);
-		}
-
-		// Case 2) 최종 이동 구현
+	{		
+		// 이동을 업데이트한다.
 		{
 			constexpr float MAX_SPEED = 300.0f;
 			constexpr float ACC = 32.0f; // 가속도
@@ -577,12 +523,9 @@ bool MainScene::Update(const float deltaTime)
 				}
 			}
 
-			// TODO(이수원): 코드 정리가 필요하다.
 			constexpr float MAX_DASH_SPEED = 600.0f;
 			constexpr float DASH_ACC = 30.0f;
-			static float dashSpeed = 0.0f;
-			static bool bDashing = false;
-			static D2D1_POINT_2F dashDirection{};
+			static D2D1_POINT_2F dashDirection;
 
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
 			{
@@ -591,14 +534,14 @@ bool MainScene::Update(const float deltaTime)
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
-				if (not bDashing and Input::Get().GetKeyDown(VK_SPACE))
+				if (not mIsDashing and Input::Get().GetKeyDown(VK_SPACE))
 				{
 					dashDirection = direction;
 
 					if (mDashCount != 0)
 					{
 						mDashCount--;
-						bDashing = true;
+						mIsDashing = true;
 						mDashShadowCoolTimer = 0.0f;
 					}
 				}
@@ -607,16 +550,15 @@ bool MainScene::Update(const float deltaTime)
 				mHero.SetPosition(position);
 			}
 
-
-			if (bDashing)
+			if (mIsDashing)
 			{
-				dashSpeed = min(dashSpeed + DASH_ACC, MAX_DASH_SPEED);
-				const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, dashSpeed * deltaTime);
+				mDashSpeed = min(mDashSpeed + DASH_ACC, MAX_DASH_SPEED);
+				const D2D1_POINT_2F velocity = Math::ScaleVector(dashDirection, mDashSpeed * deltaTime);
 
-				if (dashSpeed >= MAX_DASH_SPEED)
+				if (mDashSpeed >= MAX_DASH_SPEED)
 				{
-					dashSpeed = 0.0f;
-					bDashing = false;
+					mDashSpeed = 0.0f;
+					mIsDashing = false;
 				}
 
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
@@ -674,17 +616,13 @@ bool MainScene::Update(const float deltaTime)
 
 		// 총알을 업데이트한다.
 		{
-			static float shootingCoolTimer = 0.0f;
-
-			static D2D1_POINT_2F startPosition[CASING_COUNT];
-			static D2D1_POINT_2F endPosition[CASING_COUNT];
 			constexpr float LENGTH = 100.0f;
 
-			shootingCoolTimer = max(shootingCoolTimer - deltaTime, 0.0f);
+			mBulletShootingCoolTimer = max(mBulletShootingCoolTimer - deltaTime, 0.0f);
 
 			// 총알을 스폰한다.
 			if (Input::Get().GetMouseButton(Input::eMouseButton::Left)
-				and shootingCoolTimer <= 0.001f
+				and mBulletShootingCoolTimer <= 0.001f
 				and mBulletValue != 0
 				and not misKeyDownReload)
 			{
@@ -703,7 +641,6 @@ bool MainScene::Update(const float deltaTime)
 					bullet.PrevPosition = spawnPosition;
 
 					// 이동 방향을 구한다.
-					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
 					bullet.Direction = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
 
 					// 거리에 따라 반동효과가 다르다.
@@ -749,8 +686,8 @@ bool MainScene::Update(const float deltaTime)
 							casingSprite.SetPosition((spawnPosition));
 
 							// 탄피의 이동 좌표를 생성한다.
-							startPosition[j] = casingSprite.GetPosition();
-							endPosition[j] = Math::AddVector(startPosition[i], Math::ScaleVector(casingDirection, LENGTH));
+							casing.StartPosition = casingSprite.GetPosition();
+							casing.EndPosition = Math::AddVector(casing.StartPosition, Math::ScaleVector(casingDirection, LENGTH));
 
 							break;
 						}
@@ -767,7 +704,7 @@ bool MainScene::Update(const float deltaTime)
 					break;
 				}
 
-				shootingCoolTimer = 0.12f;
+				mBulletShootingCoolTimer = 0.12f;
 			}
 
 			// 총알을 이동시킨다.
@@ -818,7 +755,7 @@ bool MainScene::Update(const float deltaTime)
 					float t = casing.CasingTimer / MOVE_TIME;
 					t = std::clamp(t, 0.0f, 1.0f);
 
-					D2D1_POINT_2F position = Math::LerpVector(startPosition[i], endPosition[i], t);
+					D2D1_POINT_2F position = Math::LerpVector(casing.StartPosition, casing.EndPosition, t);
 					casingSprite.SetPosition(position);
 
 					if (t >= 1.0f)
@@ -1078,6 +1015,7 @@ bool MainScene::Update(const float deltaTime)
 
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
+				monster.PrevPosition = spawnPositionCircle;
 				monsterSprite.SetPosition(spawnPositionCircle);
 				monsterSprite.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
 				monsterSprite.SetActive(true);
@@ -1156,6 +1094,7 @@ bool MainScene::Update(const float deltaTime)
 			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
 
 			position = Math::AddVector(position, velocity);
+			monster.PrevPosition = position;
 			monsterSprite.SetPosition(position);
 
 			// hp를 좌표를 업데이트한다.
@@ -1307,6 +1246,8 @@ bool MainScene::Update(const float deltaTime)
 				const float offset = BOUNDARY_RADIUS - 30.0f;
 				const D2D1_POINT_2F spawnPositionCircle = Math::ScaleVector(spawnDirection, offset);
 
+
+				runMonster.PrevPosition = spawnPositionCircle;
 				runMonsterSprite.SetPosition(spawnPositionCircle);
 				runMonsterSprite.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
 				runMonsterSprite.SetActive(true);
@@ -1407,13 +1348,8 @@ bool MainScene::Update(const float deltaTime)
 					const D2D1_POINT_2F monsterPosition = runMonsterSprite.GetPosition();
 					const D2D1_POINT_2F heroPosition = mHero.GetPosition();
 
-					// TODO: 길이가 0인 경우 예외 처리가 필요하다.
-					D2D1_POINT_2F direction = Math::SubtractVector(heroPosition, monsterPosition);
-					direction = Math::NormalizeVector(direction);
-
 					mRunMonsterMoveSpeeds[i] = 0.0f;
 
-					// TODO: 길이가 0인 경우 예외 처리가 필요하다.
 					mRunMonsterMoveDirections[i] = Math::SubtractVector(heroPosition, monsterPosition);
 					mRunMonsterMoveDirections[i] = Math::NormalizeVector(mRunMonsterMoveDirections[i]);
 
@@ -1432,6 +1368,7 @@ bool MainScene::Update(const float deltaTime)
 
 			D2D1_POINT_2F position = runMonsterSprite.GetPosition();
 			position = Math::AddVector(position, velocity);
+			runMonster.PrevPosition = position;
 			runMonsterSprite.SetPosition(position);
 
 			// hp를 좌표를 업데이트한다.
@@ -1959,54 +1896,6 @@ bool MainScene::Update(const float deltaTime)
 
 	// 충돌 처리를 업데이트한다.
 	{
-		// 선과 마우스 커서의 충돌체크를 하고 좌표 이동을 한다.
-		constexpr float offset = 5.0f;
-		static bool isLeft, isRight, isDrag;
-
-		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
-		{
-			if (Collision::IsCollidedCircleWithPoint(mLine.Point0, TEST_RADIUS + offset, getMouseWorldPosition()))
-			{
-				isLeft = true;
-			}
-			else if (Collision::IsCollidedCircleWithPoint(mLine.Point1, TEST_RADIUS + offset, getMouseWorldPosition()))
-			{
-				isRight = true;
-			}
-		}
-
-		if (Input::Get().GetMouseButton(Input::eMouseButton::Left))
-		{
-			if (isLeft)
-			{
-				mLine.Point0 = getMouseWorldPosition();
-			}
-			if (isRight)
-			{
-				mLine.Point1 = getMouseWorldPosition();
-			}
-		}
-		else if (Input::Get().GetMouseButtonUp(Input::eMouseButton::Left))
-		{
-			isLeft = false;
-			isRight = false;
-		}
-
-		// 원과 원의 충돌체크를 한다.
-		const D2D1_ELLIPSE heroEllipse = { .point = mHero.GetPosition(), .radiusX = getCircleFromSprite(mHero).radiusX };
-
-		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
-		const D2D1_ELLIPSE zoomEllipse = { .point = zoomPosition, .radiusX = getCircleFromSprite(mZoom).radiusX };
-
-		if (Collision::IsCollidedCircleWithCircle(heroEllipse, zoomEllipse))
-		{
-			//DEBUG_LOG("ㅇㅇ");
-		}
-		else
-		{
-			//DEBUG_LOG("ss");
-		}
-
 		// 플레이어와 원의 충돌을 한다.
 		if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, mHero.GetPosition()))
 		{
@@ -2060,7 +1949,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		constexpr float DAMAGE_COOL_TIMER = 0.5f;
+		constexpr float DAMAGE_COOL_TIMER = 0.05f;
 
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -2072,36 +1961,40 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			// 몬스터와 플레이어 충돌을 검사한다.
-			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monsterSprite)))
+			if (monster.IsDead)
 			{
-				monster.PlayerEnterCollidingTimer += deltaTime;
-
-				if (monster.PlayerEnterCollidingTimer >= DAMAGE_COOL_TIMER)
-				{
-					mHeroHpValue -= MONSTER_ATTACK_VALUE;
-					monster.HpValue -= PLAYER_ATTACK_VALUE * 2;
-
-					monster.PlayerEnterCollidingTimer = 0.0f;
-				}
-
-				break;
+				continue;
 			}
 
-			// 몬스터와 내부 원 충돌을 검사한다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, monsterSprite.GetPosition()))
-			{
-				monster.InBoundryEnterCollidingTimer += deltaTime;
+			// 몬스터와 플레이어 충돌을 검사한다.
+			monster.PlayerDistance = 999.9f;
 
-				if (monster.InBoundryEnterCollidingTimer >= DAMAGE_COOL_TIMER)
+			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monsterSprite)))
+			{
+				const float playerDistance = Math::GetVectorLength(Math::SubtractVector(monster.PrevPosition, mHero.GetPosition()));
+				if (playerDistance < monster.PlayerDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					monster.HpValue -= PLAYER_ATTACK_VALUE * 2;
 
-					monster.InBoundryEnterCollidingTimer = 0.0f;
+					monster.PlayerDistance = playerDistance;
 				}
+			}
 
-				break;
+			
+			// 몬스터와 내부 원 충돌을 검사한다.
+			monster.InBoundryDistance = 999.9f;
+
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monsterSprite), {}, IN_BOUNDARY_RADIUS))
+			{
+				const float inDistance = Math::GetVectorLength(Math::SubtractVector(monster.PrevPosition, {}));
+				if (inDistance < monster.InBoundryDistance)
+				{
+					mHeroHpValue -= MONSTER_ATTACK_VALUE;
+					monster.HpValue -= PLAYER_ATTACK_VALUE * 2;
+
+					monster.InBoundryDistance = inDistance;
+				}			
 			}
 		}
 
@@ -2115,52 +2008,54 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
+			if (runMonster.IsDead)
+			{
+				continue;
+			}
+
 			// 돌진 몬스터와 플레이어 충돌을 검사한다.
+			runMonster.PlayerDistance = 999.9f;
+
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(runMonsterSprite)))
 			{
-				runMonster.PlayerEnterCollidingTimer += deltaTime;
-
-				if (runMonster.PlayerEnterCollidingTimer >= DAMAGE_COOL_TIMER)
+				const float playerDistance = Math::GetVectorLength(Math::SubtractVector(runMonster.PrevPosition, mHero.GetPosition()));
+				if (playerDistance < runMonster.PlayerDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					runMonster.HpValue -= PLAYER_ATTACK_VALUE;
 
-					runMonster.PlayerEnterCollidingTimer = 0.0f;
+					runMonster.PlayerDistance = playerDistance;
 				}
-
-				break;
 			}
 
 			// 돌진 몬스터와 내부 원 충돌을 검사한다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, runMonsterSprite.GetPosition()))
-			{
-				runMonster.InBoundryEnterCollidingTimer += deltaTime;
+			runMonster.InBoundryDistance = 999.9f;
 
-				if (runMonster.InBoundryEnterCollidingTimer >= DAMAGE_COOL_TIMER)
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonsterSprite), {}, IN_BOUNDARY_RADIUS))
+			{
+				const float inDistance = Math::GetVectorLength(Math::SubtractVector(runMonster.PrevPosition, {}));
+				if (inDistance < runMonster.InBoundryDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					runMonster.HpValue -= BOUNDRY_ATTACK_VALUE;
 
-					runMonster.InBoundryEnterCollidingTimer = 0.0f;
+					runMonster.InBoundryDistance = inDistance;
 				}
-
-				break;
 			}
 
-			// 돌진 몬스터와 외부 원 충돌을 검사한다.
-			if (not Collision::IsCollidedCircleWithPoint({}, BOUNDARY_RADIUS, runMonsterSprite.GetPosition()))
-			{
-				mRunMonsterToBoundryEnterCollidingTimers[i] += deltaTime;
+			// 돌진 몬스터와 외부 원 충돌을 검사한다.			
+			runMonster.BoundryDistance = 999.9f;
 
-				if (mRunMonsterToBoundryEnterCollidingTimers[i] >= DAMAGE_COOL_TIMER)
+			if (not Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonsterSprite), {}, BOUNDARY_RADIUS))
+			{
+				const float outDistance = Math::GetVectorLength(Math::SubtractVector(runMonster.PrevPosition, {}));
+				if (outDistance < runMonster.BoundryDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					runMonster.HpValue -= BOUNDRY_ATTACK_VALUE;
 
-					mRunMonsterToBoundryEnterCollidingTimers[i] = 0.0f;
+					runMonster.BoundryDistance = outDistance;
 				}
-
-				break;
 			}
 		}
 
@@ -2174,36 +2069,39 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
+			if (slowMonster.IsDead)
+			{
+				continue;
+			}
+
 			// 느린 몬스터와 플레이어 충돌을 검사한다.
+			slowMonster.PlayerDistance = 999.9f;
+
 			if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(slowMonsterSprite)))
 			{
-				slowMonster.PlayerEnterCollidingTimer += deltaTime;
-
-				if (slowMonster.PlayerEnterCollidingTimer >= DAMAGE_COOL_TIMER)
+				const float playerDistance = Math::GetVectorLength(Math::SubtractVector(slowMonster.PrevPosition, mHero.GetPosition()));
+				if (playerDistance < slowMonster.PlayerDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					slowMonster.HpValue -= PLAYER_ATTACK_VALUE;
 
-					slowMonster.PlayerEnterCollidingTimer = 0.0f;
+					slowMonster.PlayerDistance = playerDistance;
 				}
-
-				break;
 			}
 
 			// 느린 몬스터와 내부 원 충돌을 검사한다.
-			if (Collision::IsCollidedCircleWithPoint({}, IN_BOUNDARY_RADIUS, slowMonsterSprite.GetPosition()))
-			{
-				slowMonster.InBoundryEnterCollidingTimer += deltaTime;
+			slowMonster.InBoundryDistance = 999.9f;
 
-				if (slowMonster.InBoundryEnterCollidingTimer >= DAMAGE_COOL_TIMER)
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(slowMonsterSprite), {}, IN_BOUNDARY_RADIUS))
+			{
+				const float inDistance = Math::GetVectorLength(Math::SubtractVector(slowMonster.PrevPosition, {}));
+				if (inDistance < slowMonster.InBoundryDistance)
 				{
 					mHeroHpValue -= MONSTER_ATTACK_VALUE;
 					slowMonster.HpValue -= BOUNDRY_ATTACK_VALUE;
 
-					slowMonster.InBoundryEnterCollidingTimer = 0.0f;
+					slowMonster.InBoundryDistance = inDistance;
 				}
-
-				break;
 			}
 		}
 
@@ -2246,6 +2144,11 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
+				if (monster.IsDead)
+				{
+					continue;
+				}
+
 				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(monsterSprite), line))
 				{
 					continue;
@@ -2276,6 +2179,11 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
+				if (runMonster.IsDead)
+				{
+					continue;
+				}
+
 				if (not Collision::IsCollidedSqureWithLine(getRectangleFromSprite(runMonsterSprite), line))
 				{
 					continue;
@@ -2302,6 +2210,11 @@ bool MainScene::Update(const float deltaTime)
 				Sprite& slowMonsterSprite = slowMonster.Sprite;
 
 				if (not slowMonsterSprite.IsActive())
+				{
+					continue;
+				}
+
+				if (slowMonster.IsDead)
 				{
 					continue;
 				}
