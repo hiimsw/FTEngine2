@@ -2254,8 +2254,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].Sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				mMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				mMonsters[i].HpValue = 0;
 			}
 		}
 
@@ -2272,8 +2271,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonsterSprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				runMonster.HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				runMonster.HpValue = 0;
 			}
 		}
 
@@ -2287,8 +2285,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].Sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
 			{
-				mSlowMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				mSlowMonsters[i].HpValue = 0;
 			}
 		}
 
@@ -2303,8 +2300,7 @@ bool MainScene::Update(const float deltaTime)
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].Sprite), center, mOrbitEllipse.radiusX))
 			{
-				mMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				mMonsters[i].HpValue = 0;
 			}
 		}
 
@@ -2318,8 +2314,7 @@ bool MainScene::Update(const float deltaTime)
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mRunMonsters[i].Sprite), center, mOrbitEllipse.radiusX))
 			{
-				mRunMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				mRunMonsters[i].HpValue = 0;
 			}
 		}
 
@@ -2333,8 +2328,7 @@ bool MainScene::Update(const float deltaTime)
 			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].Sprite), center, mOrbitEllipse.radiusX))
 			{
-				mSlowMonsters[i].HpValue -= PLAYER_ATTACK_VALUE;
-				break;
+				mSlowMonsters[i].HpValue = 0;
 			}
 		}
 	}
