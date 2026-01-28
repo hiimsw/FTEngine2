@@ -65,7 +65,7 @@ void MainScene::Initialize()
 		mHero.SetTexture(&mPinkRectangleTexture);
 		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
 
-		for (Sprite& shadow : mDashShadow)
+		for (Sprite& shadow : mDashShadows)
 		{
 			shadow.SetScale(mHero.GetScale());
 			shadow.SetTexture(&mRectangleTexture);
@@ -582,7 +582,6 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float DASH_ACC = 30.0f;
 			static float dashSpeed = 0.0f;
 			static bool bDashing = false;
-			static float dashShadowCoolTime = 0.0f;
 			static D2D1_POINT_2F dashDirection{};
 
 			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
@@ -600,7 +599,7 @@ bool MainScene::Update(const float deltaTime)
 					{
 						mDashCount--;
 						bDashing = true;
-						dashShadowCoolTime = 0.0f;
+						mDashShadowCoolTimer = 0.0f;
 					}
 				}
 
@@ -608,8 +607,6 @@ bool MainScene::Update(const float deltaTime)
 				mHero.SetPosition(position);
 			}
 
-			static float dashScaleTimer;
-			static float dashTimer[SHADOW_COUNT];
 
 			if (bDashing)
 			{
@@ -625,10 +622,10 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
 				mHero.SetPosition(position);
 
-				dashShadowCoolTime -= deltaTime;
-				if (dashShadowCoolTime <= 0.0f)
+				mDashShadowCoolTimer -= deltaTime;
+				if (mDashShadowCoolTimer <= 0.0f)
 				{
-					for (Sprite& shadow : mDashShadow)
+					for (Sprite& shadow : mDashShadows)
 					{
 						if (shadow.IsActive())
 						{
@@ -642,11 +639,11 @@ bool MainScene::Update(const float deltaTime)
 						break;
 					}
 
-					dashShadowCoolTime = 0.05f;
+					mDashShadowCoolTimer = 0.05f;
 				}
 			}
 
-			for (Sprite& shadow : mDashShadow)
+			for (Sprite& shadow : mDashShadows)
 			{
 				if (not shadow.IsActive())
 				{
@@ -665,12 +662,12 @@ bool MainScene::Update(const float deltaTime)
 
 			if (mDashCount < DASH_MAX_COUNT)
 			{
-				dashScaleTimer += deltaTime;
+				mDashCountTimer += deltaTime;
 
-				if (dashScaleTimer >= 2.0f)
+				if (mDashCountTimer >= 2.0f)
 				{
 					mDashCount++;
-					dashScaleTimer = 0.0f;
+					mDashCountTimer = 0.0f;
 				}
 			}
 		}
@@ -1725,6 +1722,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (mSlowMonsterStopTimers[i] >= STOP_TIME)
 				{
+					mSlowMonsterShadowCoolTimer = 0.0f;
 					mSlowMonsterMovingTimers[i] = 0.0f;
 
 					mSlowMonsterStartPositions[i] = slowMonsterSprite.GetPosition();
@@ -1741,9 +1739,9 @@ bool MainScene::Update(const float deltaTime)
 			}
 			}
 
-			mSlowMonsterShadowCoolTimers[i] -= deltaTime;
+			mSlowMonsterShadowCoolTimer -= deltaTime;
 
-			if (mSlowMonsterShadowCoolTimers[i] <= 0.0f)
+			if (mSlowMonsterShadowCoolTimer <= 0.0f)
 			{
 				for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
 				{
@@ -1761,7 +1759,7 @@ bool MainScene::Update(const float deltaTime)
 					break;
 				}
 
-				mSlowMonsterShadowCoolTimers[i] = 0.15f;
+				mSlowMonsterShadowCoolTimer = 0.05f;
 			}
 
 			// hp를 좌표를 업데이트한다.

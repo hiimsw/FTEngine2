@@ -178,8 +178,10 @@ private:
 
 	// 플레이어 대쉬
 	static constexpr uint32_t DASH_MAX_COUNT = 10;
-	Sprite mDashShadow[SHADOW_COUNT]{};
+	Sprite mDashShadows[SHADOW_COUNT]{};
 	int32_t mDashCount = DASH_MAX_COUNT;
+	float mDashCountTimer{};
+	float mDashShadowCoolTimer{};
 
 	// 플레이어 총알
 	static constexpr uint32_t BULLET_COUNT = 80;
@@ -243,13 +245,13 @@ private:
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
 
-	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
-	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
-
 	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
 	float mRunMonsterSpawnTimer{};
 
 	// 바가 다 차면, 이동한다.
+	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
+	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
+
 	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
 	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
 	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
@@ -279,7 +281,7 @@ private:
 
 	// 그림자 관련
 	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
-	float mSlowMonsterShadowCoolTimers[SLOW_MONSTER_COUNT]{};
+	float mSlowMonsterShadowCoolTimer{};
 
 	// 충돌 관련
 	Sprite* mTargetMonster = nullptr;
