@@ -91,8 +91,10 @@ void MainScene::Initialize()
 
 	// 탄피를 초기화한다.
 	{
-		for (Sprite& casing : mCasings)
+		for (uint32_t i = 0; i < CASING_COUNT; ++i)
 		{
+			Sprite& casing = mCasings[i].Sprite;
+
 			casing.SetScale({ .width = 0.2f, .height = 0.2f });
 			casing.SetCenter({ -0.5f, 0.0f });
 			casing.SetOpacity(0.3f);
@@ -728,17 +730,18 @@ bool MainScene::Update(const float deltaTime)
 					{
 						for (uint32_t j = 0; j < CASING_COUNT; ++j)
 						{
-							Sprite& casing = mCasings[j];
+							Casing& casing = mCasings[j];
+							Sprite& casingSprite = casing.Sprite;
 
-							if (casing.IsActive())
+							if (casingSprite.IsActive())
 							{
 								continue;
 							}
 
-							casing.SetOpacity(1.0f);
-							casing.SetActive(true);
+							casingSprite.SetOpacity(1.0f);
+							casingSprite.SetActive(true);
 
-							D2D1_POINT_2F& casingDirection = mCasingDirections[j];
+							D2D1_POINT_2F& casingDirection = casing.CasingDirection;
 							casingDirection = Math::NormalizeVector(bullet.Direction);
 							casingDirection = Math::RotateVector(casingDirection, getRandom(-30.0f, 30.0f));
 							casingDirection = Math::ScaleVector(casingDirection, -1.0f);	// 뒤로 가도록 조정한다.
@@ -746,10 +749,10 @@ bool MainScene::Update(const float deltaTime)
 							D2D1_POINT_2F spawnPosition = mHero.GetPosition();
 							constexpr float OFFSET = 50.0f;
 							spawnPosition = Math::AddVector(spawnPosition, Math::ScaleVector(casingDirection, OFFSET));
-							casing.SetPosition((spawnPosition));
+							casingSprite.SetPosition((spawnPosition));
 
 							// 탄피의 이동 좌표를 생성한다.
-							startPosition[j] = casing.GetPosition();
+							startPosition[j] = casingSprite.GetPosition();
 							endPosition[j] = Math::AddVector(startPosition[i], Math::ScaleVector(casingDirection, LENGTH));
 
 							break;
@@ -805,29 +808,31 @@ bool MainScene::Update(const float deltaTime)
 
 				for (uint32_t i = 0; i < CASING_COUNT; ++i)
 				{
-					Sprite& casing = mCasings[i];
-					if (not casing.IsActive())
+					Casing& casing = mCasings[i];
+					Sprite& casingSprite = casing.Sprite;
+
+					if (not casingSprite.IsActive())
 					{
 						continue;
 					}
 
-					mCasingTimers[i] += deltaTime;
+					casing.CasingTimer += deltaTime;
 
-					float t = mCasingTimers[i] / MOVE_TIME;
+					float t = casing.CasingTimer / MOVE_TIME;
 					t = std::clamp(t, 0.0f, 1.0f);
 
 					D2D1_POINT_2F position = Math::LerpVector(startPosition[i], endPosition[i], t);
-					casing.SetPosition(position);
+					casingSprite.SetPosition(position);
 
 					if (t >= 1.0f)
 					{
-						casing.SetActive(false);
-						mCasingTimers[i] = 0.0f;
+						casingSprite.SetActive(false);
+						casing.CasingTimer = 0.0f;
 					}
 
-					float opacity = casing.GetOpacity();
+					float opacity = casingSprite.GetOpacity();
 					opacity -= 0.8f * deltaTime;
-					casing.SetOpacity(opacity);
+					casingSprite.SetOpacity(opacity);
 				}
 			}
 

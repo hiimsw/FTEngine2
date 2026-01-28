@@ -71,6 +71,13 @@ struct Bullet
 	D2D1_POINT_2F Direction;
 };
 
+struct Casing
+{
+	Sprite Sprite;
+	D2D1_POINT_2F CasingDirection;
+	float CasingTimer;
+};
+
 class MainScene final : public Scene
 {
 	enum class Layer
@@ -181,9 +188,7 @@ private:
 
 	// 플레이어 탄피
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
-	Sprite mCasings[CASING_COUNT]{};
-	D2D1_POINT_2F mCasingDirections[CASING_COUNT]{};
-	float mCasingTimers[CASING_COUNT]{};
+	Casing mCasings[CASING_COUNT]{};
 	bool misKeyDownReload = false;
 
 	// 플레이어 쉴드 스킬
