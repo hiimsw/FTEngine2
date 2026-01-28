@@ -76,8 +76,10 @@ void MainScene::Initialize()
 
 	// 총알을 초기화한다.
 	{
-		for (Sprite& bullet : mBullets)
+		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
+			Sprite& bullet = mBullets[i].Sprite;
+
 			bullet.SetPosition(mHero.GetPosition());
 			bullet.SetCenter({ .x = -0.5f, .y = 0.0f });
 			bullet.SetScale({ 2.5f, 0.1f });
@@ -689,34 +691,36 @@ bool MainScene::Update(const float deltaTime)
 			{
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
-					Sprite& bullet = mBullets[i];
-					if (bullet.IsActive())
+					Bullet& bullet = mBullets[i];
+					Sprite& bulletSprite = bullet.Sprite;
+
+					if (bulletSprite.IsActive())
 					{
 						continue;
 					}
 
 					const D2D1_POINT_2F spawnPosition = mHero.GetPosition();
-					bullet.SetPosition(spawnPosition);
-					mPrevBulletPosition[i] = spawnPosition;
+					bulletSprite.SetPosition(spawnPosition);
+					bullet.PrevPosition = spawnPosition;
 
 					// 이동 방향을 구한다.
 					// TODO(이수원): direction의 길이가 0인 경우 normalize 처리할 때 문제가 생기므로 예외 처리가 필요하다.
-					mBulletDirections[i] = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
+					bullet.Direction = Math::SubtractVector(getMouseWorldPosition(), spawnPosition);
 
 					// 거리에 따라 반동효과가 다르다.
-					const float length = Math::GetVectorLength(mBulletDirections[i]);
-					mBulletDirections[i] = (length >= 200.0f) ?
-						Math::RotateVector(mBulletDirections[i], getRandom(-10.0f, 10.0f))
-						: Math::RotateVector(mBulletDirections[i], getRandom(-5.0f, 5.0f));
+					const float length = Math::GetVectorLength(bullet.Direction);
+					bullet.Direction = (length >= 200.0f) ?
+						Math::RotateVector(bullet.Direction, getRandom(-10.0f, 10.0f))
+						: Math::RotateVector(bullet.Direction, getRandom(-5.0f, 5.0f));
 
-					mBulletDirections[i] = Math::NormalizeVector(mBulletDirections[i]);
+					bullet.Direction = Math::NormalizeVector(bullet.Direction);
 
-					float angle = Math::ConvertRadianToDegree(atan2f(mBulletDirections[i].y, mBulletDirections[i].x));
-					bullet.SetAngle(-angle);
+					float angle = Math::ConvertRadianToDegree(atan2f(bullet.Direction.y, bullet.Direction.x));
+					bulletSprite.SetAngle(-angle);
 
-					bullet.SetActive(true);
+					bulletSprite.SetActive(true);
 
-					bullet.SetOpacity(0.0f);
+					bulletSprite.SetOpacity(0.0f);
 
 					mBulletValue--;
 
@@ -735,7 +739,7 @@ bool MainScene::Update(const float deltaTime)
 							casing.SetActive(true);
 
 							D2D1_POINT_2F& casingDirection = mCasingDirections[j];
-							casingDirection = Math::NormalizeVector(mBulletDirections[i]);
+							casingDirection = Math::NormalizeVector(bullet.Direction);
 							casingDirection = Math::RotateVector(casingDirection, getRandom(-30.0f, 30.0f));
 							casingDirection = Math::ScaleVector(casingDirection, -1.0f);	// 뒤로 가도록 조정한다.
 
@@ -772,23 +776,25 @@ bool MainScene::Update(const float deltaTime)
 
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
-					Sprite& bullet = mBullets[i];
-					if (not bullet.IsActive())
+					Bullet& bullet = mBullets[i];
+					Sprite& bulletSprite = bullet.Sprite;
+
+					if (not bulletSprite.IsActive())
 					{
 						continue;
 					}
 
-					const D2D1_POINT_2F velocity = Math::ScaleVector(mBulletDirections[i], MOVE_SPEED * deltaTime);
-					const D2D1_POINT_2F position = Math::AddVector(bullet.GetPosition(), velocity);
+					const D2D1_POINT_2F velocity = Math::ScaleVector(bullet.Direction, MOVE_SPEED * deltaTime);
+					const D2D1_POINT_2F position = Math::AddVector(bulletSprite.GetPosition(), velocity);
 
-					mPrevBulletPosition[i] = bullet.GetPosition();
-					bullet.SetPosition(position);
+					bullet.PrevPosition = bulletSprite.GetPosition();
+					bulletSprite.SetPosition(position);
 
-					float opacity = bullet.GetOpacity();
+					float opacity = bulletSprite.GetOpacity();
 
 					D2D1_POINT_2F lerp = { opacity, opacity };
 					lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
-					bullet.SetOpacity(lerp.x);
+					bulletSprite.SetOpacity(lerp.x);
 				}
 			}
 
@@ -2024,29 +2030,30 @@ bool MainScene::Update(const float deltaTime)
 		// 총알과 원이 충돌한다.
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
-			Sprite& bullet = mBullets[i];
+			Bullet& bullet = mBullets[i];
+			Sprite& bulletSprite = bullet.Sprite;
 
-			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
+			const float halfLength = bulletSprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
 			const D2D1_POINT_2F endPosition =
 			{
-				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength,
-				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
+				.x = bulletSprite.GetPosition().x + bullet.Direction.x * halfLength,
+				.y = bulletSprite.GetPosition().y + bullet.Direction.y * halfLength
 			};
 
 			Line line =
 			{
-				.Point0 = mPrevBulletPosition[i],
+				.Point0 = bullet.PrevPosition,
 				.Point1 = endPosition
 			};
 
 			if (not Collision::IsCollidedCircleWithLine({}, BOUNDARY_RADIUS, line))
 			{
-				bullet.SetActive(false);
+				bulletSprite.SetActive(false);
 			}
 
 			if (Collision::IsCollidedCircleWithLine({}, IN_BOUNDARY_RADIUS, line))
 			{
-				bullet.SetActive(false);
+				bulletSprite.SetActive(false);
 			}
 		}
 
@@ -2200,23 +2207,25 @@ bool MainScene::Update(const float deltaTime)
 		// 총알과 모든 몬스터 충돌을 검사한다.
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
-			Sprite& bullet = mBullets[i];
-			if (not bullet.IsActive())
+			Bullet& bullet = mBullets[i];
+			Sprite& bulletSprite = bullet.Sprite;
+
+			if (not bulletSprite.IsActive())
 			{
 				continue;
 			}
 
 			// 이전 좌표와 현재 좌표의 직선을 그려서 충돌체크를 한다.
-			const float halfLength = bullet.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
+			const float halfLength = bulletSprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f;
 			const D2D1_POINT_2F endPosition =
 			{
-				.x = bullet.GetPosition().x + mBulletDirections[i].x * halfLength,
-				.y = bullet.GetPosition().y + mBulletDirections[i].y * halfLength
+				.x = bulletSprite.GetPosition().x + bullet.Direction.x * halfLength,
+				.y = bulletSprite.GetPosition().y + bullet.Direction.y * halfLength
 			};
 
 			const Line line =
 			{
-				.Point0 = mPrevBulletPosition[i],
+				.Point0 = bullet.PrevPosition,
 				.Point1 = endPosition
 			};
 
@@ -2239,7 +2248,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], monsterSprite.GetPosition()));
+				const float distance = Math::GetVectorLength(Math::SubtractVector(bullet.PrevPosition, monsterSprite.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
 					monster.HpValue -= BULLET_ATTACK_VALUE;
@@ -2269,7 +2278,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], runMonsterSprite.GetPosition()));
+				const float distance = Math::GetVectorLength(Math::SubtractVector(bullet.PrevPosition, runMonsterSprite.GetPosition()));
 				if (distance < targetRunMonsterDistance)
 				{
 					runMonster.HpValue -= BULLET_ATTACK_VALUE;
@@ -2299,7 +2308,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				const float distance = Math::GetVectorLength(Math::SubtractVector(mPrevBulletPosition[i], slowMonsterSprite.GetPosition()));
+				const float distance = Math::GetVectorLength(Math::SubtractVector(bullet.PrevPosition, slowMonsterSprite.GetPosition()));
 				if (distance < targetMonsterDistance)
 				{
 					slowMonster.HpValue -= BULLET_ATTACK_VALUE;
@@ -2314,7 +2323,7 @@ bool MainScene::Update(const float deltaTime)
 				or targetRunMonster != nullptr
 				or targetSlowMonster != nullptr)
 			{
-				bullet.SetActive(false);
+				mBullets[i].Sprite.SetActive(false);
 			}
 		}
 
@@ -2639,14 +2648,14 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 	{
 		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 		{
-			Sprite& bullet = mBullets[i];
+			Sprite& bulletSprite = mBullets[i].Sprite;
 
-			if (mIsColliderKeyDown and bullet.IsActive())
+			if (mIsColliderKeyDown and bulletSprite.IsActive())
 			{
-				const Matrix3x2F worldView = Transformation::getWorldMatrix(getCircleFromSprite(bullet).point) * view;
+				const Matrix3x2F worldView = Transformation::getWorldMatrix(getCircleFromSprite(bulletSprite).point) * view;
 				renderTarget->SetTransform(worldView);
 
-				const D2D1_SIZE_F scale = bullet.GetScale();
+				const D2D1_SIZE_F scale = bulletSprite.GetScale();
 
 				const D2D1_ELLIPSE circleSize =
 				{

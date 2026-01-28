@@ -34,6 +34,11 @@ struct GizmoLine
 	D2D1_POINT_2F Point1;
 };
 
+struct Player
+{
+
+};
+
 struct Monster
 {
 	Sprite BackgroundHpBar;
@@ -57,6 +62,13 @@ struct Monster
 	D2D1_SIZE_F BulletEffectScale;
 
 	int32_t HpValue;
+};
+
+struct Bullet
+{
+	Sprite Sprite;
+	D2D1_POINT_2F PrevPosition;
+	D2D1_POINT_2F Direction;
 };
 
 class MainScene final : public Scene
@@ -164,9 +176,7 @@ private:
 
 	// 플레이어 총알
 	static constexpr uint32_t BULLET_COUNT = 80;
-	Sprite mBullets[BULLET_COUNT]{};
-	D2D1_POINT_2F mPrevBulletPosition[BULLET_COUNT]{};
-	D2D1_POINT_2F mBulletDirections[BULLET_COUNT]{};
+	Bullet mBullets[BULLET_COUNT]{};
 	int32_t mBulletValue = BULLET_COUNT;
 
 	// 플레이어 탄피
