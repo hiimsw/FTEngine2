@@ -58,6 +58,35 @@ void MainScene::Initialize()
 		mYellowBarTexture.Initialize(GetHelper(), L"Resource/YellowBar.png");
 	}
 
+	// 사운드를 초기화한다.
+	{
+		mBackgroundSound.Initialize(GetHelper(), "Resource/Sound/DST-TowerDefenseTheme.mp3", true);
+		mBackgroundSound.SetVolume(0.3f);
+
+		mBulletSound.Initialize(GetHelper(), "Resource/Sound/shoot_sound.wav", false);
+
+		mHeroSound.Initialize(GetHelper(), "Resource/Sound/player_hit.wav", false);
+		mHeroSound.SetVolume(0.2f);
+
+		mShieldSound.Initialize(GetHelper(), "Resource/Sound/E_Skill.mp3", false);
+		mShieldSound.SetVolume(0.2f);
+
+		mOrbitSound.Initialize(GetHelper(), "Resource/Sound/Q_Skill.mp3", false);
+		mOrbitSound.SetVolume(0.2f);
+
+		mMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break.mp3", false);
+		mMonsterDeadSound.SetVolume(0.5f);
+
+		mRunMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break2.mp3", false);
+		mRunMonsterDeadSound.SetVolume(0.5f);
+
+		mSlowMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break3.mp3", false);
+		mSlowMonsterDeadSound.SetVolume(0.5f);
+
+		mEndingSound.Initialize(GetHelper(), "Resource/Sound/game_over.mp3", false);
+		mEndingSound.SetVolume(0.3f);
+	}
+
 	// 플레이어를 초기화한다.
 	{
 		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
@@ -425,6 +454,8 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 bool MainScene::Update(const float deltaTime)
 {
+	mBackgroundSound.Play();
+
 	// 키를 업데이트한다.
 	{
 		// 게임을 종료한다.
@@ -626,6 +657,8 @@ bool MainScene::Update(const float deltaTime)
 				and mBulletValue != 0
 				and not misKeyDownReload)
 			{
+				mBulletSound.Replay();
+
 				for (uint32_t i = 0; i < BULLET_COUNT; ++i)
 				{
 					Bullet& bullet = mBullets[i];
@@ -821,6 +854,8 @@ bool MainScene::Update(const float deltaTime)
 			if (mShieldState == eShield_State::End
 				and Input::Get().GetKeyDown('E'))
 			{
+				mShieldSound.Replay();
+
 				mShieldLabel.SetActive(true);
 				mShieldState = eShield_State::Growing;
 			}
@@ -894,6 +929,8 @@ bool MainScene::Update(const float deltaTime)
 
 			case eShield_State::CoolTime:
 			{
+				mShieldSound.Pause();
+
 				shieldCoolTimer += deltaTime;
 
 				if (shieldCoolTimer >= 2.0f)
@@ -919,6 +956,8 @@ bool MainScene::Update(const float deltaTime)
 			if (Input::Get().GetKeyDown('Q')
 				and mOrbitState == eOrbit_State::End)
 			{
+				mOrbitSound.Replay();
+
 				mOrbitState = eOrbit_State::Rotating;
 			}
 
@@ -967,6 +1006,8 @@ bool MainScene::Update(const float deltaTime)
 			}
 			case eOrbit_State::CoolTime:
 			{
+				mOrbitSound.Pause();
+
 				orbitCoolTimer += deltaTime;
 
 				if (orbitCoolTimer >= ORBIT_COOL_TIMER)
@@ -1126,6 +1167,8 @@ bool MainScene::Update(const float deltaTime)
 			if (not monster.IsDead
 				and monster.HpValue <= 0)
 			{
+				mMonsterDeadSound.Replay();
+
 				monster.HpValue = 0;
 				monster.IsDead = true;
 			}
@@ -1388,7 +1431,7 @@ bool MainScene::Update(const float deltaTime)
 			runMonster.HpBar.SetPosition(offset);
 		}
 
-		// 돌진 몬스터의 체력 업데이트를 한다.
+		// 돌진 몬스터의 체력을 업데이트한다.
 		static float prevHp[RUN_MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
@@ -1399,6 +1442,8 @@ bool MainScene::Update(const float deltaTime)
 			if (not runMonster.IsDead
 				and runMonster.HpValue <= 0)
 			{
+				mRunMonsterDeadSound.Replay();
+
 				runMonster.HpValue = 0;
 				runMonster.IsDead = true;
 			}
@@ -1715,8 +1760,8 @@ bool MainScene::Update(const float deltaTime)
 			slowMonster.BackgroundHpBar.SetPosition(offset);
 			slowMonster.HpBar.SetPosition(offset);
 		}
-
-		// 느린 몬스터의 체력 업데이트를 한다.
+		
+		// 느린 몬스터의 체력을 업데이트한다.
 		static float prevHp[SLOW_MONSTER_COUNT];
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
@@ -1726,6 +1771,9 @@ bool MainScene::Update(const float deltaTime)
 			if (not slowMonster.IsDead
 				and slowMonster.HpValue <= 0)
 			{
+				// TODO: 스폰 - 죽었을 때 꼬임
+				//mSlowMonsterDeadSound.Replay();
+
 				slowMonster.HpValue = 0;
 				slowMonster.IsDead = true;
 			}
@@ -1827,6 +1875,9 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어가 죽었을 때 종료된다.
 		if (mHeroHpValue <= 0)
 		{
+			mBackgroundSound.Pause();
+			mEndingSound.Play();
+
 			mEndingLabel.SetActive(true);
 
 			mHeroHpValue = 0;
@@ -1839,6 +1890,8 @@ bool MainScene::Update(const float deltaTime)
 
 		if (prevHp != mHeroHpValue)
 		{
+			mHeroSound.Replay();
+
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
 
 			prevHp = mHeroHpValue;

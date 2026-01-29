@@ -1,10 +1,11 @@
 #pragma once
 #include "Core/Camera.h"
+#include "Core/Font.h"
+#include "Core/Label.h"
 #include "Core/Scene.h"
+#include "Core/Sound.h"
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
-#include "Core/Label.h"
-#include "Core/Font.h"
 
 enum class eShield_State
 {
@@ -162,6 +163,8 @@ private:
 	ID2D1SolidColorBrush* mYellowBrush = nullptr;
 	ID2D1SolidColorBrush* mCyanBrush = nullptr;
 
+	Sound mBackgroundSound{};
+
 	// 키 관련
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;
@@ -172,6 +175,7 @@ private:
 	Sprite mHero{};
 	D2D1_POINT_2F mHeroVelocity{};
 	int32_t mHeroHpValue = HERO_MAX_HP;
+	Sound mHeroSound{};
 
 	// 플레이어 줌
 	Sprite mZoom{};
@@ -190,6 +194,7 @@ private:
 	Bullet mBullets[BULLET_COUNT]{};
 	float mBulletShootingCoolTimer{};
 	int32_t mBulletValue = BULLET_COUNT;
+	Sound mBulletSound{};
 
 	// 플레이어 탄피
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
@@ -205,11 +210,15 @@ private:
 	float mShieldTotalElapsedTimer{};
 	bool mShieldBlinkOn = false;
 
+	Sound mShieldSound{};
+
 	// 플레이어 공전 스킬
 	D2D1_ELLIPSE mOrbitEllipse{};
 	eOrbit_State mOrbitState = eOrbit_State::End;
 	float mOrbitAngle{};
 	bool mOrbitBlinkOn = false;
+
+	Sound mOrbitSound{};
 
 	// UI
 	static constexpr float UI_DASH_SCALE_WIDTH = 1.5f;
@@ -233,6 +242,7 @@ private:
 
 	Font mEndingFont{};
 	Label mEndingLabel{};
+	Sound mEndingSound{};
 
 	// 몬스터
 	static constexpr uint32_t MONSTER_COUNT = 1;
@@ -242,6 +252,8 @@ private:
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
+	
+	Sound mMonsterDeadSound{};
 
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
@@ -259,6 +271,8 @@ private:
 	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
 	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
 	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
+
+	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
 	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
@@ -278,6 +292,8 @@ private:
 
 	D2D1_POINT_2F mSlowMonsterStartPositions[SLOW_MONSTER_COUNT]{};
 	D2D1_POINT_2F mSlowMonsterEndPositions[SLOW_MONSTER_COUNT]{};
+
+	Sound mSlowMonsterDeadSound{};
 
 	// 그림자 관련
 	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
