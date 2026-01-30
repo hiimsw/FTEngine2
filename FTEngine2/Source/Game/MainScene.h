@@ -33,8 +33,7 @@ enum class eMonster_State
 {
 	Spawn,
 	Life,
-	Dead,
-	End
+	Dead
 };
 
 struct GizmoLine
@@ -48,8 +47,6 @@ struct Monster
 	eMonster_State state;
 
 	Sprite sprite;
-	bool isSpawn;
-	float growingTimer;
 
 	// 충돌 관련
 	D2D1_POINT_2F prevPosition;
@@ -58,9 +55,9 @@ struct Monster
 	float playerDistance;
 
 	bool isBulletColliding;
-	float bulletEffectTimer;
 
-	bool isLife;
+	float growingTimer;
+	float bulletEffectTimer;
 	float dieTimer;
 
 	D2D1_POINT_2F bulletThick;
@@ -121,6 +118,11 @@ private:
 	void initializeCameraShake(const float amplitude, const float duration, const float frequency);
 	D2D1_POINT_2F updateCameraShake(const float deltaTime);
 
+	void UpdateSpawnMonster(Monster* monster, const float radius, const D2D1_SIZE_F monsterScale, const D2D1_SIZE_F bulletEffectScale, 
+		const D2D1_POINT_2F hpOffset, const float maxHp, const float deltaTime);
+	void UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F effectScale, const D2D1_SIZE_F monsterScale, float effectTime, const float deltaTime);
+	void 
+
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
@@ -149,9 +151,6 @@ private:
 
 	static constexpr float IN_BOUNDARY_RADIUS = 30.0f;
 	static constexpr float BOUNDARY_RADIUS = 400.0f;
-
-	static constexpr float MIN_ANGLE = 0.0f;
-	static constexpr float MAX_ANGLE = 2.0f * Math::PI;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 
@@ -253,7 +252,7 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 1;
+	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
