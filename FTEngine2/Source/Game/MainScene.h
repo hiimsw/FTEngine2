@@ -29,54 +29,62 @@ enum class eSlow_Monster_State
 	End
 };
 
+enum class eMonster_State
+{
+	Spawn,
+	Life,
+	Dead,
+	End
+};
+
 struct GizmoLine
 {
-	D2D1_POINT_2F Point0;
-	D2D1_POINT_2F Point1;
+	D2D1_POINT_2F point0;
+	D2D1_POINT_2F point1;
 };
 
 struct Monster
 {
-	Sprite BackgroundHpBar;
-	Sprite HpBar;
+	eMonster_State state;
 
-	Sprite Sprite;
-
-	bool IsSpawn;
-	float GrowingTimer;
+	Sprite sprite;
+	bool isSpawn;
+	float growingTimer;
 
 	// 충돌 관련
-	D2D1_POINT_2F PrevPosition;
-	float BoundryDistance;
-	float InBoundryDistance;
-	float PlayerDistance;
+	D2D1_POINT_2F prevPosition;
+	float boundryDistance;
+	float inBoundryDistance;
+	float playerDistance;
 
-	bool IsBulletColliding;
-	float BulletEffectTimer;
+	bool isBulletColliding;
+	float bulletEffectTimer;
 
-	bool IsDead;
-	float DieTimer;
+	bool isLife;
+	float dieTimer;
 
-	D2D1_POINT_2F BulletThick;
-	D2D1_SIZE_F BulletEffectScale;
+	D2D1_POINT_2F bulletThick;
+	D2D1_SIZE_F bulletEffectScale;
 
-	int32_t HpValue;
+	Sprite backgroundHpBar;
+	Sprite hpBar;
+	int32_t hpValue;
 };
 
 struct Bullet
 {
-	Sprite Sprite;
-	D2D1_POINT_2F PrevPosition;
-	D2D1_POINT_2F Direction;
+	Sprite sprite;
+	D2D1_POINT_2F prevPosition;
+	D2D1_POINT_2F direction;
 };
 
 struct Casing
 {
-	Sprite Sprite;
-	D2D1_POINT_2F CasingDirection;
-	D2D1_POINT_2F StartPosition;
-	D2D1_POINT_2F EndPosition;
-	float CasingTimer;
+	Sprite sprite;
+	D2D1_POINT_2F casingDirection;
+	D2D1_POINT_2F startPosition;
+	D2D1_POINT_2F endPosition;
+	float casingTimer;
 };
 
 class MainScene final : public Scene
@@ -275,7 +283,7 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;

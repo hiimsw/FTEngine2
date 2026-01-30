@@ -112,9 +112,9 @@ namespace Collision
 		const D2D1_POINT_2F ab = Math::SubtractVector(line.Point1, line.Point0);
 		
 		const D2D1_POINT_2F abDirection = Math::NormalizeVector(ab);
-		const float abLength = Math::GetVectorLength(ab);
-
 		float t = Math::DotProduct2D(ac, abDirection);
+
+		const float abLength = Math::GetVectorLength(ab);
 		t = std::clamp(t, 0.0f, abLength);
 
 		const D2D1_POINT_2F dPoint = 
