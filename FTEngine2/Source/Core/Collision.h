@@ -125,7 +125,7 @@ namespace Collision
 
 		const D2D1_POINT_2F diff = Math::SubtractVector(center, dPoint);
 		
-		bool result = Math::DotProduct2D(diff, diff) <= radius * radius;
+		bool result = (diff.x * diff.x + diff.y + diff.y) <= (radius * radius);
 
 		return result;
 	}
