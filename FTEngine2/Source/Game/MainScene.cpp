@@ -49,6 +49,7 @@ void MainScene::Initialize()
 		mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
 		mBlueRectangleTexture.Initialize(GetHelper(), L"Resource/BlueRectangle.png");
 		mPinkRectangleTexture.Initialize(GetHelper(), L"Resource/PinkRectangle.png");
+		mSkyBlueRectangleTexture.Initialize(GetHelper(), L"Resource/SkyBlueRectangle.png");
 
 		mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
 		mRedCircleTexture.Initialize(GetHelper(), L"Resource/RedCircle.png");
@@ -173,6 +174,14 @@ void MainScene::Initialize()
 			hpBar.SetActive(false);
 			hpBar.SetTexture(&mRedBarTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
+		}
+
+		for (Sprite& effect: mMonsterToBulletEffects)
+		{
+			effect.SetScale({ .width = 1.0f, .height = 50.0f });
+			effect.SetActive(false);
+			effect.SetTexture(&mSkyBlueRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&effect);
 		}
 	}
 
@@ -2586,6 +2595,7 @@ void MainScene::Finalize()
 	mRedRectangleTexture.Finalize();
 	mBlueRectangleTexture.Finalize();
 	mPinkRectangleTexture.Finalize();
+	mSkyBlueRectangleTexture.Finalize();
 
 	mCircleTexture.Finalize();
 	mRedCircleTexture.Finalize();

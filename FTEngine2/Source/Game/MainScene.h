@@ -128,6 +128,7 @@ private:
 	Texture mRedRectangleTexture{};
 	Texture mBlueRectangleTexture{};
 	Texture mPinkRectangleTexture{};
+	Texture mSkyBlueRectangleTexture{};
 
 	Texture mCircleTexture{};
 	Texture mRedCircleTexture{};
@@ -260,6 +261,8 @@ private:
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
 	float mMonsterSpeeds[MONSTER_COUNT]{};
+
+	Sprite mMonsterToBulletEffects[MONSTER_COUNT]{};
 
 	Sound mMonsterDeadSound{};
 
