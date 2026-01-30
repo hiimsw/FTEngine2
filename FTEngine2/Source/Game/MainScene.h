@@ -291,7 +291,9 @@ private:
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
 
+	static constexpr D2D1_SIZE_F MONSTER_TO_BULLET_EFFECT_SCALE = { 1.0f, 50.0f };
 	Sprite mMonsterToBulletEffects[MONSTER_COUNT]{};
+	float mMonsterToBulletEffectsTimers[MONSTER_COUNT]{};
 
 	Sound mMonsterDeadSound{};
 

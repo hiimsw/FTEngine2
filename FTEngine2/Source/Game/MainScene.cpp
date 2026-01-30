@@ -142,14 +142,6 @@ void MainScene::Initialize()
 		};
 	}
 
-	for (Sprite& effect : mMonsterToBulletEffects)
-	{
-		effect.SetScale({ .width = 1.0f, .height = 50.0f });
-		effect.SetActive(false);
-		effect.SetTexture(&mSkyBlueRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Monster)].push_back(&effect);
-	}
-
 	// 몬스터를 초기화한다.
 	{
 		for (Monster& monster : mMonsters)
@@ -181,7 +173,7 @@ void MainScene::Initialize()
 
 		for (Sprite& effect: mMonsterToBulletEffects)
 		{
-			effect.SetScale({ .width = 1.0f, .height = 50.0f });
+			effect.SetScale({ .width = MONSTER_TO_BULLET_EFFECT_SCALE.width, .height = MONSTER_TO_BULLET_EFFECT_SCALE.height });
 			effect.SetActive(false);
 			effect.SetTexture(&mSkyBlueRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&effect);
@@ -1120,12 +1112,38 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
-		for (Monster& monster : mMonsters)
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			Monster& monster = mMonsters[i];
 			if (not monster.isBulletColliding)
 			{
 				continue;
 			}
+
+			D2D1_POINT_2F position = monster.sprite.GetPosition();
+			Sprite& effect = mMonsterToBulletEffects[i];
+			effect.SetPosition(position);
+			effect.SetActive(true);
+
+			const D2D1_POINT_2F direction = Math::NormalizeVector(monster.sprite.GetPosition());
+			float angle = Math::ConvertRadianToDegree(direction.y);
+			effect.SetAngle(-angle);
+
+			// 이펙트가 생성된다.
+			mMonsterToBulletEffectsTimers[i] += deltaTime;
+			float t = mMonsterToBulletEffectsTimers[i] / 0.5f;
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = MONSTER_TO_BULLET_EFFECT_SCALE.width, .y = MONSTER_TO_BULLET_EFFECT_SCALE.height },
+				{ .x = 0.1f, .y = MONSTER_TO_BULLET_EFFECT_SCALE.height }, t);
+			effect.SetScale({ .width = scale.x, .height = scale.y });
+
+			if (t >= 1.0f)
+			{
+				monster.isBulletColliding = false;
+				effect.SetActive(false);
+				mMonsterToBulletEffectsTimers[i] = 0.0f;
+			}
+
+			DEBUG_LOG("%d", monster.isBulletColliding);
 			break;
 		}
 
