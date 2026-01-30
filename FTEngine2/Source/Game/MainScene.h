@@ -48,7 +48,6 @@ struct Monster
 	eMonster_State state;
 
 	// 충돌 관련
-	D2D1_POINT_2F prevPosition;
 	float boundryDistance;
 	float inBoundryDistance;
 	float playerDistance;
@@ -58,14 +57,11 @@ struct Monster
 	float spawnEffectTimer;
 	float bulletEffectTimer;
 	float deadEffectTimer;
-
-	D2D1_POINT_2F bulletThick;
-	D2D1_SIZE_F bulletEffectScale;
+	float moveSpeed;
 
 	Sprite backgroundHpBar;
 	Sprite hpBar;
-	int32_t hpValue;
-	int32_t prevHp;
+	int32_t hp;
 };
 
 struct Bullet
@@ -82,6 +78,40 @@ struct Casing
 	D2D1_POINT_2F startPosition;
 	D2D1_POINT_2F endPosition;
 	float casingTimer;
+};
+
+struct BulletEffect
+{
+	D2D1_POINT_2F thick;
+	D2D1_SIZE_F scale;
+};
+
+struct MonsterSpawnDesc
+{
+	Monster* monster;
+	const D2D1_SIZE_F scale;
+	const D2D1_SIZE_F hitEffect;
+	const D2D1_POINT_2F hpOffset;
+	const int32_t maxHp;
+};
+
+struct MonsterSpawnEffectDesc
+{
+	Monster* monster;
+	const D2D1_SIZE_F originalScale;
+	const D2D1_SIZE_F effectScale;
+	const float time;
+	const float deltaTime;
+};
+
+struct MonsterDeadSoundDesc
+{
+	Monster* monster;
+	Sound* sound;
+	D2D1_SIZE_F startScale;
+	D2D1_SIZE_F endScale;
+	float time;
+	float deltaTime;
 };
 
 class MainScene final : public Scene
@@ -118,10 +148,10 @@ private:
 	void initializeCameraShake(const float amplitude, const float duration, const float frequency);
 	D2D1_POINT_2F updateCameraShake(const float deltaTime);
 
-	void UpdateSpawnMonster(Monster* monster, const float radius, const D2D1_SIZE_F monsterScale, const D2D1_SIZE_F bulletEffectScale, 
-		const D2D1_POINT_2F hpOffset, const float maxHp, const float deltaTime);
-	void UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F effectScale, const D2D1_SIZE_F monsterScale, float effectTime, const float deltaTime);
-	void UpdateMonsterHp(Monster* monster, const D2D1_SIZE_F effectStartScale, const D2D1_SIZE_F effectEndScale, const float effectTime, const float deltaTime);
+	void SpawnMonster(const MonsterSpawnDesc& desc);
+	void UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc);
+	void UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
+	void MonsterDeadEffect(const MonsterDeadSoundDesc& desc);
 
 private:
 	Texture mRectangleTexture{};
@@ -253,14 +283,13 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 10;
+	static constexpr uint32_t MONSTER_COUNT = 1;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
-	float mMonsterSpeeds[MONSTER_COUNT]{};
 
 	Sprite mMonsterToBulletEffects[MONSTER_COUNT]{};
 
@@ -282,6 +311,8 @@ private:
 	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
 	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
 	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
+
+	BulletEffect mRunMonsterToBulletEffects[RUN_MONSTER_COUNT]{};
 
 	Sound mRunMonsterDeadSound{};
 
