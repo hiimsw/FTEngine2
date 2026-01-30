@@ -149,6 +149,8 @@ void MainScene::Initialize()
 		{
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Dead;
+			monster.hpValue = MONSTER_MAX_HP;
+			monster.prevHp = monster.hpValue;
 
 			Sprite& sprite = monster.sprite;
 			sprite.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
@@ -1026,8 +1028,6 @@ bool MainScene::Update(const float deltaTime)
 
 	// 몬스터를 업데이트한다.
 	{
-		static float speed[MONSTER_COUNT];
-
 		// 몬스터를 일정 시간마다 스폰한다.
 		mMonsterSpawnTimer += deltaTime;
 		if (mMonsterSpawnTimer >= 0.5f)
@@ -1045,7 +1045,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					UpdateSpawnMonster(&mMonsters[i], BOUNDARY_RADIUS, { .width = MONSTER_SCALE , .height = MONSTER_SCALE }, { .width = 20.0f, .height = 720.0f },
 						{ 3.0f, 10.0f }, MONSTER_MAX_HP, deltaTime);
-					speed[i] = getRandom(10.0f, 80.0f);
+					mMonsterSpeeds[i] = getRandom(10.0f, 80.0f);
 					mMonsterSpawnTimer = 0.0f;
 
 					break;
@@ -1089,7 +1089,7 @@ bool MainScene::Update(const float deltaTime)
 			D2D1_POINT_2F position = monsterSprite.GetPosition();
 			D2D1_POINT_2F direction = Math::SubtractVector({}, position);
 			direction = Math::NormalizeVector(direction);
-			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, speed[i] * deltaTime);
+			const D2D1_POINT_2F velocity = Math::ScaleVector(direction, mMonsterSpeeds[i] * deltaTime);
 
 			position = Math::AddVector(position, velocity);
 			monster.prevPosition = position;
@@ -1114,43 +1114,6 @@ bool MainScene::Update(const float deltaTime)
 			monster.hpBar.SetPosition(offset);
 		}
 
-		// 몬스터의 체력을 업데이트를 한다.
-		static float prevHp[MONSTER_COUNT];
-
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		{
-			Monster& monster = mMonsters[i];
-
-			if (monster.state == eMonster_State::Dead)
-			{
-				continue;
-			}
-
-			if (monster.state == eMonster_State::Life
-				and monster.hpValue <= 0)
-			{
-				mMonsterDeadSound.Replay();
-
-				//monster.HpValue = 0;
-			}
-
-			if (prevHp[i] > monster.hpValue)
-			{		
-				// 카메라 흔들기를 시작한다.
-				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
-				const float duration = getRandom(0.5f, 0.8f);
-				const float frequency = getRandom(50.0f, 60.0f);
-				initializeCameraShake(amplitude, duration, frequency);
-			}
-
-			prevHp[i] = monster.hpValue;
-
-			Sprite& hpBar = monster.hpBar;
-			D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
-			scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(monster.hpValue) / float(MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
-			hpBar.SetScale({ scale.x, scale.y });
-		}
-
 		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
@@ -1163,13 +1126,12 @@ bool MainScene::Update(const float deltaTime)
 
 			monster.bulletEffectTimer += deltaTime;
 
-			D2D1_POINT_2F startScale = { monster.bulletEffectScale.width, monster.bulletEffectScale.height };
-			
-			float tt = (monster.bulletEffectTimer - START_LERP_TIME) / DURING_TIME;
-			tt = std::clamp(tt, 0.0f, 1.0f);
-			startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, 5.0f * deltaTime);
+			float t = monster.bulletEffectTimer / 0.5f;
+			t = std::clamp(t, 0.0f, 1.0f);
 
-			if (tt >= 1.0f)
+			D2D1_POINT_2F startScale = Math::LerpVector({ 70.0f , 720.0f }, { 0.1f , 0.1f }, t);
+
+			if (t >= 1.0f)
 			{
 				monster.bulletEffectTimer = 0.0f;
 			}
@@ -1193,38 +1155,26 @@ bool MainScene::Update(const float deltaTime)
 			break;
 		}
 
-		// 몬스터가 죽으면, 사라지는 이펙트가 생성된다.
+		// 몬스터의 체력을 업데이트를 한다.
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mMonsters[i];
-			Sprite& monsterSprite = monster.sprite;
 
-			if (monster.state != eMonster_State::Dead)
+			if (monster.state == eMonster_State::Dead)
 			{
 				continue;
 			}
 
-			monster.dieTimer += deltaTime;
+			UpdateMonsterHp(&mMonsters[i], { 3.0f, 3.0f }, { 0.1f, 0.1f }, 0.5f, deltaTime);
 
-			D2D1_POINT_2F startScale = { monsterSprite.GetScale().width, monsterSprite.GetScale().height };
-			startScale = Math::LerpVector(startScale, { 3.0f , 3.0f }, 8.0f * deltaTime);
-
-			float t = (monster.dieTimer - START_LERP_TIME) / DURING_TIME;
-			t = std::clamp(t, 0.0f, 1.0f);
-
-			startScale = Math::LerpVector(startScale, { 0.1f , 0.1f }, t);
-
-			if (t >= 1.0f)
+			if (monster.state == eMonster_State::Dead)
 			{
-				monsterSprite.SetActive(false);
-
-				monster.backgroundHpBar.SetActive(false);
-				monster.hpBar.SetActive(false);
-
-				monster.dieTimer = 0.0f;
+				// 카메라 흔들기를 시작한다.
+				const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
+				const float duration = getRandom(0.5f, 0.8f);
+				const float frequency = getRandom(50.0f, 60.0f);
+				initializeCameraShake(amplitude, duration, frequency);
 			}
-
-			monsterSprite.SetScale({ startScale.x , startScale.y });
 		}
 	}
 
@@ -2811,9 +2761,9 @@ void MainScene::UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F eff
 {
 	ASSERT(monster != nullptr);
 
-	monster->growingTimer += deltaTime;
+	monster->spawnEffectTimer += deltaTime;
 	
-	float t = monster->growingTimer / effectTime;
+	float t = monster->spawnEffectTimer / effectTime;
 	t = std::clamp(t, 0.0f, 1.0f);
 
 	D2D1_POINT_2F scale = Math::LerpVector({ effectScale.width, effectScale.height }, { monsterScale.width, monsterScale.height }, t);
@@ -2821,7 +2771,7 @@ void MainScene::UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F eff
 	if (t >= 1.0f)
 	{
 		monster->state = eMonster_State::Life;
-		monster->growingTimer = 0.0f;
+		monster->spawnEffectTimer = 0.0f;
 	}
 
 	monster->sprite.SetScale({ scale.x, scale.y });
@@ -2829,4 +2779,43 @@ void MainScene::UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F eff
 	// 이펙트가 끝나면 체력바를 업데이트한다.
 	monster->backgroundHpBar.SetActive(true);
 	monster->hpBar.SetActive(true);
+}
+
+void MainScene::UpdateMonsterHp(Monster* monster, const D2D1_SIZE_F effectStartScale, const D2D1_SIZE_F effectEndScale, const float effectTime, const float deltaTime)
+{
+	ASSERT(monster != nullptr);
+
+	// 체력바를 업데이트한다.
+	Sprite& hpBar = monster->hpBar;
+	D2D1_POINT_2F scale = { .x = hpBar.GetScale().width, .y = hpBar.GetScale().height };
+	scale = Math::LerpVector(scale, { MONSTER_HP_BAR_WIDTH * (float(monster->hpValue) / float(MONSTER_MAX_HP)), hpBar.GetScale().height }, 10.0f * deltaTime);
+	hpBar.SetScale({ scale.x, scale.y });
+
+	// 몬스터가 죽었을 때 이펙트가 발생한다.
+	if (monster->state == eMonster_State::Life
+		and monster->hpValue <= 0)
+	{
+		//monster->hpValue = 0;
+		mMonsterDeadSound.Replay();
+
+		monster->deadEffectTimer += deltaTime;
+
+		float t = monster->deadEffectTimer / effectTime;
+		t = std::clamp(t, 0.0f, 1.0f);
+
+		D2D1_POINT_2F startScale = Math::LerpVector({ effectStartScale.width , effectStartScale.height }, { effectEndScale.width , effectEndScale.height }, t);
+
+		if (t >= 1.0f)
+		{
+			monster->sprite.SetActive(false);
+
+			monster->backgroundHpBar.SetActive(false);
+			monster->hpBar.SetActive(false);
+
+			monster->state == eMonster_State::Dead;
+			monster->deadEffectTimer = 0.0f;
+		}
+
+		monster->sprite.SetScale({ startScale.x , startScale.y });
+	}
 }

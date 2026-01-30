@@ -44,9 +44,8 @@ struct GizmoLine
 
 struct Monster
 {
-	eMonster_State state;
-
 	Sprite sprite;
+	eMonster_State state;
 
 	// 충돌 관련
 	D2D1_POINT_2F prevPosition;
@@ -56,9 +55,9 @@ struct Monster
 
 	bool isBulletColliding;
 
-	float growingTimer;
+	float spawnEffectTimer;
 	float bulletEffectTimer;
-	float dieTimer;
+	float deadEffectTimer;
 
 	D2D1_POINT_2F bulletThick;
 	D2D1_SIZE_F bulletEffectScale;
@@ -66,6 +65,7 @@ struct Monster
 	Sprite backgroundHpBar;
 	Sprite hpBar;
 	int32_t hpValue;
+	int32_t prevHp;
 };
 
 struct Bullet
@@ -121,7 +121,7 @@ private:
 	void UpdateSpawnMonster(Monster* monster, const float radius, const D2D1_SIZE_F monsterScale, const D2D1_SIZE_F bulletEffectScale, 
 		const D2D1_POINT_2F hpOffset, const float maxHp, const float deltaTime);
 	void UpdateSpawnEffectMonster(Monster* monster, const D2D1_SIZE_F effectScale, const D2D1_SIZE_F monsterScale, float effectTime, const float deltaTime);
-	void 
+	void UpdateMonsterHp(Monster* monster, const D2D1_SIZE_F effectStartScale, const D2D1_SIZE_F effectEndScale, const float effectTime, const float deltaTime);
 
 private:
 	Texture mRectangleTexture{};
@@ -259,7 +259,8 @@ private:
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
-	
+	float mMonsterSpeeds[MONSTER_COUNT]{};
+
 	Sound mMonsterDeadSound{};
 
 	// 돌진 몬스터
