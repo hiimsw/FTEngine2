@@ -109,7 +109,6 @@ void MainScene::Initialize()
 		for (Bullet& bullet : mBullets)
 		{
 			Sprite& sprite = bullet.sprite;
-
 			sprite.SetPosition(mHero.GetPosition());
 			sprite.SetCenter({ .x = -0.5f, .y = 0.0f });
 			sprite.SetScale({ 2.5f, 0.1f });
@@ -124,7 +123,6 @@ void MainScene::Initialize()
 		for (Casing& casing : mCasings)
 		{
 			Sprite& sprite = casing.sprite;
-
 			sprite.SetScale({ .width = 0.2f, .height = 0.2f });
 			sprite.SetCenter({ -0.5f, 0.0f });
 			sprite.SetOpacity(0.3f);
@@ -187,20 +185,35 @@ void MainScene::Initialize()
 
 	// 돌진 몬스터를 초기화한다.
 	{
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		for (Monster& monster : mRunMonsters)
 		{
-			Sprite& monster = mRunMonsters[i].sprite;
+			// 기본 정보를 초기화한다.
+			monster.state = eMonster_State::Dead;
+			monster.hpValue = RUN_MONSTER_MAX_HP;
+			monster.prevHp = monster.hpValue;
 
-			mRunMonsters[i].hpValue = MONSTER_MAX_HP;
-			mRunMonsters[i].state = eMonster_State::Dead;
+			Sprite& sprite = monster.sprite;
+			sprite.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
+			sprite.SetActive(false);
+			sprite.SetTexture(&mRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
 
-			monster.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
-			monster.SetActive(false);
-			monster.SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
+			// 체력바 배경 정보를 초기화한다.
+			Sprite& background = monster.backgroundHpBar;
+			background.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			background.SetCenter({ -0.5f, 0.0f });
+			background.SetActive(false);
+			background.SetTexture(&mWhiteBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
+
+			// 체력바 정보를 초기화한다.
+			Sprite& hpBar = monster.hpBar;
+			hpBar.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			hpBar.SetCenter({ -0.5f, 0.0f });
+			hpBar.SetActive(false);
+			hpBar.SetTexture(&mRedBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
-
-		constexpr D2D1_POINT_2F BAR_SCALE = { .x = RUN_MONSTER_START_BAR_WIDTH, .y = 0.1f };
 
 		// 시작바를 생성한다.
 		for (Sprite& bar : mRunMonsterStartBars)
@@ -211,40 +224,38 @@ void MainScene::Initialize()
 			bar.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&bar);
 		}
-
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
-		{
-			Sprite& background = mRunMonsters[i].backgroundHpBar;
-
-			background.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			background.SetCenter({ -0.5f, 0.0f });
-			background.SetActive(false);
-			background.SetTexture(&mWhiteBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
-		}
-
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
-		{
-			Sprite& hpBar = mRunMonsters[i].hpBar;
-
-			hpBar.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			hpBar.SetCenter({ -0.5f, 0.0f });
-			hpBar.SetActive(false);
-			hpBar.SetTexture(&mRedBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
-		}
 	}
 
 	// 느린 몬스터를 초기화한다.
 	{
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		for (Monster& monster : mSlowMonsters)
 		{
-			Sprite& monster = mSlowMonsters[i].sprite;
+			// 기본 정보를 초기화한다.
+			monster.state = eMonster_State::Dead;
+			monster.hpValue = SLOW_MONSTER_MAX_HP;
+			monster.prevHp = monster.hpValue;
 
-			monster.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
-			monster.SetActive(false);
-			monster.SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&monster);
+			Sprite& sprite = monster.sprite;
+			sprite.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
+			sprite.SetActive(false);
+			sprite.SetTexture(&mRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
+
+			// 체력바 배경 정보를 초기화한다.
+			Sprite& background = monster.backgroundHpBar;
+			background.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			background.SetCenter({ -0.5f, 0.0f });
+			background.SetActive(false);
+			background.SetTexture(&mWhiteBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
+
+			// 체력바 정보를 초기화한다.
+			Sprite& hpBar = monster.hpBar;
+			hpBar.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
+			hpBar.SetCenter({ -0.5f, 0.0f });
+			hpBar.SetActive(false);
+			hpBar.SetTexture(&mRedBarTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
 
 		// 그림자를 초기화한다.
@@ -264,28 +275,6 @@ void MainScene::Initialize()
 
 				mSpriteLayers[uint32_t(Layer::Monster)].push_back(&shadow);
 			}
-		}
-
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
-		{
-			Sprite& background = mSlowMonsters[i].backgroundHpBar;
-
-			background.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			background.SetCenter({ -0.5f, 0.0f });
-			background.SetActive(false);
-			background.SetTexture(&mWhiteBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
-		}
-
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
-		{
-			Sprite& hpBar = mSlowMonsters[i].hpBar;
-
-			hpBar.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			hpBar.SetCenter({ -0.5f, 0.0f });
-			hpBar.SetActive(false);
-			hpBar.SetTexture(&mRedBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
 	}
 
