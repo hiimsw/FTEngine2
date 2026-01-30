@@ -180,8 +180,8 @@ private:
 	// °ø¿ë
 	static constexpr float TEST_RADIUS = 5.0f;
 
-	static constexpr float IN_BOUNDARY_RADIUS = 30.0f;
-	static constexpr float BOUNDARY_RADIUS = 400.0f;
+	static constexpr float IN_BOUNDARY_RADIUS = 60.0f;
+	static constexpr float BOUNDARY_RADIUS = 500.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 
