@@ -90,14 +90,18 @@ void MainScene::Initialize()
 
 	// 플레이어를 초기화한다.
 	{
-		mHero.SetPosition({ .x = -200.0f, .y = 0.0f });
-		mHero.SetScale({ .width = 0.75f, .height = 0.75f });
-		mHero.SetTexture(&mPinkRectangleTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mHero);
+		mHero.hp = HERO_MAX_HP;
+		mHero.velocity = {};
+
+		Sprite& hero = mHero.sprite;
+		hero.SetPosition({ .x = -200.0f, .y = 0.0f });
+		hero.SetScale({ .width = 0.75f, .height = 0.75f });
+		hero.SetTexture(&mPinkRectangleTexture);
+		mSpriteLayers[uint32_t(Layer::Player)].push_back(&hero);
 
 		for (Sprite& shadow : mDashShadows)
 		{
-			shadow.SetScale(mHero.GetScale());
+			shadow.SetScale(hero.GetScale());
 			shadow.SetTexture(&mPinkRectangleTexture);
 			shadow.SetActive(false);
 			mSpriteLayers[uint32_t(Layer::Player)].push_back(&shadow);
@@ -109,7 +113,7 @@ void MainScene::Initialize()
 		for (Bullet& bullet : mBullets)
 		{
 			Sprite& sprite = bullet.sprite;
-			sprite.SetPosition(mHero.GetPosition());
+			sprite.SetPosition(mHero.sprite.GetPosition());
 			sprite.SetCenter({ .x = -0.5f, .y = 0.0f });
 			sprite.SetScale({ 2.5f, 0.1f });
 			sprite.SetActive(false);
@@ -284,7 +288,7 @@ void MainScene::Initialize()
 
 	// 카메라를 초기화한다.
 	{
-		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 		const D2D1_POINT_2F cameraPosition{ .x = heroPosition.x * 0.5f, .y = heroPosition.y * 0.5f };
 
 		mMainCamera.SetPosition(cameraPosition);
@@ -366,7 +370,7 @@ void MainScene::Initialize()
 			mHpValueLabel.SetPosition(offset);
 
 			mHpValueLabel.SetCenter({ .x = 0.5f, .y = 0.0f });
-			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHero.hp) + L" / " + std::to_wstring(HERO_MAX_HP));
 			mLabels.push_back(&mHpValueLabel);
 		}
 
@@ -487,7 +491,7 @@ bool MainScene::Update(const float deltaTime)
 		const D2D1_POINT_2F screenPosition = Math::SubtractVector(mousePosition, centerOffset);
 		mZoom.SetPosition(screenPosition);
 
-		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 		const D2D1_POINT_2F zoomPosition = getMouseWorldPosition();
 
 		D2D1_POINT_2F toTarget = Math::SubtractVector(zoomPosition, heroPosition);
@@ -513,38 +517,39 @@ bool MainScene::Update(const float deltaTime)
 
 			static int32_t previousMoveX;
 			static int32_t previousMoveY;
+			D2D1_POINT_2F& velocity = mHero.velocity;
 
 			if (moveX != 0)
 			{
-				mHeroVelocity.x = std::clamp(mHeroVelocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
+				velocity.x = std::clamp(velocity.x + ACC * moveX, -MAX_SPEED, MAX_SPEED);
 				previousMoveX = moveX;
 			}
 			else
 			{
 				if (previousMoveX > 0)
 				{
-					mHeroVelocity.x = max(mHeroVelocity.x - ACC, 0.0f);
+					velocity.x = max(velocity.x - ACC, 0.0f);
 				}
 				else
 				{
-					mHeroVelocity.x = min(mHeroVelocity.x + ACC, 0.0f);
+					velocity.x = min(velocity.x + ACC, 0.0f);
 				}
 			}
 
 			if (moveY != 0)
 			{
-				mHeroVelocity.y = std::clamp(mHeroVelocity.y + ACC * moveY, -MAX_SPEED, MAX_SPEED);
+				velocity.y = std::clamp(velocity.y + ACC * moveY, -MAX_SPEED, MAX_SPEED);
 				previousMoveY = moveY;
 			}
 			else
 			{
 				if (previousMoveY > 0)
 				{
-					mHeroVelocity.y = max(mHeroVelocity.y - ACC, 0.0f);
+					velocity.y = max(velocity.y - ACC, 0.0f);
 				}
 				else
 				{
-					mHeroVelocity.y = min(mHeroVelocity.y + ACC, 0.0f);
+					velocity.y = min(velocity.y + ACC, 0.0f);
 				}
 			}
 
@@ -552,10 +557,10 @@ bool MainScene::Update(const float deltaTime)
 			constexpr float DASH_ACC = 30.0f;
 			static D2D1_POINT_2F dashDirection;
 
-			if (Math::GetVectorLength(mHeroVelocity) != 0.0f)
+			if (Math::GetVectorLength(velocity) != 0.0f)
 			{
-				float speed = min(Math::GetVectorLength(mHeroVelocity), MAX_SPEED);
-				const D2D1_POINT_2F direction = Math::NormalizeVector(mHeroVelocity);
+				float speed = min(Math::GetVectorLength(velocity), MAX_SPEED);
+				const D2D1_POINT_2F direction = Math::NormalizeVector(velocity);
 				D2D1_POINT_2F adjustVelocity = Math::ScaleVector(direction, speed);
 				adjustVelocity = Math::ScaleVector(adjustVelocity, deltaTime);
 
@@ -571,8 +576,8 @@ bool MainScene::Update(const float deltaTime)
 					}
 				}
 
-				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), adjustVelocity);
-				mHero.SetPosition(position);
+				const D2D1_POINT_2F position = Math::AddVector(mHero.sprite.GetPosition(), adjustVelocity);
+				mHero.sprite.SetPosition(position);
 			}
 
 			if (mIsDashing)
@@ -586,8 +591,8 @@ bool MainScene::Update(const float deltaTime)
 					mIsDashing = false;
 				}
 
-				const D2D1_POINT_2F position = Math::AddVector(mHero.GetPosition(), velocity);
-				mHero.SetPosition(position);
+				const D2D1_POINT_2F position = Math::AddVector(mHero.sprite.GetPosition(), velocity);
+				mHero.sprite.SetPosition(position);
 
 				mDashShadowCoolTimer -= deltaTime;
 				if (mDashShadowCoolTimer <= 0.0f)
@@ -663,7 +668,7 @@ bool MainScene::Update(const float deltaTime)
 						continue;
 					}
 
-					const D2D1_POINT_2F spawnPosition = mHero.GetPosition();
+					const D2D1_POINT_2F spawnPosition = mHero.sprite.GetPosition();
 					bulletSprite.SetPosition(spawnPosition);
 					bullet.prevPosition = spawnPosition;
 
@@ -707,7 +712,7 @@ bool MainScene::Update(const float deltaTime)
 							casingDirection = Math::RotateVector(casingDirection, getRandom(-30.0f, 30.0f));
 							casingDirection = Math::ScaleVector(casingDirection, -1.0f);	// 뒤로 가도록 조정한다.
 
-							D2D1_POINT_2F spawnPosition = mHero.GetPosition();
+							D2D1_POINT_2F spawnPosition = mHero.sprite.GetPosition();
 							constexpr float OFFSET = 50.0f;
 							spawnPosition = Math::AddVector(spawnPosition, Math::ScaleVector(casingDirection, OFFSET));
 							casingSprite.SetPosition((spawnPosition));
@@ -1266,7 +1271,7 @@ bool MainScene::Update(const float deltaTime)
 					mRunMonsterStartBars[i].SetScale(scale);
 
 					const D2D1_POINT_2F monsterPosition = sprite.GetPosition();
-					const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+					const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 
 					mRunMonsterMoveSpeeds[i] = 0.0f;
 
@@ -1631,34 +1636,34 @@ bool MainScene::Update(const float deltaTime)
 	// 플레이어 체력에 관련된 부분을 업데이트한다.
 	{
 		// 플레이어가 죽었을 때 종료된다.
-		if (mHeroHpValue <= 0)
+		if (mHero.hp <= 0)
 		{
 			mBackgroundSound.Pause();
 			mEndingSound.Play();
 
 			mEndingLabel.SetActive(true);
 
-			mHeroHpValue = 0;
-			mHeroVelocity = {};
-			mHero.SetActive(false);
+			mHero.hp = 0;
+			mHero.velocity = {};
+			mHero.sprite.SetActive(false);
 		}
 
 		// 플레이어 체력 라벨을 업데이트 한다.
-		static int32_t prevHp = mHeroHpValue;
+		static int32_t prevHp = mHero.hp;
 
-		if (prevHp != mHeroHpValue)
+		if (prevHp != mHero.hp)
 		{
 			mHeroSound.Replay();
 
-			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHeroHpValue) + L" / " + std::to_wstring(HERO_MAX_HP));
+			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHero.hp) + L" / " + std::to_wstring(HERO_MAX_HP));
 
-			prevHp = mHeroHpValue;
+			prevHp = mHero.hp;
 		}
 
 		// 플레이어 체력바를 업데이트한다.
 		D2D1_POINT_2F scale = { mUiHpBar.GetScale().width, mUiHpBar.GetScale().height };
 		scale = Math::LerpVector(scale,
-			{ UI_HP_SCALE_WIDTH * (float(mHeroHpValue) / float(HERO_MAX_HP)), scale.y },
+			{ UI_HP_SCALE_WIDTH * (float(mHero.hp) / float(HERO_MAX_HP)), scale.y },
 			10.0f * deltaTime);
 		mUiHpBar.SetScale({ scale.x, scale.y });
 	}
@@ -1693,7 +1698,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 타이머 라벨을 업데이트한다.
 	{
-		if (mHeroHpValue > 0)
+		if (mHero.hp > 0)
 		{
 			mGameTimer += deltaTime;
 		}
@@ -1708,27 +1713,27 @@ bool MainScene::Update(const float deltaTime)
 	// 충돌 처리를 업데이트한다.
 	{
 		// 플레이어와 원의 충돌을 한다.
-		if (not Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mHero), {}, BOUNDARY_RADIUS))
+		if (not Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mHero.sprite), {}, BOUNDARY_RADIUS))
 		{
-			mHeroVelocity = {};
+			mHero.velocity = {};
 
-			D2D1_POINT_2F heroPosition = mHero.GetPosition();
+			D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 			const D2D1_POINT_2F direction = Math::NormalizeVector(heroPosition);
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, -2.0f));
-			mHero.SetPosition(heroPosition);
+			mHero.sprite.SetPosition(heroPosition);
 		}
 
-		const float offset = IN_BOUNDARY_RADIUS + mHero.GetScale().height * mPinkRectangleTexture.GetHeight();
-		if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mHero), {}, offset))
+		const float offset = IN_BOUNDARY_RADIUS + mHero.sprite.GetScale().height * mPinkRectangleTexture.GetHeight();
+		if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mHero.sprite), {}, offset))
 		{
-			mHeroVelocity = {};
+			mHero.velocity = {};
 
-			D2D1_POINT_2F heroPosition = mHero.GetPosition();
+			D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 			const D2D1_POINT_2F direction = Math::NormalizeVector(heroPosition);
 
 			heroPosition = Math::AddVector(heroPosition, Math::ScaleVector(direction, 2.0f));
-			mHero.SetPosition(heroPosition);
+			mHero.sprite.SetPosition(heroPosition);
 		}
 
 		// 총알과 원이 충돌한다.
@@ -1763,52 +1768,20 @@ bool MainScene::Update(const float deltaTime)
 
 		constexpr float DAMAGE_COOL_TIMER = 0.05f;
 
-		//for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		//{
-		//	Monster& monster = mMonsters[i];
-		//	Sprite& monsterSprite = monster.sprite;
+		for (Monster& monster : mMonsters)
+		{
+			Sprite& sprite = monster.sprite;
+			if (not sprite.IsActive())
+			{
+				continue;
+			}
 
-		//	if (not monsterSprite.IsActive())
-		//	{
-		//		continue;
-		//	}
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
 
-		//	if (monster.state != eMonster_State::Life)
-		//	{
-		//		continue;
-		//	}
-
-		//	// 몬스터와 플레이어 충돌을 검사한다.
-		//	monster.playerDistance = 999.9f;
-
-		//	if (Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero), getRectangleFromSprite(monsterSprite)))
-		//	{
-		//		const float playerDistance = Math::GetVectorLength(Math::SubtractVector(monster.prevPosition, mHero.GetPosition()));
-		//		if (playerDistance < monster.playerDistance)
-		//		{
-		//			mHeroHpValue -= MONSTER_ATTACK_VALUE;
-		//			monster.hp -= PLAYER_ATTACK_VALUE * 2;
-
-		//			monster.playerDistance = playerDistance;
-		//		}
-		//	}
-
-		//	
-		//	// 몬스터와 내부 원 충돌을 검사한다.
-		//	monster.inBoundryDistance = 999.9f;
-
-		//	if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monsterSprite), {}, IN_BOUNDARY_RADIUS))
-		//	{
-		//		const float inDistance = Math::GetVectorLength(Math::SubtractVector(monster.prevPosition, {}));
-		//		if (inDistance < monster.inBoundryDistance)
-		//		{
-		//			mHeroHpValue -= MONSTER_ATTACK_VALUE;
-		//			monster.hp -= PLAYER_ATTACK_VALUE * 2;
-
-		//			monster.inBoundryDistance = inDistance;
-		//		}			
-		//	}
-		//}
+		}
 
 		//for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		//{
@@ -2055,7 +2028,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].sprite), mHero.sprite.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				mMonsters[i].hp = 0;
 			}
@@ -2072,7 +2045,7 @@ bool MainScene::Update(const float deltaTime)
 			Monster& runMonster = mRunMonsters[i];
 			Sprite& runMonsterSprite = runMonster.sprite;
 
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonsterSprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(runMonsterSprite), mHero.sprite.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				runMonster.hp = 0;
 			}
@@ -2086,7 +2059,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].sprite), mHero.GetPosition(), mShieldScale.width * 0.5f))
+			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].sprite), mHero.sprite.GetPosition(), mShieldScale.width * 0.5f))
 			{
 				mSlowMonsters[i].hp = 0;
 			}
@@ -2100,7 +2073,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].sprite), center, mOrbitEllipse.radiusX))
 			{
 				mMonsters[i].hp = 0;
@@ -2114,7 +2087,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mRunMonsters[i].sprite), center, mOrbitEllipse.radiusX))
 			{
 				mRunMonsters[i].hp = 0;
@@ -2128,7 +2101,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.GetPosition());
+			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
 			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].sprite), center, mOrbitEllipse.radiusX))
 			{
 				mSlowMonsters[i].hp = 0;
@@ -2139,7 +2112,7 @@ bool MainScene::Update(const float deltaTime)
 	// 카메라를 업데이트한다.
 	{
 		D2D1_POINT_2F position = mMainCamera.GetPosition();
-		const D2D1_POINT_2F heroPosition = mHero.GetPosition();
+		const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
 		position = Math::LerpVector(position, heroPosition, 8.0f * deltaTime);
 
 		if (mCameraShakeAmplitude > 0.0f)
@@ -2160,7 +2133,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Hero 쉴드 스킬을 그린다.
 	{
-		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
+		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.sprite.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
 		const D2D1_ELLIPSE ellipse =
@@ -2178,7 +2151,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Hero 공전 스킬을 그린다.
 	{
-		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.GetPosition()) * view;
+		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.sprite.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
 		if (mOrbitState == eOrbit_State::Rotating

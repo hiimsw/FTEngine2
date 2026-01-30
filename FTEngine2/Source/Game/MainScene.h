@@ -42,6 +42,13 @@ struct GizmoLine
 	D2D1_POINT_2F point1;
 };
 
+struct Player
+{
+	Sprite sprite;
+	D2D1_POINT_2F velocity;
+	int32_t hp;
+};
+
 struct Monster
 {
 	Sprite sprite;
@@ -210,9 +217,8 @@ private:
 	// 플레이어
 	static constexpr uint32_t HERO_MAX_HP = 1500;
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
-	Sprite mHero{};
-	D2D1_POINT_2F mHeroVelocity{};
-	int32_t mHeroHpValue = HERO_MAX_HP;
+
+	Player mHero{};
 	Sound mHeroSound{};
 
 	// 플레이어 줌
