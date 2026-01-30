@@ -68,7 +68,7 @@ namespace Collision
 		Line leftLine =
 		{
 			.Point0 = {.x = rect.left, .y = rect.top },
-			.Point1 = {.x = rect.right, .y = rect.bottom },
+			.Point1 = {.x = rect.left, .y = rect.bottom },
 		};
 
 		Line topLine =
@@ -90,9 +90,9 @@ namespace Collision
 		};
 
 		const bool result = IsCollidedCircleWithLine(center, radius, leftLine)
-			or IsCollidedCircleWithLine(center, radius, topLine)
-			or IsCollidedCircleWithLine(center, radius, rightLine)
-			or IsCollidedCircleWithLine(center, radius, bottomLine);
+			and IsCollidedCircleWithLine(center, radius, topLine)
+			and IsCollidedCircleWithLine(center, radius, rightLine)
+			and IsCollidedCircleWithLine(center, radius, bottomLine);
 
 		return result;
 	}
@@ -125,7 +125,7 @@ namespace Collision
 
 		const D2D1_POINT_2F diff = Math::SubtractVector(center, dPoint);
 		
-		bool result = (diff.x * diff.x + diff.y + diff.y) <= (radius * radius);
+		bool result = Math::DotProduct2D(diff, diff) <= (radius * radius);
 
 		return result;
 	}
