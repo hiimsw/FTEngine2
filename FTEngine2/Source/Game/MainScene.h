@@ -299,6 +299,8 @@ private:
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
 
+	static constexpr float MONSTER_DIE_EFFECT_TIME = 0.2f;
+
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
 	bool mIsMonsterHp[MONSTER_COUNT]{};
@@ -313,6 +315,8 @@ private:
 	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
+
+	static constexpr float RUN_MONSTER_DIE_EFFECT_TIME = 0.5f;
 
 	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
 	float mRunMonsterSpawnTimer{};
@@ -331,11 +335,13 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
 	static constexpr uint32_t SLOW_MONSTER_MAX_HP = 10;
+
+	static constexpr float SLOW_MONSTER_DIE_EFFECT_TIME = 0.5f;
 
 	Monster mSlowMonsters[SLOW_MONSTER_COUNT]{};
 	float mSlowMonsterSpawnTimer{};
@@ -348,6 +354,9 @@ private:
 
 	D2D1_POINT_2F mSlowMonsterStartPositions[SLOW_MONSTER_COUNT]{};
 	D2D1_POINT_2F mSlowMonsterEndPositions[SLOW_MONSTER_COUNT]{};
+
+	// 이펙트 관련
+	BulletEffect mSlowMonsterToBulletEffects[SLOW_MONSTER_COUNT]{};
 
 	Sound mSlowMonsterDeadSound{};
 
