@@ -153,6 +153,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.hp = MONSTER_MAX_HP;
+			monster.collisionState = eCollision_State::None;
 
 			Sprite& sprite = monster.sprite;
 			sprite.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
@@ -191,6 +192,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Dead;
 			monster.hp = RUN_MONSTER_MAX_HP;
+			monster.collisionState = eCollision_State::None;
 
 			Sprite& sprite = monster.sprite;
 			sprite.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
@@ -233,6 +235,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Dead;
 			monster.hp = SLOW_MONSTER_MAX_HP;
+			monster.collisionState = eCollision_State::None;
 
 			Sprite& sprite = monster.sprite;
 			sprite.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
@@ -1025,7 +1028,7 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 몬스터를 업데이트한다.
-	{
+	{				
 		// 일반 몬스터를 일정 시간마다 스폰한다.
 		mMonsterSpawnTimer += deltaTime;
 		if (mMonsterSpawnTimer >= 0.5f)
@@ -1034,6 +1037,8 @@ bool MainScene::Update(const float deltaTime)
 			{
 				if (monster.sprite.IsActive())
 				{
+					monster.backgroundHpBar.SetActive(true);
+					monster.hpBar.SetActive(true);
 					continue;
 				}
 
@@ -1041,14 +1046,12 @@ bool MainScene::Update(const float deltaTime)
 					{
 						.monster = &monster,
 						.scale {.width = MONSTER_SCALE , .height = MONSTER_SCALE },
-						.hpOffset { 3.0f, 10.0f },
 						.maxHp = MONSTER_MAX_HP
 					}
 				);
 
 				monster.moveSpeed = getRandom(10.0f, 80.0f);
 				mMonsterSpawnTimer = 0.0f;
-
 				break;
 			}
 		}
@@ -1066,16 +1069,11 @@ bool MainScene::Update(const float deltaTime)
 					.monster = &monster,
 					.originalScale { MONSTER_SCALE, MONSTER_SCALE },
 					.effectScale{ 3.0f, 3.0f },
-					.time = 1.0f,
+					.time = 0.3f,
 					.deltaTime = deltaTime
 				}
 			);
 
-			if (monster.sprite.GetScale().width <= MONSTER_SCALE)
-			{
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-			}
 		}
 
 		// 몬스터를 이동시킨다.
@@ -1117,11 +1115,16 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
-		constexpr float TIME = 0.5f;
-
+		constexpr float TIME = 0.2f;
+		
 		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mMonsters[i];
+			if (monster.state == eMonster_State::Dead)
+			{
+				continue;
+			}
+
 			if (not monster.isBulletColliding)
 			{
 				continue;
@@ -1153,34 +1156,27 @@ bool MainScene::Update(const float deltaTime)
 			break;
 		}
 
-		// 몬스터의 체력을 업데이트를 한다.
 		for (Monster& monster : mMonsters)
 		{
-			if (monster.state != eMonster_State::Life)
-			{
-				continue;
-			}
-
+			// 체력바를 업데이트한다.
 			UpdateMonsterHp(&monster, MONSTER_HP_BAR_WIDTH, MONSTER_MAX_HP, deltaTime);
-		}
 
-		// 몬스터가 죽으면 이펙트가 생성된다.
-		for (Monster& monster : mMonsters)
-		{
-			if (monster.state != eMonster_State::Life)
+			// 몬스터가 죽으면 이펙트가 생성된다.
+			if (monster.hp <= 0
+				and monster.state == eMonster_State::Life)
 			{
-				continue;
+				monster.state == eMonster_State::Dead;
 			}
 
 			MonsterDeadEffect(
-			{
-				.monster = &monster,
-				.sound = &mMonsterDeadSound,
-				.startScale = {.width = MONSTER_SCALE, .height = MONSTER_SCALE },
-				.endScale = {.width = 0.1f, .height = 0.1f },
-				.time = 0.5f,
-				.deltaTime = deltaTime
-			}
+				{
+					.monster = &monster,
+					.sound = &mMonsterDeadSound,
+					.startScale = {.width = 3.0f, .height = 3.0f },
+					.endScale = {.width = 0.1f, .height = 0.1f },
+					.time = 0.2f,
+					.deltaTime = deltaTime
+				}
 			);
 		}
 	}
@@ -1205,7 +1201,7 @@ bool MainScene::Update(const float deltaTime)
 					{
 						.monster = &monster,
 						.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
-						.hpOffset { 0.0f, -10.0f },
+						/*.hpOffset { 0.0f, -10.0f },*/
 						.maxHp = RUN_MONSTER_MAX_HP
 					}
 				);
@@ -1312,23 +1308,17 @@ bool MainScene::Update(const float deltaTime)
 			monster.hpBar.SetPosition(offset);
 		}
 
-		// 몬스터의 체력을 업데이트를 한다.
 		for (Monster& monster : mRunMonsters)
 		{
-			if (monster.state != eMonster_State::Life)
-			{
-				continue;
-			}
-
+			// 체력바를 업데이트한다.
 			UpdateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
-		}
 
-		// 몬스터가 죽으면 이펙트가 생성된다.
-		for (Monster& monster : mRunMonsters)
-		{
-			if (monster.state != eMonster_State::Life)
+
+			// 몬스터가 죽으면 이펙트가 생성된다.
+			if (monster.hp <= 0
+				and monster.state == eMonster_State::Life)
 			{
-				continue;
+				monster.state == eMonster_State::Dead;
 			}
 
 			MonsterDeadEffect(
@@ -1337,7 +1327,7 @@ bool MainScene::Update(const float deltaTime)
 					.sound = &mRunMonsterDeadSound,
 					.startScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
 					.endScale = {.width = 0.1f, .height = 0.1f },
-					.time = 0.5f,
+					.time = 0.1f,
 					.deltaTime = deltaTime
 				}
 			);
@@ -1396,7 +1386,7 @@ bool MainScene::Update(const float deltaTime)
 						{
 							.monster = &monster,
 							.scale {.width = SLOW_MONSTER_SCALE , .height = SLOW_MONSTER_SCALE },
-							.hpOffset {20.0f, -10.0f },
+							/*.hpOffset {20.0f, -10.0f },*/
 							.maxHp = SLOW_MONSTER_MAX_HP
 						}
 					);
@@ -1446,14 +1436,7 @@ bool MainScene::Update(const float deltaTime)
 					}
 				);
 
-				DEBUG_LOG("%f", monster.sprite.GetScale().width);
-
-				if (monster.sprite.GetScale().width <= 0.9f)
-				{
-					mSlowMonsterState[i] = eSlow_Monster_State::Stop;
-					monster.backgroundHpBar.SetActive(true);
-					monster.hpBar.SetActive(true);
-				}
+				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
 			}
 
 			// 느린 몬스터와 그림자가 이동한다.
@@ -1507,6 +1490,9 @@ bool MainScene::Update(const float deltaTime)
 
 				case eSlow_Monster_State::Stop:
 				{
+					monster.backgroundHpBar.SetActive(true);
+					monster.hpBar.SetActive(true);
+
 					mSlowMonsterStopTimers[i] += deltaTime;
 
 					if (mSlowMonsterStopTimers[i] >= STOP_TIME)
@@ -1626,7 +1612,7 @@ bool MainScene::Update(const float deltaTime)
 						.sound = &mSlowMonsterDeadSound,
 						.startScale = {.width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE },
 						.endScale = {.width = 0.1f, .height = 0.1f },
-						.time = 0.3f,
+						.time = 0.1f,
 						.deltaTime = deltaTime
 					}
 				);
@@ -1754,23 +1740,26 @@ bool MainScene::Update(const float deltaTime)
 				.Point1 = endPosition
 			};
 
-			if (not Collision::IsCollidedCircleWithLine({}, BOUNDARY_RADIUS, line))
+			bool isBoundryToBullet = Collision::IsCollidedCircleWithLine({}, BOUNDARY_RADIUS, line);
+			if (not isBoundryToBullet)
 			{
 				sprite.SetActive(false);
 			}
 
 			const float offset = IN_BOUNDARY_RADIUS + sprite.GetScale().height * mRedRectangleTexture.GetHeight();
-			if (Collision::IsCollidedCircleWithLine({}, offset, line))
+			bool isInBoundryToBullet = Collision::IsCollidedCircleWithLine({}, offset, line);
+			if (isInBoundryToBullet)
 			{
 				sprite.SetActive(false);
 			}
 		}
 
-		constexpr float DAMAGE_COOL_TIMER = 0.05f;
-
-		for (Monster& monster : mMonsters)
+		static bool isCollision[MONSTER_COUNT];
+		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
 		{
+			Monster& monster = mMonsters[i];
 			Sprite& sprite = monster.sprite;
+
 			if (not sprite.IsActive())
 			{
 				continue;
@@ -1781,6 +1770,30 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
+			// 몬스터 - 내부 바운더리
+			{
+				const float offset = IN_BOUNDARY_RADIUS + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+				const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), {}, offset);
+				updateCollision(isCollision, monster.collisionState);
+
+				if (monster.collisionState == eCollision_State::Enter)
+				{
+					mHero.hp -= MONSTER_ATTACK_VALUE;
+					monster.hp -= PLAYER_ATTACK_VALUE * 2;
+				}
+			}
+
+			// 몬스터 - 플레이어
+			{
+				const bool isCollision = Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero.sprite), getRectangleFromSprite(monster.sprite));
+				updateCollision(isCollision, monster.collisionState);
+
+				if (monster.collisionState == eCollision_State::Enter)
+				{
+					mHero.hp -= MONSTER_ATTACK_VALUE;
+					monster.hp -= PLAYER_ATTACK_VALUE * 2;
+				}
+			}
 		}
 
 		//for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
@@ -2472,12 +2485,15 @@ void MainScene::SpawnMonster(const MonsterSpawnDesc& desc)
 {
 	Monster* monster = desc.monster;
 	D2D1_SIZE_F scale = desc.scale;
-	D2D1_POINT_2F hpOffset = desc.hpOffset;
 	int32_t maxHp = desc.maxHp;
 
 	// 초기 정보를 업데이트한다.
 	monster->state = eMonster_State::Spawn;
 	monster->hp = maxHp;
+	monster->collisionState = eCollision_State::None;
+
+	monster->backgroundHpBar.SetActive(false);
+	monster->hpBar.SetActive(false);
 
 	constexpr float MIN_ANGLE = 0.0f;
 	constexpr float MAX_ANGLE = 2.0f * Math::PI;
@@ -2496,24 +2512,6 @@ void MainScene::SpawnMonster(const MonsterSpawnDesc& desc)
 	sprite.SetPosition(spawnPosition);
 	sprite.SetScale(scale);
 	sprite.SetActive(true);
-
-	// hp를 좌표를 업데이트한다.
-	{
-		const D2D1_SIZE_F scaleOffset =
-		{
-			.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
-			.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
-		};
-
-		const D2D1_POINT_2F offset =
-		{
-			.x = spawnPosition.x - scaleOffset.width + hpOffset.x,
-			.y = spawnPosition.y - scaleOffset.height - hpOffset.y
-		};
-
-		monster->backgroundHpBar.SetPosition(offset);
-		monster->hpBar.SetPosition(offset);
-	}
 }
 
 void MainScene::UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc)
@@ -2524,18 +2522,28 @@ void MainScene::UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc)
 	const float time = desc.time;
 	const float deltaTime = desc.deltaTime;
 
-	monster->spawnEffectTimer += desc.deltaTime;
-	float t = monster->spawnEffectTimer / time;
-	t = std::clamp(t, 0.0f, 1.0f);
+	monster->spawnStartEffectTimer += desc.deltaTime;
+	float startT = monster->spawnStartEffectTimer / time;
+	startT = std::clamp(startT, 0.0f, 1.0f);
+	D2D1_POINT_2F scale = Math::LerpVector({ monster->sprite.GetScale().width, monster->sprite.GetScale().height}, { effectScale.width, effectScale.height}, startT);
 
-	D2D1_POINT_2F scale = Math::LerpVector({ effectScale.width, effectScale.height }, { originalScale.width, originalScale.height }, t);
-	monster->sprite.SetScale({ scale.x, scale.y });
+	if (startT >= 1.0f)
+	{
+		monster->spawnStartEffectTimer = 0.0f;
+	}
 
-	if (t >= 1.0f)
+	monster->spawnEndEffectTimer += desc.deltaTime;
+	float endT = monster->spawnEndEffectTimer / time;
+	endT = std::clamp(endT, 0.0f, 1.0f);
+	scale = Math::LerpVector({ scale.x, scale.y }, { originalScale.width, originalScale.height }, endT);
+
+	if (endT >= 1.0f)
 	{
 		monster->state = eMonster_State::Life;
-		monster->spawnEffectTimer = 0.0f;
+		monster->spawnEndEffectTimer = 0.0f;
 	}
+
+	monster->sprite.SetScale({ scale.x, scale.y });
 }
 
 void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime)
@@ -2566,9 +2574,10 @@ void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 		initializeCameraShake(amplitude, duration, frequency);
 
 		monster->hp = 0;
-		monster->state == eMonster_State::Dead;
-
 		sound->Replay();
+
+		monster->backgroundHpBar.SetActive(false);
+		monster->hpBar.SetActive(false);
 
 		monster->deadEffectTimer += deltaTime;
 
@@ -2581,11 +2590,47 @@ void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 		if (t >= 1.0f)
 		{
 			monster->sprite.SetActive(false);
-
-			monster->backgroundHpBar.SetActive(false);
-			monster->hpBar.SetActive(false);
-
 			monster->deadEffectTimer = 0.0f;
+		}
+	}
+}
+
+void MainScene::updateMonsterCollision(Monster* monster, Player* player, const float deltaTime)
+{
+	ASSERT(monster != nullptr);
+	ASSERT(player != nullptr);
+
+	// 몬스터와 플레이어 충돌을 검사한다.
+	{
+	}
+
+	// 몬스터와 내부 원 충돌을 검사한다.
+	{
+	}
+}
+
+void MainScene::updateCollision(const bool isCollision, eCollision_State& state)
+{
+	if (isCollision)
+	{
+		if (state == eCollision_State::None or state == eCollision_State::Exit)
+		{
+			state = eCollision_State::Enter;
+		}
+		else
+		{
+			state = eCollision_State::Stay;
+		}
+	}
+	else
+	{
+		if (state == eCollision_State::Enter or state == eCollision_State::Stay)
+		{
+			state = eCollision_State::Exit;
+		}
+		else
+		{
+			state = eCollision_State::None;
 		}
 	}
 }

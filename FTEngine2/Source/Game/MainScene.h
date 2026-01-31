@@ -36,6 +36,14 @@ enum class eMonster_State
 	Dead
 };
 
+enum class eCollision_State
+{
+	None,
+	Enter,
+	Stay,
+	Exit
+};
+
 struct GizmoLine
 {
 	D2D1_POINT_2F point0;
@@ -55,13 +63,14 @@ struct Monster
 	eMonster_State state;
 
 	// 충돌 관련
-	float boundryDistance;
-	float inBoundryDistance;
-	float playerDistance;
+	eCollision_State collisionState;
+	bool isPlayerCollision;
+	bool isInBoundryCollision;
 
 	bool isBulletColliding;
 
-	float spawnEffectTimer;
+	float spawnStartEffectTimer;
+	float spawnEndEffectTimer;
 	float bulletEffectTimer;
 	float deadEffectTimer;
 	float moveSpeed;
@@ -98,7 +107,6 @@ struct MonsterSpawnDesc
 	Monster* monster;
 	const D2D1_SIZE_F scale;
 	const D2D1_SIZE_F hitEffect;
-	const D2D1_POINT_2F hpOffset;
 	const int32_t maxHp;
 };
 
@@ -159,6 +167,8 @@ private:
 	void UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc);
 	void UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
 	void MonsterDeadEffect(const MonsterDeadSoundDesc& desc);
+	void updateMonsterCollision(Monster* monster, Player* player, const float deltaTime);
+	void updateCollision(const bool isCollision, eCollision_State& state);
 
 private:
 	Texture mRectangleTexture{};
@@ -289,15 +299,16 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 1;
+	static constexpr uint32_t MONSTER_COUNT = 10;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
 
 	Monster mMonsters[MONSTER_COUNT]{};
 	float mMonsterSpawnTimer{};
+	bool mIsMonsterHp[MONSTER_COUNT]{};
 
-	static constexpr D2D1_SIZE_F MONSTER_TO_BULLET_EFFECT_SCALE = { 1.0f, 50.0f };
+	static constexpr D2D1_SIZE_F MONSTER_TO_BULLET_EFFECT_SCALE = { 1.2f, 50.0f };
 	Sprite mMonsterToBulletEffects[MONSTER_COUNT]{};
 	float mMonsterToBulletEffectsTimers[MONSTER_COUNT]{};
 
