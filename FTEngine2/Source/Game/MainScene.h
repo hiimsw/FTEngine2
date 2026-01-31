@@ -71,7 +71,6 @@ struct Monster
 
 	float spawnStartEffectTimer;
 	float spawnEndEffectTimer;
-	float bulletEffectTimer;
 	float deadEffectTimer;
 	float moveSpeed;
 
@@ -98,6 +97,7 @@ struct Casing
 
 struct BulletEffect
 {
+	float timer;
 	D2D1_POINT_2F thick;
 	D2D1_SIZE_F scale;
 };
@@ -195,15 +195,10 @@ private:
 	std::vector<Label*> mLabels{};
 
 	// 공용
-	static constexpr float TEST_RADIUS = 5.0f;
-
 	static constexpr float IN_BOUNDARY_RADIUS = 60.0f;
 	static constexpr float BOUNDARY_RADIUS = 500.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
-
-	static constexpr float START_LERP_TIME = 0.2f;
-	static constexpr float DURING_TIME = 0.3f;
 
 	static constexpr uint32_t SHADOW_COUNT = 40;
 
@@ -299,7 +294,7 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 10;
+	static constexpr uint32_t MONSTER_COUNT = 1;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;

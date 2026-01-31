@@ -1327,46 +1327,50 @@ bool MainScene::Update(const float deltaTime)
 					.sound = &mRunMonsterDeadSound,
 					.startScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
 					.endScale = {.width = 0.1f, .height = 0.1f },
-					.time = 0.1f,
+					.time = 0.5f,
 					.deltaTime = deltaTime
 				}
 			);
 		}
 
 
-	//	// 돌진 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
-	//	for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
-	//	{
-	//		Monster& runMonster = mRunMonsters[i];
-	//		Sprite& runMonsterSprite = runMonster.Sprite;
+		// 돌진 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		{
+			Monster& monster = mRunMonsters[i];
+			//if (monster.state == eMonster_State::Dead)
+			//{
+			//	continue;
+			//}
 
-	//		if (not runMonster.IsBulletColliding)
-	//		{
-	//			continue;
-	//		}
+			if (not monster.isBulletColliding)
+			{
+				continue;
+			}
 
-	//		runMonster.BulletEffectTimer += deltaTime;
+			BulletEffect& effect = mRunMonsterToBulletEffects[i];
 
-	//		// 크기를 보간한다.
-	//		D2D1_POINT_2F scale = { runMonster.BulletEffectScale.width, runMonster.BulletEffectScale.height };
-	//		scale = Math::LerpVector(scale, { 60.0f , 60.0f }, 5.0f * deltaTime);
-	//		runMonster.BulletEffectScale = { scale.x, scale.y };
+			effect.timer += deltaTime;
 
-	//		// 두께를 보간한다.
-	//		runMonster.BulletThick = { .x = 15.0f, .y = 15.0f };
-	//		float t = (runMonster.BulletEffectTimer - START_LERP_TIME) / DURING_TIME;
-	//		t = std::clamp(t, 0.0f, 1.0f);
-	//		runMonster.BulletThick = Math::LerpVector(runMonster.BulletThick, { 0.1f , 0.1f }, t);
+			// 크기를 보간한다.
+			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
+			scale = Math::LerpVector(scale, { 80.0f , 80.0f }, 5.0f * deltaTime);
+			effect.scale = { scale.x, scale.y };
 
-	//		if (t >= 1.0f)
-	//		{
-	//			runMonster.IsBulletColliding = false;
-	//			runMonster.BulletEffectTimer = 0.0f;
-	//		}
+			// 두께를 보간한다.
+			effect.thick = { .x = 50.0f, .y = 50.0f };
+			float t = effect.timer / 0.5f;
+			t = std::clamp(t, 0.0f, 1.0f);
+			effect.thick = Math::LerpVector(effect.thick, { 0.1f , 0.1f }, t);
 
-	//		break;
-	//	}
+			if (t >= 1.0f)
+			{
+				monster.isBulletColliding = false;
+				effect.timer = 0.0f;
+			}
 
+			break;
+		}
 
 	// 느린 몬스터를 업데이트한다.
 		{
@@ -2190,7 +2194,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				Transformation::getWorldMatrix(
 					{ 
 						.x = sprite.GetPosition().x, 
-						.y = sprite.GetPosition().y + 35.0f 
+						.y = sprite.GetPosition().y + 50.0f 
 					}, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
