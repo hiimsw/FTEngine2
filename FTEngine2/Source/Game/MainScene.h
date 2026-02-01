@@ -60,6 +60,34 @@ struct Player
 	int32_t prevHp;
 };
 
+struct Shield
+{
+	eShield_State state;
+	D2D1_SIZE_F scale;
+	float speed;
+
+	float labelCoolTimer;
+
+	float waitingTimer;
+	bool isBlinkOn;
+	float blinkTimer;
+	float coolTimer;
+};
+
+struct Orbit
+{
+	D2D1_ELLIPSE ellipse;
+	eOrbit_State state;
+	float angle;
+
+	float labelCoolTimer;
+
+	float rotatingTimer;
+	bool isBlinkOn;
+	float blinkTimer;
+	float coolTimer;
+};
+
 struct Monster
 {
 	Sprite sprite;
@@ -214,6 +242,7 @@ private:
 
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	ID2D1SolidColorBrush* mYellowBrush = nullptr;
+	ID2D1SolidColorBrush* mOrange = nullptr;
 	ID2D1SolidColorBrush* mCyanBrush = nullptr;
 	ID2D1SolidColorBrush* mDarkGreen = nullptr;
 
@@ -262,19 +291,11 @@ private:
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
 	static constexpr float SHELD_MAX_RADIUS = 150.0f;
 
-	eShield_State mShieldState = eShield_State::End;
-	D2D1_SIZE_F mShieldScale = { .width = SHELD_MIN_RADIUS, .height = SHELD_MIN_RADIUS };
-	float mShieldTotalElapsedTimer{};
-	bool mShieldBlinkOn = false;
-
+	Shield mShield{};
 	Sound mShieldSound{};
 
 	// 플레이어 공전 스킬
-	D2D1_ELLIPSE mOrbitEllipse{};
-	eOrbit_State mOrbitState = eOrbit_State::End;
-	float mOrbitAngle{};
-	bool mOrbitBlinkOn = false;
-
+	Orbit mOrbit{};
 	Sound mOrbitSound{};
 
 	// UI
@@ -293,6 +314,9 @@ private:
 
 	Label mShieldLabel{};
 	Label mShieldKeyLabel{};
+
+	Label mOrbitLabel{};
+	Label mOrbitKeyLabel{};
 
 	Font mTimerFont{};
 	Label mTimerLabel{};

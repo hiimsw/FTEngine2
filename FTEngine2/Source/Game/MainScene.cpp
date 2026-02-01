@@ -36,6 +36,7 @@ void MainScene::Initialize()
 		ID2D1HwndRenderTarget* renderTarget = GetHelper()->GetRenderTarget();
 		HR(renderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &mDefaultBrush));
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Yellow), &mYellowBrush));
+		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Orange), &mOrange));
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Cyan), &mCyanBrush));
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::DarkGreen), &mDarkGreen));
 
@@ -152,14 +153,19 @@ void MainScene::Initialize()
 		}
 	}
 
+	// 쉴드 스킬을 초기화한다.
+	mShield.state = eShield_State::End;
+
 	// 공전 스킬을 초기화한다.
 	{
-		mOrbitEllipse =
+		mOrbit.ellipse =
 		{
 			.point = {.x = 0.0f, .y = 160.0f },
 			.radiusX = 20.0f,
 			.radiusY = 20.0f,
 		};
+
+		mOrbit.state = eOrbit_State::End;
 	}
 
 	// 몬스터를 초기화한다.
@@ -405,20 +411,6 @@ void MainScene::Initialize()
 			mLabels.push_back(&mHpValueLabel);
 		}
 
-		// 쉴드 쿨 타이머
-		{
-			mShieldLabel.SetFont(&mDefaultFont);
-			mShieldLabel.SetUI(true);
-
-			const D2D1_POINT_2F position = mUiBackgroundDashBar.GetPosition();
-			float barOffsetX = mUiBackgroundDashBar.GetScale().width * mWhiteBarTexture.GetWidth();
-			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 65.0f, .y = position.y };
-			mShieldLabel.SetPosition(offset);
-
-			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
-			mLabels.push_back(&mShieldLabel);
-		}
-
 		// 총알 개수
 		{
 			mBulletLabel.SetFont(&mBulletFont);
@@ -434,7 +426,34 @@ void MainScene::Initialize()
 			mLabels.push_back(&mBulletLabel);
 		}
 
-		// 키 설명
+		// 쉴드 쿨 타이머
+		{
+			mShieldLabel.SetFont(&mDefaultFont);
+			mShieldLabel.SetUI(true);
+
+			const D2D1_POINT_2F position = mUiBackgroundDashBar.GetPosition();
+			float barOffsetX = mUiBackgroundDashBar.GetScale().width * mWhiteBarTexture.GetWidth();
+			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 65.0f, .y = position.y };
+			mShieldLabel.SetPosition(offset);
+
+			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mShieldLabel);
+		}
+
+		// 공전 쿨 타이머
+		{
+			mOrbitLabel.SetFont(&mDefaultFont);
+			mOrbitLabel.SetUI(true);
+
+			const D2D1_POINT_2F position = mShieldLabel.GetPosition();
+			const D2D1_POINT_2F offset = { .x = position.x + 70.0f, .y = position.y };
+			mOrbitLabel.SetPosition(offset);
+
+			mOrbitLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mOrbitLabel);
+		}
+
+		// 쉴드 키 설명
 		{
 			mShieldKeyLabel.SetFont(&mDefaultFont);
 			mShieldKeyLabel.SetUI(true);
@@ -445,10 +464,22 @@ void MainScene::Initialize()
 			mShieldKeyLabel.SetPosition(offset);
 
 			mShieldKeyLabel.SetText(L"E");
-			mShieldKeyLabel.SetActive(true);
-
 			mShieldKeyLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 			mLabels.push_back(&mShieldKeyLabel);
+		}
+
+		// 공전 키 설명
+		{
+			mOrbitKeyLabel.SetFont(&mDefaultFont);
+			mOrbitKeyLabel.SetUI(true);
+
+			const D2D1_POINT_2F position = mShieldKeyLabel.GetPosition();
+			const D2D1_POINT_2F offset = { .x = position.x + 68.0f, .y = position.y + 3.0f };
+			mOrbitKeyLabel.SetPosition(offset);
+
+			mOrbitKeyLabel.SetText(L"Q");
+			mOrbitKeyLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mOrbitKeyLabel);
 		}
 
 		// 엔딩
@@ -885,47 +916,48 @@ bool MainScene::Update(const float deltaTime)
 
 		// 쉴드 키를 업데이트한다.
 		{
-			static float speed;
-			static float shieldTimer;
-			static float shieldCoolTimer;
-			constexpr float SHIELD_SKILL_DURATION = 3.0f;
-			static float blinkTimer;
-
-			if (mShieldState == eShield_State::End
+			if (mShield.state == eShield_State::End
 				and Input::Get().GetKeyDown('E'))
 			{
 				mShieldSound.Replay();
 
 				mShieldLabel.SetActive(true);
-				mShieldState = eShield_State::Growing;
+				mShield.state = eShield_State::Growing;
 			}
 
-			mShieldTotalElapsedTimer += deltaTime;
-			const uint32_t seconds = uint32_t(mShieldTotalElapsedTimer) % 60;
-
-			if (mShieldState != eShield_State::End)
+			// 쿨타임을 표시한다.
 			{
-				mShieldLabel.SetText(std::to_wstring(8 - seconds));
-			}
-			else
-			{
-				mShieldLabel.SetActive(false);
+				mShield.labelCoolTimer += deltaTime;
+				const uint32_t seconds = uint32_t(mShield.labelCoolTimer) % 60;
+
+				if (mShield.state != eShield_State::End)
+				{
+					mShieldKeyLabel.SetActive(false);
+					mShieldLabel.SetText(std::to_wstring(8 - seconds));
+				}
+				else
+				{
+					mShieldKeyLabel.SetActive(true);
+					mShieldLabel.SetActive(false);
+				}
 			}
 
-			switch (mShieldState)
+			constexpr float SHIELD_SKILL_DURATION = 3.0f;
+
+			switch (mShield.state)
 			{
 			case eShield_State::Growing:
 			{
 				mShieldKeyLabel.SetActive(false);
 
-				speed = 50.0f;
+				mShield.speed = 50.0f;
 
-				mShieldScale.width += speed * deltaTime;
-				mShieldScale.height += speed * deltaTime;
+				mShield.scale.width += mShield.speed * deltaTime;
+				mShield.scale.height += mShield.speed * deltaTime;
 
-				if (mShieldScale.width >= SHELD_MAX_RADIUS)
+				if (mShield.scale.width >= SHELD_MAX_RADIUS)
 				{
-					mShieldState = eShield_State::Waiting;
+					mShield.state = eShield_State::Waiting;
 				}
 
 				break;
@@ -933,37 +965,37 @@ bool MainScene::Update(const float deltaTime)
 
 			case eShield_State::Waiting:
 			{
-				speed = 0.0f;
+				mShield.speed = 0.0f;
 
-				shieldTimer += deltaTime;
+				mShield.waitingTimer += deltaTime;
 
 				// 1초 남았을 때 깜빡거린다.
-				if ((SHIELD_SKILL_DURATION - shieldTimer) <= 1.0f)
+				if ((SHIELD_SKILL_DURATION - mShield.waitingTimer) <= 1.0f)
 				{
-					blinkTimer += deltaTime;
+					mShield.blinkTimer += deltaTime;
 
-					if (blinkTimer >= 0.1f)
+					if (mShield.blinkTimer >= 0.1f)
 					{
-						mShieldBlinkOn = !mShieldBlinkOn;
-						blinkTimer = 0.0f;
+						mShield.isBlinkOn = !mShield.isBlinkOn;
+						mShield.blinkTimer = 0.0f;
 					}
 				}
 				else
 				{
-					mShieldBlinkOn = true;
+					mShield.isBlinkOn = true;
 				}
 
-				if (shieldTimer >= SHIELD_SKILL_DURATION)
+				if (mShield.waitingTimer >= SHIELD_SKILL_DURATION)
 				{
-					mShieldScale.width = SHELD_MIN_RADIUS;
-					mShieldScale.height = SHELD_MIN_RADIUS;
+					mShield.scale.width = SHELD_MIN_RADIUS;
+					mShield.scale.height = SHELD_MIN_RADIUS;
 
-					shieldTimer = 0.0f;
+					mShield.waitingTimer = 0.0f;
 
-					blinkTimer = 0.0f;
-					mShieldBlinkOn = true;
+					mShield.blinkTimer = 0.0f;
+					mShield.isBlinkOn = true;
 
-					mShieldState = eShield_State::CoolTime;
+					mShield.state = eShield_State::CoolTime;
 				}
 
 				break;
@@ -973,12 +1005,12 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mShieldSound.Pause();
 
-				shieldCoolTimer += deltaTime;
+				mShield.coolTimer += deltaTime;
 
-				if (shieldCoolTimer >= 2.0f)
+				if (mShield.coolTimer >= 2.0f)
 				{
-					shieldCoolTimer = 0.0f;
-					mShieldState = eShield_State::End;
+					mShield.coolTimer = 0.0f;
+					mShield.state = eShield_State::End;
 				}
 
 				break;
@@ -986,8 +1018,7 @@ bool MainScene::Update(const float deltaTime)
 
 			case eShield_State::End:
 			{
-				mShieldKeyLabel.SetActive(true);
-				mShieldTotalElapsedTimer = 0.0f;
+				mShield.labelCoolTimer = 0.0f;
 				break;
 			}
 
@@ -999,51 +1030,64 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어 주변을 공전하는 스킬을 업데이트한다.
 		{
 			if (Input::Get().GetKeyDown('Q')
-				and mOrbitState == eOrbit_State::End)
+				and mOrbit.state == eOrbit_State::End)
 			{
 				mOrbitSound.Replay();
 
-				mOrbitState = eOrbit_State::Rotating;
+				mOrbitLabel.SetActive(true);
+				mOrbit.state = eOrbit_State::Rotating;
 			}
 
-			static float orbitOnTimer;
-			static float orbitCoolTimer;
-			static float tempTimer;
-			constexpr float ORBIT_ON_TIMER = 4.0f;
-			constexpr float ORBIT_COOL_TIMER = 3.0f;
 			constexpr float SPEED = 400.0f;
+			constexpr float ROTATE_TIME = 4.0f;
+			constexpr float COOL_TIME = 6.0f;
 
-			switch (mOrbitState)
+			mOrbit.labelCoolTimer += deltaTime;
+			const uint32_t seconds = uint32_t(mOrbit.labelCoolTimer) % 60;
+
+			// 쿨타임을 표시한다.
+			if (mOrbit.state != eOrbit_State::End)
+			{
+				mOrbitKeyLabel.SetActive(false);
+				mOrbitLabel.SetText(std::to_wstring(uint32_t(ROTATE_TIME + COOL_TIME) - seconds));
+			}
+			else
+			{
+				mOrbitKeyLabel.SetActive(true);
+				mOrbitLabel.SetActive(false);
+			}
+
+			switch (mOrbit.state)
 			{
 			case eOrbit_State::Rotating:
 			{
-				orbitOnTimer += deltaTime;
-				mOrbitAngle += SPEED * deltaTime;
+				mOrbit.rotatingTimer += deltaTime;
+				mOrbit.angle += SPEED * deltaTime;
 
 				constexpr float OFFSET = 160.0f;
-				mOrbitEllipse.point = { .x = 0.0f, .y = OFFSET };
-				mOrbitEllipse.point = Math::RotateVector(mOrbitEllipse.point, -mOrbitAngle);
+				mOrbit.ellipse.point = { .x = 0.0f, .y = OFFSET };
+				mOrbit.ellipse.point = Math::RotateVector(mOrbit.ellipse.point, -mOrbit.angle);
 
-				// 1초 남았을 때 깜빡거린다.
-				if ((ORBIT_ON_TIMER - orbitOnTimer) <= 1.0f)
+				// 1초 남았을 때 깜빡거린다. (총 4초 유지)
+				if ((ROTATE_TIME - mOrbit.rotatingTimer) <= 1.0f)
 				{
-					tempTimer += deltaTime;
+					mOrbit.blinkTimer += deltaTime;
 
-					if (tempTimer >= 0.1f)
+					if (mOrbit.blinkTimer >= 0.1f)
 					{
-						mOrbitBlinkOn = !mOrbitBlinkOn;
-						tempTimer = 0.0f;
+						mOrbit.isBlinkOn = !mOrbit.isBlinkOn;
+						mOrbit.blinkTimer = 0.0f;
 					}
 				}
 				else
 				{
-					mOrbitBlinkOn = true;
+					mOrbit.isBlinkOn = true;
 				}
 
-				if (orbitOnTimer >= ORBIT_ON_TIMER)
+				if (mOrbit.rotatingTimer >= ROTATE_TIME)
 				{
-					orbitOnTimer = 0.0f;
-					mOrbitState = eOrbit_State::CoolTime;
+					mOrbit.rotatingTimer = 0.0f;
+					mOrbit.state = eOrbit_State::CoolTime;
 				}
 
 				break;
@@ -1052,17 +1096,20 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mOrbitSound.Pause();
 
-				orbitCoolTimer += deltaTime;
+				mOrbit.coolTimer += deltaTime;
 
-				if (orbitCoolTimer >= ORBIT_COOL_TIMER)
+				if (mOrbit.coolTimer >= COOL_TIME)
 				{
-					orbitCoolTimer = 0.0f;
-					mOrbitState = eOrbit_State::End;
+					mOrbit.coolTimer = 0.0f;
+					mOrbit.state = eOrbit_State::End;
 				}
 				break;
 			}
 			case eOrbit_State::End:
+			{
+				mOrbit.labelCoolTimer = 0.0f;
 				break;
+			}
 			default:
 				break;
 			}
@@ -2072,13 +2119,13 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (mShieldState != eShield_State::Growing
-				and mShieldState != eShield_State::Waiting)
+			if (mShield.state != eShield_State::Growing
+				and mShield.state != eShield_State::Waiting)
 			{
 				continue;
 			}
 
-			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const float offset = mShield.scale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
 			
 			if (isCollision and monster.hp > 0)
@@ -2089,13 +2136,13 @@ bool MainScene::Update(const float deltaTime)
 
 		for (Monster& monster : mRunMonsters)
 		{
-			if (mShieldState != eShield_State::Growing
-				and mShieldState != eShield_State::Waiting)
+			if (mShield.state != eShield_State::Growing
+				and mShield.state != eShield_State::Waiting)
 			{
 				continue;
 			}
 
-			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const float offset = mShield.scale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
 			
 			if (isCollision and monster.hp > 0)
@@ -2106,13 +2153,13 @@ bool MainScene::Update(const float deltaTime)
 
 		for (Monster& monster : mSlowMonsters)
 		{
-			if (mShieldState != eShield_State::Growing
-				and mShieldState != eShield_State::Waiting)
+			if (mShield.state != eShield_State::Growing
+				and mShield.state != eShield_State::Waiting)
 			{
 				continue;
 			}
 
-			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const float offset = mShield.scale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
 			
 			if (isCollision and monster.hp > 0)
@@ -2129,13 +2176,13 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (mOrbitState != eOrbit_State::Rotating)
+			if (mOrbit.state != eOrbit_State::Rotating)
 			{
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
-			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbit.ellipse.point);
+			const float radius = mOrbit.ellipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
 
 			if (isCollision and monster.hp > 0)
@@ -2151,8 +2198,13 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
-			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			if (mOrbit.state != eOrbit_State::Rotating)
+			{
+				continue;
+			}
+
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbit.ellipse.point);
+			const float radius = mOrbit.ellipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
 			
 			if (isCollision and monster.hp > 0)
@@ -2168,13 +2220,13 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			if (mOrbitState != eOrbit_State::Rotating)
+			if (mOrbit.state != eOrbit_State::Rotating)
 			{
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
-			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbit.ellipse.point);
+			const float radius = mOrbit.ellipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
 			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
 
 			if (isCollision and monster.hp > 0)
@@ -2213,12 +2265,12 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 		const D2D1_ELLIPSE ellipse =
 		{
-			.radiusX = mShieldScale.width * 0.5f,
-			.radiusY = mShieldScale.height * 0.5f
+			.radiusX = mShield.scale.width * 0.5f,
+			.radiusY = mShield.scale.height * 0.5f
 		};
 
-		if (mShieldState == eShield_State::Growing or mShieldState == eShield_State::Waiting
-			and mShieldBlinkOn)
+		if (mShield.state == eShield_State::Growing or mShield.state == eShield_State::Waiting
+			and mShield.isBlinkOn)
 		{
 			renderTarget->DrawEllipse(ellipse, mYellowBrush, 10.0f);
 		}
@@ -2229,10 +2281,10 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix(mHero.sprite.GetPosition()) * view;
 		renderTarget->SetTransform(worldView);
 
-		if (mOrbitState == eOrbit_State::Rotating
-			and mOrbitBlinkOn)
+		if (mOrbit.state == eOrbit_State::Rotating
+			and mOrbit.isBlinkOn)
 		{
-			renderTarget->DrawEllipse(mOrbitEllipse, mYellowBrush, 5.0f);
+			renderTarget->DrawEllipse(mOrbit.ellipse, mOrange, 5.0f);
 		}
 	}
 
@@ -2383,6 +2435,21 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 		const D2D1_ELLIPSE ellipse{ .radiusX = 25.0f, .radiusY = 25.0f };
 		renderTarget->DrawEllipse(ellipse, mYellowBrush, 5.0f);
+	}
+
+	// 공전 스킬 UI를 그린다.
+	{
+		const Matrix3x2F worldView = Transformation::getWorldMatrix
+		(
+			{
+				.x = float(Constant::Get().GetWidth()) * 0.5f + 590.0f,
+				.y = 62.0f
+			}
+		);
+		renderTarget->SetTransform(worldView);
+
+		const D2D1_ELLIPSE ellipse{ .radiusX = 25.0f, .radiusY = 25.0f };
+		renderTarget->DrawEllipse(ellipse, mOrange, 5.0f);
 	}
 }
 
