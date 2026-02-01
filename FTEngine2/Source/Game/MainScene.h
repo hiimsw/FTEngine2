@@ -206,6 +206,7 @@ private:
 	ID2D1SolidColorBrush* mDefaultBrush = nullptr;
 	ID2D1SolidColorBrush* mYellowBrush = nullptr;
 	ID2D1SolidColorBrush* mCyanBrush = nullptr;
+	ID2D1SolidColorBrush* mDarkGreen = nullptr;
 
 	Sound mBackgroundSound{};
 
@@ -361,7 +362,4 @@ private:
 	// 충돌 관련
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
-
-	// 기타
-	GizmoLine mLine{};
 };

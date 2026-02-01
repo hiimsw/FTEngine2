@@ -113,11 +113,9 @@ bool Core::Update(const float deltaTime)
 
 		// Render labels
 		{
-			// TODO(이수원): bursh를 멤버 변수로 옮겨 캐싱하여 처리하자.
-			static ID2D1SolidColorBrush* brush = nullptr;
-			if (brush == nullptr)
+			if (mBrush == nullptr)
 			{
-				HR(mRenderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &brush));
+				HR(mRenderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &mBrush));
 			}
 
 			D2D1_RECT_F drawArea = RectF(0.0f, 0.0f, float(Constant::Get().GetWidth()), float(Constant::Get().GetHeight()));
@@ -155,7 +153,7 @@ bool Core::Update(const float deltaTime)
 					worldView = worldView * (label->IsUI() == false ? view : viewForUI);
 					mRenderTarget->SetTransform(worldView);
 
-					mRenderTarget->DrawText(text.c_str(), UINT32(text.size()), textFormat, drawArea, brush);
+					mRenderTarget->DrawText(text.c_str(), UINT32(text.size()), textFormat, drawArea, mBrush);
 				}
 			}
 		}
@@ -174,6 +172,8 @@ void Core::Finalize()
 	RELEASE_D2D1(mDwriteFactory);
 	RELEASE_D2D1(mFactory);
 	RELEASE_D2D1(mWICImagingFactory);
+
+	RELEASE_D2D1(mBrush);
 
 	mScene->Finalize();
 	RELEASE(mScene);

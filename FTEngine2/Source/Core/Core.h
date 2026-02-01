@@ -22,6 +22,7 @@ private:
 	IDWriteFactory* mDwriteFactory = nullptr;
 	ID2D1HwndRenderTarget* mRenderTarget = nullptr;
 	FMOD::System* mSoundSystem = nullptr;
+	ID2D1SolidColorBrush* mBrush = nullptr;
 
 	Helper mHelper{};
 	Scene* mScene = nullptr;

@@ -37,6 +37,7 @@ void MainScene::Initialize()
 		HR(renderTarget->CreateSolidColorBrush(ColorF(1.0f, 1.0f, 1.0f), &mDefaultBrush));
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Yellow), &mYellowBrush));
 		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::Cyan), &mCyanBrush));
+		HR(renderTarget->CreateSolidColorBrush(ColorF(ColorF::DarkGreen), &mDarkGreen));
 
 		mIsCursorConfined = (Input::Get().GetCursorLockState() == Input::eCursorLockState::Confined);
 
@@ -410,20 +411,6 @@ void MainScene::Initialize()
 			mEndingLabel.SetText(L"GameOver");
 			mLabels.push_back(&mEndingLabel);
 		}
-	}
-
-	mLine.point0 = { .x = -200.0f, .y = 200.0f };
-	mLine.point1 = { .x = 150.0f, .y = 100.0f };
-
-	// TODO(이수원): 디버깅 용도로 사용되며, 추후 삭제 예정이다.
-	{
-		//for (Sprite* sprite : mSpriteLayer)
-		//{
-		//	D2D1_SIZE_F scale = sprite->GetScale();
-		//	scale.width *= SCALE;
-		//	scale.height *= SCALE;
-		//	sprite->SetScale(scale);
-		//}
 	}
 }
 
@@ -2222,49 +2209,9 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				.bottom = effect.scale.height
 			};
 
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, effect.thick.x);
+			renderTarget->DrawRectangle(colliderSize, mDarkGreen, effect.thick.x);
 		}
 	}
-
-	// 라인을 그린다.
-	{
-		//const D2D1_ELLIPSE CIRCLE{ .radiusX = TEST_RADIUS, .radiusY = TEST_RADIUS };
-
-		//Matrix3x2F point0WorldView = Transformation::getWorldMatrix(mLine.Point0) * view;
-		//Matrix3x2F point1WorldView = Transformation::getWorldMatrix(mLine.Point1) * view;
-
-		//// 두 점을 그린다.
-		//{
-		//	renderTarget->SetTransform(point0WorldView);
-		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-
-		//	renderTarget->SetTransform(point1WorldView);
-		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-		//}
-
-		//// 라인을 그린다.
-		//{
-		//	const D2D1_POINT_2F point0 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point0WorldView;
-		//	const D2D1_POINT_2F point1 = D2D1_POINT_2F{ .x = 0.0f, .y = 0.0f } *point1WorldView;
-		//	renderTarget->SetTransform(Matrix3x2F::Identity());
-		//	renderTarget->DrawLine(point0, point1, mDefaultBrush);
-		//}
-	}
-
-	// 몬스터를 그린다.
-	//{
-		//for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
-		//{
-		//	D2D1_POINT_2F spawnDirection = Math::GetNormalizeVector(mMonsters[i].GetPosition());
-		//	D2D1_POINT_2F spawnPositionInCircle = Math::ScaleVector(spawnDirection, 350.0f);
-
-		//	Matrix3x2F worldView = Transformation::getWorldMatrix(spawnPositionInCircle) * view;
-		//	renderTarget->SetTransform(worldView);
-
-		//	D2D1_ELLIPSE CIRCLE{ .radiusX = 30.0f, .radiusY = 30.0f };
-		//	renderTarget->DrawEllipse(CIRCLE, mDefaultBrush);
-		//}
-	//}
 
 	// 몬스터 충돌박스를 그린다.
 	{
@@ -2340,6 +2287,8 @@ void MainScene::Finalize()
 {
 	RELEASE_D2D1(mCyanBrush);
 	RELEASE_D2D1(mYellowBrush);
+	RELEASE_D2D1(mCyanBrush);
+	RELEASE_D2D1(mDarkGreen);
 	RELEASE_D2D1(mDefaultBrush);
 
 	mRectangleTexture.Finalize();
@@ -2421,18 +2370,9 @@ void MainScene::initializeCameraShake(const float amplitude, const float duratio
 	mCameraShakeTime = 0.0f;
 	mCameraShakeTimer = 0.0f;
 
-	//if (amplitude > mCameraShakeAmplitude)
-	{
-		mCameraShakeAmplitude = amplitude;
-	}
-	//if (duration > mCameraShakeDuration)
-	{
-		mCameraShakeDuration = duration;
-	}
-	//if (frequency > mCameraShakeFrequency)
-	{
-		mCameraShakeFrequency = frequency;
-	}
+	mCameraShakeAmplitude = amplitude;	
+	mCameraShakeDuration = duration;	
+	mCameraShakeFrequency = frequency;
 }
 
 D2D1_POINT_2F MainScene::updateCameraShake(const float deltaTime)
