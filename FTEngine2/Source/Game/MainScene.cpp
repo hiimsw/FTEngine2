@@ -410,8 +410,9 @@ void MainScene::Initialize()
 			mShieldLabel.SetFont(&mDefaultFont);
 			mShieldLabel.SetUI(true);
 
-			const D2D1_POINT_2F position = mHpValueLabel.GetPosition();
-			const D2D1_POINT_2F offset = { .x = position.x + 280.0f, .y = position.y };
+			const D2D1_POINT_2F position = mUiBackgroundDashBar.GetPosition();
+			float barOffsetX = mUiBackgroundDashBar.GetScale().width * mWhiteBarTexture.GetWidth();
+			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 65.0f, .y = position.y };
 			mShieldLabel.SetPosition(offset);
 
 			mShieldLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
@@ -424,12 +425,30 @@ void MainScene::Initialize()
 			mBulletLabel.SetUI(true);
 
 			const D2D1_POINT_2F position = mUiBackgroundHpBar.GetPosition();
-			const D2D1_POINT_2F offset = { .x = position.x + mUiBackgroundHpBar.GetScale().width * mWhiteBarTexture.GetWidth() + 40.0f, .y = position.y};
+			float barOffsetX = mUiBackgroundHpBar.GetScale().width * mWhiteBarTexture.GetWidth();
+			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 40.0f, .y = position.y };
 			mBulletLabel.SetPosition(offset);
 
 			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
 			mBulletLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 			mLabels.push_back(&mBulletLabel);
+		}
+
+		// 키 설명
+		{
+			mShieldKeyLabel.SetFont(&mDefaultFont);
+			mShieldKeyLabel.SetUI(true);
+
+			const D2D1_POINT_2F position = mUiBackgroundDashBar.GetPosition();
+			float barOffsetX = mUiBackgroundDashBar.GetScale().width * mWhiteBarTexture.GetWidth();
+			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 65.0f, .y = position.y };
+			mShieldKeyLabel.SetPosition(offset);
+
+			mShieldKeyLabel.SetText(L"E");
+			mShieldKeyLabel.SetActive(true);
+
+			mShieldKeyLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
+			mLabels.push_back(&mShieldKeyLabel);
 		}
 
 		// 엔딩
@@ -821,25 +840,25 @@ bool MainScene::Update(const float deltaTime)
 
 			// 재장전을 한다.
 			{
-				static float reloadCoolTimer = 0.0f;
 				constexpr float RELOAD_TIME = 1.2f;
 
 				if (mBulletValue <= 0)
 				{
-					if (reloadCoolTimer == 0.0f) 
+					if (mreloadCoolTimer == 0.0f) 
 					{
 						mReloadSound.Replay();
 					}
 
-					reloadCoolTimer += deltaTime;
+					mreloadCoolTimer += deltaTime;
 
-					if (reloadCoolTimer >= RELOAD_TIME)
+					if (mreloadCoolTimer >= RELOAD_TIME)
 					{
 						mBulletValue = BULLET_COUNT;
-						reloadCoolTimer = 0.0f;
+						mreloadCoolTimer = 0.0f;
 					}
 				}
 
+				// 키를 누르면, 재장전이 된다.
 				if (Input::Get().GetKeyDown('R'))
 				{
 					if (mBulletValue != BULLET_COUNT)
@@ -850,16 +869,14 @@ bool MainScene::Update(const float deltaTime)
 					}
 				}
 
-				static float reloadKeyDownCoolTimer = 0.0f;
-
 				if (misKeyDownReload)
 				{
-					reloadKeyDownCoolTimer += deltaTime;
+					mreloadKeyDownCoolTimer += deltaTime;
 
-					if (reloadKeyDownCoolTimer >= RELOAD_TIME)
+					if (mreloadKeyDownCoolTimer >= RELOAD_TIME)
 					{
 						mBulletValue = BULLET_COUNT;
-						reloadKeyDownCoolTimer = 0.0f;
+						mreloadKeyDownCoolTimer = 0.0f;
 						misKeyDownReload = false;
 					}
 				}
@@ -899,6 +916,8 @@ bool MainScene::Update(const float deltaTime)
 			{
 			case eShield_State::Growing:
 			{
+				mShieldKeyLabel.SetActive(false);
+
 				speed = 50.0f;
 
 				mShieldScale.width += speed * deltaTime;
@@ -966,8 +985,11 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			case eShield_State::End:
+			{
+				mShieldKeyLabel.SetActive(true);
 				mShieldTotalElapsedTimer = 0.0f;
 				break;
+			}
 
 			default:
 				break;
@@ -2353,14 +2375,14 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		const Matrix3x2F worldView = Transformation::getWorldMatrix
 		(
 			{
-				.x = float(Constant::Get().GetWidth()) * 0.5f,
-				.y = 110.0f
+				.x = float(Constant::Get().GetWidth()) * 0.5f + 520.0f,
+				.y = 60.0f
 			}
 		);
 		renderTarget->SetTransform(worldView);
 
 		const D2D1_ELLIPSE ellipse{ .radiusX = 25.0f, .radiusY = 25.0f };
-		renderTarget->DrawEllipse(ellipse, mYellowBrush, 2.0f);
+		renderTarget->DrawEllipse(ellipse, mYellowBrush, 5.0f);
 	}
 }
 

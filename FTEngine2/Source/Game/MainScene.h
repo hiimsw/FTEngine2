@@ -250,6 +250,8 @@ private:
 	Sound mBulletSound{};
 
 	bool misKeyDownReload = false;
+	float mreloadKeyDownCoolTimer = 0.0f;
+	float mreloadCoolTimer = 0.0f;
 	Sound mReloadSound{};
 
 	// 플레이어 탄피
@@ -290,6 +292,7 @@ private:
 	Label mBulletLabel{};
 
 	Label mShieldLabel{};
+	Label mShieldKeyLabel{};
 
 	Font mTimerFont{};
 	Label mTimerLabel{};
