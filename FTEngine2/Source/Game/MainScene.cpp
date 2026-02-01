@@ -2136,6 +2136,11 @@ bool MainScene::Update(const float deltaTime)
 
 		for (Monster& monster : mRunMonsters)
 		{
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
+
 			if (mShield.state != eShield_State::Growing
 				and mShield.state != eShield_State::Waiting)
 			{
@@ -2153,6 +2158,11 @@ bool MainScene::Update(const float deltaTime)
 
 		for (Monster& monster : mSlowMonsters)
 		{
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
+
 			if (mShield.state != eShield_State::Growing
 				and mShield.state != eShield_State::Waiting)
 			{
