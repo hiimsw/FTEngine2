@@ -10,11 +10,8 @@ using namespace std::chrono;
 
 enum class eGameScene
 {
-	StartScene,
-	VillageScene,
-	Stage01Scene,
-	MainScene,
-	CameraGuideScene,
+	Start,
+	Main
 };
 
 static LRESULT HandleWindowMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -65,7 +62,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	Input::Get()._Initialize(hWnd);
 
 	gCore.Initialize(hWnd, new MainScene);
-	gGameScene = eGameScene::VillageScene;
+	gGameScene = eGameScene::Main;
 
 	MSG msg{};
 	float deltaTime = 0.0f;

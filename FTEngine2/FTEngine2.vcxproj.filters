@@ -61,6 +61,9 @@
     <ClCompile Include="Source\Core\Sound.cpp">
       <Filter>Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="StartScene.cpp">
+      <Filter>Source\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\pch.h">
@@ -107,6 +110,9 @@
     </ClInclude>
     <ClInclude Include="Source\Core\Sound.h">
       <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="StartScene.h">
+      <Filter>Source\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -164,15 +164,6 @@ struct MonsterDeadSoundDesc
 
 class MainScene final : public Scene
 {
-	enum class Layer
-	{
-		Background,
-		Monster,
-		Player,
-		UI,
-		End
-	};
-
 public:
 	MainScene() = default;
 	MainScene(const MainScene&) = delete;
@@ -222,7 +213,7 @@ private:
 	float mCameraShakeDuration = 0.0f;
 	float mCameraShakeFrequency = 0.0f;
 
-	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
+	std::array<std::vector<Sprite*>, uint32_t(Scene::Layer::End)> mSpriteLayers{};
 	std::vector<Label*> mLabels{};
 
 	// °ø¿ë

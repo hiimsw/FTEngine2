@@ -168,6 +168,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StartScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\Camera.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="Source\Core\Transformation.h" />
     <ClInclude Include="Source\Game\MainScene.h" />
     <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="StartScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,6 +8,16 @@ class Sprite;
 class Scene
 {
 public:
+	enum class Layer
+	{
+		Background,
+		Monster,
+		Player,
+		UI,
+		End
+	};
+
+public:
 	Scene() = default;
 	Scene(const Scene&) = delete;
 	const Scene& operator=(const Scene&) = delete;
