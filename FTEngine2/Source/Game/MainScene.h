@@ -54,7 +54,10 @@ struct Player
 {
 	Sprite sprite;
 	D2D1_POINT_2F velocity;
+	float hitEffectTimer;
+	bool isHitEffect;
 	int32_t hp;
+	int32_t prevHp;
 };
 
 struct Monster
@@ -98,6 +101,13 @@ struct BulletEffect
 	D2D1_SIZE_F scale;
 };
 
+struct Particle
+{
+	Sprite sprite;
+	D2D1_POINT_2F direction;
+	float speed;
+};
+
 struct MonsterSpawnDesc
 {
 	Monster* monster;
@@ -118,7 +128,6 @@ struct MonsterSpawnEffectDesc
 struct MonsterDeadSoundDesc
 {
 	Monster* monster;
-	Sound* sound;
 	D2D1_SIZE_F startScale;
 	D2D1_SIZE_F endScale;
 	float time;
@@ -219,7 +228,7 @@ private:
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 
 	Player mHero{};
-	Sound mHeroSound{};
+	Sound mHeroHitSound{};
 
 	// 플레이어 줌
 	Sprite mZoom{};
@@ -234,16 +243,18 @@ private:
 	bool mIsDashing = false;
 
 	// 플레이어 총알
-	static constexpr uint32_t BULLET_COUNT = 80;
+	static constexpr uint32_t BULLET_COUNT = 100;
 	Bullet mBullets[BULLET_COUNT]{};
 	float mBulletShootingCoolTimer{};
 	int32_t mBulletValue = BULLET_COUNT;
 	Sound mBulletSound{};
 
+	bool misKeyDownReload = false;
+	Sound mReloadSound{};
+
 	// 플레이어 탄피
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
 	Casing mCasings[CASING_COUNT]{};
-	bool misKeyDownReload = false;
 
 	// 플레이어 쉴드 스킬
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;

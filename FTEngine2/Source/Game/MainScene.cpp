@@ -67,8 +67,11 @@ void MainScene::Initialize()
 
 		mBulletSound.Initialize(GetHelper(), "Resource/Sound/shoot_sound.wav", false);
 
-		mHeroSound.Initialize(GetHelper(), "Resource/Sound/player_hit.wav", false);
-		mHeroSound.SetVolume(0.2f);
+		mReloadSound.Initialize(GetHelper(), "Resource/Sound/reload.mp3", false);
+		mReloadSound.SetVolume(0.5f);
+
+		mHeroHitSound.Initialize(GetHelper(), "Resource/Sound/hit.mp3", false);
+		mHeroHitSound.SetVolume(1.0f);
 
 		mShieldSound.Initialize(GetHelper(), "Resource/Sound/E_Skill.mp3", false);
 		mShieldSound.SetVolume(0.2f);
@@ -91,8 +94,12 @@ void MainScene::Initialize()
 
 	// 플레이어를 초기화한다.
 	{
-		mHero.hp = HERO_MAX_HP;
 		mHero.velocity = {};
+		mHero.hitEffectTimer = {};
+		mHero.isHitEffect = false;
+
+		mHero.hp = HERO_MAX_HP;
+		mHero.prevHp = mHero.hp;
 
 		Sprite& hero = mHero.sprite;
 		hero.SetPosition({ .x = -200.0f, .y = 0.0f });
@@ -113,6 +120,9 @@ void MainScene::Initialize()
 	{
 		for (Bullet& bullet : mBullets)
 		{
+			bullet.prevPosition = {};
+			bullet.direction = {};
+
 			Sprite& sprite = bullet.sprite;
 			sprite.SetPosition(mHero.sprite.GetPosition());
 			sprite.SetCenter({ .x = -0.5f, .y = 0.0f });
@@ -127,6 +137,11 @@ void MainScene::Initialize()
 	{
 		for (Casing& casing : mCasings)
 		{
+			casing.casingDirection = {};
+			casing.startPosition = {};
+			casing.endPosition = {};
+			casing.casingTimer = {};
+
 			Sprite& sprite = casing.sprite;
 			sprite.SetScale({ .width = 0.2f, .height = 0.2f });
 			sprite.SetCenter({ -0.5f, 0.0f });
@@ -141,7 +156,7 @@ void MainScene::Initialize()
 	{
 		mOrbitEllipse =
 		{
-			.point = {.x = 0.0f, .y = -120.0f },
+			.point = {.x = 0.0f, .y = 160.0f },
 			.radiusX = 20.0f,
 			.radiusY = 20.0f,
 		};
@@ -153,6 +168,11 @@ void MainScene::Initialize()
 		{
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
+			monster.isBulletColliding = false;
+			monster.spawnStartEffectTimer = {};
+			monster.spawnEndEffectTimer = {};
+			monster.deadEffectTimer = {};
+			monster.moveSpeed = {};
 			monster.hp = MONSTER_MAX_HP;
 
 			Sprite& sprite = monster.sprite;
@@ -190,7 +210,12 @@ void MainScene::Initialize()
 		for (Monster& monster : mRunMonsters)
 		{
 			// 기본 정보를 초기화한다.
-			monster.state = eMonster_State::Dead;
+			monster.state = eMonster_State::Spawn;
+			monster.isBulletColliding = false;
+			monster.spawnStartEffectTimer = {};
+			monster.spawnEndEffectTimer = {};
+			monster.deadEffectTimer = {};
+			monster.moveSpeed = {};
 			monster.hp = RUN_MONSTER_MAX_HP;
 
 			Sprite& sprite = monster.sprite;
@@ -232,7 +257,12 @@ void MainScene::Initialize()
 		for (Monster& monster : mSlowMonsters)
 		{
 			// 기본 정보를 초기화한다.
-			monster.state = eMonster_State::Dead;
+			monster.state = eMonster_State::Spawn;
+			monster.isBulletColliding = false;
+			monster.spawnStartEffectTimer = {};
+			monster.spawnEndEffectTimer = {};
+			monster.deadEffectTimer = {};
+			monster.moveSpeed = {};
 			monster.hp = SLOW_MONSTER_MAX_HP;
 
 			Sprite& sprite = monster.sprite;
@@ -393,8 +423,8 @@ void MainScene::Initialize()
 			mBulletLabel.SetFont(&mBulletFont);
 			mBulletLabel.SetUI(true);
 
-			const D2D1_POINT_2F position = mTimerLabel.GetPosition();
-			const D2D1_POINT_2F offset = { .x = position.x - 360.0f, .y = position.y };
+			const D2D1_POINT_2F position = mUiBackgroundHpBar.GetPosition();
+			const D2D1_POINT_2F offset = { .x = position.x + mUiBackgroundHpBar.GetScale().width * mWhiteBarTexture.GetWidth() + 40.0f, .y = position.y};
 			mBulletLabel.SetPosition(offset);
 
 			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
@@ -792,10 +822,15 @@ bool MainScene::Update(const float deltaTime)
 			// 재장전을 한다.
 			{
 				static float reloadCoolTimer = 0.0f;
-				constexpr float RELOAD_TIME = 1.5f;
+				constexpr float RELOAD_TIME = 1.2f;
 
 				if (mBulletValue <= 0)
 				{
+					if (reloadCoolTimer == 0.0f) 
+					{
+						mReloadSound.Replay();
+					}
+
 					reloadCoolTimer += deltaTime;
 
 					if (reloadCoolTimer >= RELOAD_TIME)
@@ -809,6 +844,8 @@ bool MainScene::Update(const float deltaTime)
 				{
 					if (mBulletValue != BULLET_COUNT)
 					{
+						mReloadSound.Replay();
+
 						misKeyDownReload = true;
 					}
 				}
@@ -1147,12 +1184,12 @@ bool MainScene::Update(const float deltaTime)
 				and monster.state == eMonster_State::Life)
 			{
 				monster.state == eMonster_State::Dead;
+				mMonsterDeadSound.Replay();
 			}
 
 			MonsterDeadEffect(
 				{
 					.monster = &monster,
-					.sound = &mMonsterDeadSound,
 					.startScale = {.width = 3.0f, .height = 3.0f },
 					.endScale = {.width = 0.1f, .height = 0.1f },
 					.time = MONSTER_DIE_EFFECT_TIME,
@@ -1338,12 +1375,12 @@ bool MainScene::Update(const float deltaTime)
 			and monster.state == eMonster_State::Life)
 		{
 			monster.state == eMonster_State::Dead;
+			mRunMonsterDeadSound.Replay();
 		}
 
 		MonsterDeadEffect(
 			{
 				.monster = &monster,
-				.sound = &mRunMonsterDeadSound,
 				.startScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
 				.endScale = {.width = 0.1f, .height = 0.1f },
 				.time = RUN_MONSTER_DIE_EFFECT_TIME,
@@ -1580,12 +1617,12 @@ bool MainScene::Update(const float deltaTime)
 				and monster.state == eMonster_State::Life)
 			{
 				monster.state == eMonster_State::Dead;
+				mSlowMonsterDeadSound.Replay();
 			}
 
 			MonsterDeadEffect(
 				{
 					.monster = &monster,
-					.sound = &mSlowMonsterDeadSound,
 					.startScale = {.width = 3.0f, .height = 3.0f },
 					.endScale = {.width = 0.1f, .height = 0.1f },
 					.time = SLOW_MONSTER_DIE_EFFECT_TIME,
@@ -1616,15 +1653,30 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 플레이어 체력 라벨을 업데이트 한다.
-		static int32_t prevHp = mHero.hp;
-
-		if (prevHp != mHero.hp)
+		if (mHero.prevHp != mHero.hp)
 		{
-			mHeroSound.Replay();
-
+			mHeroHitSound.Replay();
 			mHpValueLabel.SetText(L"Hp: " + std::to_wstring(mHero.hp) + L" / " + std::to_wstring(HERO_MAX_HP));
+			mHero.isHitEffect = true;
 
-			prevHp = mHero.hp;
+			mHero.prevHp = mHero.hp;
+		}
+
+		if (mHero.isHitEffect)
+		{
+			mHero.hitEffectTimer += deltaTime;
+
+			float opacity = mHero.sprite.GetOpacity();
+			opacity -= 10.0f * deltaTime;
+			mHero.sprite.SetOpacity(opacity);
+
+			if (mHero.hitEffectTimer >= 0.2f)
+			{
+				mHero.sprite.SetOpacity(1.0f);
+				mHero.isHitEffect = false;
+				mHero.hitEffectTimer = 0.0f;
+			}
+
 		}
 
 		// 플레이어 체력바를 업데이트한다.
@@ -1739,7 +1791,7 @@ bool MainScene::Update(const float deltaTime)
 				sprite.SetActive(false);
 			}
 		}
-		static int frame = 0;
+
 		for (Monster& monster : mMonsters)
 		{
 			Sprite& sprite = monster.sprite;
@@ -2511,7 +2563,6 @@ void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const
 void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 {
 	Monster* monster = desc.monster;
-	Sound* sound = desc.sound;
 	const D2D1_SIZE_F startScale = desc.startScale;
 	const D2D1_SIZE_F endScale = desc.endScale;
 	const float time = desc.time;
@@ -2526,7 +2577,6 @@ void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 		initializeCameraShake(amplitude, duration, frequency);
 
 		monster->hp = 0;
-		sound->Replay();
 
 		monster->backgroundHpBar.SetActive(false);
 		monster->hpBar.SetActive(false);
