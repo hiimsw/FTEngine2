@@ -141,7 +141,7 @@ void MainScene::Initialize()
 	{
 		mOrbitEllipse =
 		{
-			.point = {.x = 0.0f, .y = -80.0f },
+			.point = {.x = 0.0f, .y = -120.0f },
 			.radiusX = 20.0f,
 			.radiusY = 20.0f,
 		};
@@ -956,14 +956,13 @@ bool MainScene::Update(const float deltaTime)
 
 			switch (mOrbitState)
 			{
-
 			case eOrbit_State::Rotating:
 			{
 				orbitOnTimer += deltaTime;
 				mOrbitAngle += SPEED * deltaTime;
 
-				constexpr float OFFSET = 120.0f;
-				mOrbitEllipse.point = { .x = 0.0f, .y = -OFFSET };
+				constexpr float OFFSET = 160.0f;
+				mOrbitEllipse.point = { .x = 0.0f, .y = OFFSET };
 				mOrbitEllipse.point = Math::RotateVector(mOrbitEllipse.point, -mOrbitAngle);
 
 				// 1초 남았을 때 깜빡거린다.
@@ -1994,6 +1993,11 @@ bool MainScene::Update(const float deltaTime)
 		// 플레이어 쉴드와 몬스터가 충돌하면 몬스터는 삭제된다.
 		for (Monster& monster : mMonsters)
 		{
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
+
 			if (mShieldState != eShield_State::Growing
 				and mShieldState != eShield_State::Waiting)
 			{
@@ -2001,9 +2005,11 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset))
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
+			
+			if (isCollision and monster.hp > 0)
 			{
-				monster.hp = 0;
+				monster.hp -= MONSTER_MAX_HP;
 			}
 		}
 
@@ -2016,9 +2022,11 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset))
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
+			
+			if (isCollision and monster.hp > 0)
 			{
-				monster.hp = 0;
+				monster.hp -= RUN_MONSTER_MAX_HP;
 			}
 		}
 
@@ -2031,52 +2039,73 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			const float offset = mShieldScale.width * 0.5f + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset))
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), mHero.sprite.GetPosition(), offset);
+			
+			if (isCollision and monster.hp > 0)
 			{
-				monster.hp = 0;
+				monster.hp -= SLOW_MONSTER_MAX_HP;
 			}
 		}
 
 		// 플레이어 주변을 공전하는 원과 몬스터가 충돌하면 몬스터는 삭제된다.
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		for (Monster& monster : mMonsters)
 		{
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
+
 			if (mOrbitState != eOrbit_State::Rotating)
 			{
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mMonsters[i].sprite), center, mOrbitEllipse.radiusX))
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
+			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
+
+			if (isCollision and monster.hp > 0)
 			{
-				mMonsters[i].hp = 0;
+				monster.hp -= MONSTER_MAX_HP;
 			}
 		}
 
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		for (Monster& monster : mRunMonsters)
 		{
-			if (mOrbitState != eOrbit_State::Rotating)
+			if (monster.state != eMonster_State::Life)
 			{
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mRunMonsters[i].sprite), center, mOrbitEllipse.radiusX))
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
+			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
+			
+			if (isCollision and monster.hp > 0)
 			{
-				mRunMonsters[i].hp = 0;
+				monster.hp -= RUN_MONSTER_MAX_HP;
 			}
 		}
 
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		for (Monster& monster : mSlowMonsters)
 		{
+			if (monster.state != eMonster_State::Life)
+			{
+				continue;
+			}
+
 			if (mOrbitState != eOrbit_State::Rotating)
 			{
 				continue;
 			}
 
-			const D2D1_POINT_2F center = Math::AddVector(mOrbitEllipse.point, mHero.sprite.GetPosition());
-			if (Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mSlowMonsters[i].sprite), center, mOrbitEllipse.radiusX))
+			const D2D1_POINT_2F center = Math::SubtractVector(mHero.sprite.GetPosition(), mOrbitEllipse.point);
+			const float radius = mOrbitEllipse.radiusX + monster.sprite.GetScale().height * mRectangleTexture.GetHeight();
+			const bool isCollision = Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(monster.sprite), center, radius);
+
+			if (isCollision and monster.hp > 0)
 			{
-				mSlowMonsters[i].hp = 0;
+				monster.hp -= SLOW_MONSTER_MAX_HP;
 			}
 		}
 	}
