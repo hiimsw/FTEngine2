@@ -63,10 +63,6 @@ struct Monster
 	eMonster_State state;
 
 	// 충돌 관련
-	eCollision_State collisionState;
-	bool isPlayerCollision;
-	bool isInBoundryCollision;
-
 	bool isBulletColliding;
 
 	float spawnStartEffectTimer;
@@ -167,8 +163,6 @@ private:
 	void UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc);
 	void UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
 	void MonsterDeadEffect(const MonsterDeadSoundDesc& desc);
-	void updateMonsterCollision(Monster* monster, Player* player, const float deltaTime);
-	void updateCollision(const bool isCollision, eCollision_State& state);
 
 private:
 	Texture mRectangleTexture{};
@@ -322,7 +316,7 @@ private:
 	float mRunMonsterSpawnTimer{};
 
 	// 바가 다 차면, 이동한다.
-	static constexpr uint32_t RUN_MONSTER_MAX_HP = 10;
+	static constexpr uint32_t RUN_MONSTER_MAX_HP = 1;
 	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
 
 	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
@@ -335,7 +329,7 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
