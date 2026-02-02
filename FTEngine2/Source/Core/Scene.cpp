@@ -63,3 +63,13 @@ void Scene::_Preinitialize(Helper* helper)
 
 	mHelper = helper;
 }
+
+const Scene::Type Scene::GetType() const
+{
+	return mType;
+}
+
+void Scene::SetType(const Type type)
+{
+	mType = type;
+}

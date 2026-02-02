@@ -17,6 +17,14 @@ public:
 		End
 	};
 
+	enum class Type
+	{
+		Start,
+		Main,
+		End
+	};
+
+
 public:
 	Scene() = default;
 	Scene(const Scene&) = delete;
@@ -54,4 +62,11 @@ private:
 
 	const std::vector<Label*>* mLabels = nullptr;
 	const Camera* mCamera = nullptr;
+
+public:
+	[[nodiscard]] const Type GetType() const;
+	void SetType(const Type type);
+
+protected:
+	Type mType{};
 };

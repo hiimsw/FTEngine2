@@ -22,7 +22,7 @@ void MainScene::Initialize()
 
 		SetCamera(&mMainCamera);
 
-		mLabels.reserve(8);
+		mLabels.reserve(16);
 		SetLabels(&mLabels);
 
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
@@ -526,7 +526,7 @@ bool MainScene::Update(const float deltaTime)
 		// 게임을 종료한다.
 		if (Input::Get().GetKeyDown(VK_ESCAPE))
 		{
-			return false;
+			mIsUpdate = false;
 		}
 
 		// 마우스 커서를 설정한다.
@@ -2261,7 +2261,7 @@ bool MainScene::Update(const float deltaTime)
 		mMainCamera.SetPosition(position);
 	}
 
-	return true;
+	return mIsUpdate;
 }
 
 void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)

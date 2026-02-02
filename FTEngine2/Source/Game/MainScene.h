@@ -239,6 +239,8 @@ private:
 
 	Sound mBackgroundSound{};
 
+	bool mIsUpdate = true;
+
 	// Å° °ü·Ã
 	bool mIsCursorConfined = false;
 	bool mIsColliderKeyDown = false;

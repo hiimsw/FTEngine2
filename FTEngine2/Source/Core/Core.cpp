@@ -79,6 +79,7 @@ bool Core::Update(const float deltaTime)
 		for (uint32_t i = 0; i < spriteLayerCount; ++i)
 		{
 			const std::vector<Sprite*>* spriteLayer = mScene->GetSpriteLayer(i);
+
 			for (const Sprite* sprite : *spriteLayer)
 			{
 				if (not sprite->IsActive())
@@ -193,5 +194,11 @@ void Core::ChangeScene(Scene* scene)
 
 	mScene = scene;
 	mScene->_Preinitialize(&mHelper);
+	mScene->SetType(mSceneType);
 	mScene->Initialize();
+}
+
+void Core::SetSceneType(const Scene::Type type)
+{
+	mSceneType = type;
 }

@@ -18,5 +18,11 @@ public:
 	void Finalize() override;
 
 private:
+	bool mIsUpdate = true;
+
 	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
+	Camera mMainCamera{};
+
+	Sprite mStartButton{};
+	Texture mStartButtonTexture{};
 };
