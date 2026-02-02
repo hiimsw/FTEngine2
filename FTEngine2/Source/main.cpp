@@ -45,7 +45,26 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		MASSERT(false, "Failed to call RegisterClassEx()");
 	}
 
-	RECT windowRect{ .left = 0, .top = 0, .right = Constant::Get().GetWidth(), .bottom = Constant::Get().GetHeight() };
+	RECT windowRect = 
+	{
+		.left = 0, 
+		.top = 0, 
+		.right = Constant::Get().GetWidth(), 
+		.bottom = Constant::Get().GetHeight() 
+	};
+
+	const D2D1_SIZE_F screen = 
+	{ 
+		.width = float(GetSystemMetrics(SM_CXSCREEN)),
+		.height = float(GetSystemMetrics(SM_CYSCREEN))
+	};
+
+	const D2D1_POINT_2F position =
+	{
+		.x = (screen.width - (windowRect.right - windowRect.left)) * 0.5f,
+		.y = (screen.height - (windowRect.bottom - windowRect.top)) * 0.5f - 30.0f
+	};
+
 	if (AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, false) == 0)
 	{
 		MASSERT(false, "Failed to call AdjustWindowRect()");
@@ -53,7 +72,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	HWND hWnd = CreateWindow(windowClass.lpszClassName, windowClass.lpszClassName,
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-		CW_USEDEFAULT, CW_USEDEFAULT,
+		position.x, position.y,
 		windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
 		nullptr, nullptr, hInstance, nullptr);
 
