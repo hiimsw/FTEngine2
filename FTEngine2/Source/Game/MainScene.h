@@ -406,6 +406,7 @@ private:
 	BulletEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
+	static constexpr float GREEN_EFFECT_TIME = 0.4f;
 	BulletEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련

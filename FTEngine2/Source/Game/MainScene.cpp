@@ -1448,26 +1448,27 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 돌진 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
-	for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+	for (Monster& monster : mRunMonsters)
 	{
-		Monster& monster = mRunMonsters[i];
 		if (not monster.isBulletColliding)
 		{
 			continue;
 		}
 
-		BulletEffect& effect = mCyanEffect[i];
-		if (effect.isActive)
+		for (BulletEffect& effect : mCyanEffect)
 		{
-			monster.isBulletColliding = false;
-			continue;
-		}
+			if (effect.isActive)
+			{
+				monster.isBulletColliding = false;
+				continue;
+			}
 
-		effect.position = monster.sprite.GetPosition();
-		effect.scale = {};
-		effect.thick = { .x = 50.0f, .y = 50.0f };
-		effect.isActive = true;
-		break;
+			effect.position = monster.sprite.GetPosition();
+			effect.scale = {};
+			effect.thick = { .x = 50.0f, .y = 50.0f };
+			effect.isActive = true;
+			break;
+		}
 	}
 
 	for (Monster& monster : mRunMonsters)
@@ -1679,44 +1680,28 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 느린 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+	// 느린 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		for (Monster& monster : mSlowMonsters)
 		{
-			Monster& slowMonster = mSlowMonsters[i];
-
-			if (slowMonster.state == eMonster_State::Dead)
+			if (not monster.isBulletColliding)
 			{
 				continue;
 			}
 
-			if (not slowMonster.isBulletColliding)
+			for (BulletEffect& effect : mGreenEffect)
 			{
-				continue;
+				if (effect.isActive)
+				{
+					monster.isBulletColliding = false;
+					continue;
+				}
+
+				effect.position = monster.sprite.GetPosition();
+				effect.scale = {};
+				effect.thick = { .x = 30.0f, .y = 30.0f };
+				effect.isActive = true;
+				break;
 			}
-
-			BulletEffect& effect = mGreenEffect[i];
-
-			effect.timer += deltaTime;
-
-			// 크기를 보간한다.
-			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
-			scale = Math::LerpVector(scale, { 70.0f , 70.0f }, 5.0f * deltaTime);
-			effect.scale = { scale.x, scale.y };
-
-			// 두께를 보간한다.
-			effect.thick = { .x = 25.0f, .y = 25.0f };
-			float t = effect.timer / (SLOW_MONSTER_DIE_EFFECT_TIME - 0.1f);
-			t = std::clamp(t, 0.0f, 1.0f);
-
-			effect.thick = Math::LerpVector(effect.thick, { 0.1f , 0.1f }, t);
-
-			if (t >= 1.0f)
-			{
-				slowMonster.isBulletColliding = false;
-				effect.timer = 0.0f;
-			}
-
-			break;
 		}
 
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
@@ -1790,6 +1775,31 @@ bool MainScene::Update(const float deltaTime)
 			// 두께를 보간한다.
 			effect.timer += deltaTime;
 			float t = effect.timer / CYAN_EFFECT_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
+
+			if (t >= 1.0f)
+			{
+				effect.isActive = false;
+				effect.timer = 0.0f;
+			}
+		}
+
+		for (BulletEffect& effect : mGreenEffect)
+		{
+			if (not effect.isActive)
+			{
+				continue;
+			}
+
+			// 크기를 보간한다.
+			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
+			scale = Math::LerpVector(scale, { 70.0f , 70.0f }, 3.0f * deltaTime);
+			effect.scale = { scale.x, scale.y };
+
+			// 두께를 보간한다.
+			effect.timer += deltaTime;
+			float t = effect.timer / GREEN_EFFECT_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
 
@@ -2448,9 +2458,8 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// CYAN 이펙트를 그린다.
 	{
-		for (uint32_t i = 0; i < CYAN_EFFECT_COUNT; ++i)
+		for (const BulletEffect& effect : mCyanEffect)
 		{
-			BulletEffect effect = mCyanEffect[i];
 			if (not effect.isActive)
 			{
 				continue;
@@ -2478,33 +2487,23 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
-	// 총알과 느린 몬스터가 충돌하면, 이펙트를 그린다.
+	// Green 이펙트를 그린다.
 	{
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		for (const BulletEffect& effect : mGreenEffect)
 		{
-			Monster& monster = mSlowMonsters[i];
-
-			if (monster.state != eMonster_State::Life)
+			if (not effect.isActive)
 			{
 				continue;
 			}
-
-			if (not monster.isBulletColliding)
-			{
-				continue;
-			}
-
-			Sprite& slowMonsterSprite = mSlowMonsters[i].sprite;
 
 			const Matrix3x2F worldView =
 				Transformation::getWorldMatrix(
 					{
-						.x = slowMonsterSprite.GetPosition().x,
-						.y = slowMonsterSprite.GetPosition().y + 50.0f
+						.x = effect.position.x,
+						.y = effect.position.y + 50.0f
 					}, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
-			const BulletEffect effect = mGreenEffect[i];
 
 			const D2D1_RECT_F colliderSize =
 			{
