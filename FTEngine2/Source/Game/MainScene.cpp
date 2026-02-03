@@ -317,6 +317,21 @@ void MainScene::Initialize()
 		}
 	}
 
+	// 파티클을 초기화한다.
+	{
+		for (Particle& particle : mParticles)
+		{
+			particle.direction = {};
+			particle.speed = getRandom(100.0f, 300.0f);
+
+			Sprite& sprite = particle.sprite;
+			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
+			sprite.SetActive(false);
+			sprite.SetTexture(&mBlueRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
+		}
+	}
+
 	// 줌을 초기화한다.
 	{
 		mZoom.SetScale({ .width = 0.7f, .height = 0.7f });
@@ -1163,6 +1178,7 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
+
 		}
 
 		// 몬스터를 이동시킨다.
@@ -1189,7 +1205,7 @@ bool MainScene::Update(const float deltaTime)
 				const D2D1_SIZE_F scaleOffset =
 				{
 					.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-					.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+						.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
 				};
 
 				const D2D1_POINT_2F offset =
@@ -1223,8 +1239,8 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			D2D1_POINT_2F position = monster.sprite.GetPosition();
 			Sprite& effect = mBigMonsterToBulletEffects[i];
+			D2D1_POINT_2F position = monster.sprite.GetPosition();
 			effect.SetPosition(position);
 			effect.SetActive(true);
 
@@ -1258,8 +1274,27 @@ bool MainScene::Update(const float deltaTime)
 			if (monster.hp <= 0
 				and monster.state == eMonster_State::Life)
 			{
-				monster.state == eMonster_State::Dead;
+				monster.state = eMonster_State::Dead;
 				mBigMonsterDeadSound.Replay();
+
+				// 파티클을 생성한다.
+				for (Particle& particle : mParticles)
+				{
+					if (particle.sprite.IsActive())
+					{
+						continue;
+					}
+
+					spawnParticle(&particle, monster.sprite.GetPosition());
+
+					--mSpawnParticleCount;
+
+					if (mSpawnParticleCount <= 0)
+					{
+						mSpawnParticleCount = 10;
+						break;
+					}
+				}
 			}
 
 			deadMonsterEffect(
@@ -1271,6 +1306,32 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
+		}
+	}
+
+	{
+		for (Particle& particle : mParticles)
+		{
+			if (not particle.sprite.IsActive())
+			{
+				continue;
+			}
+
+			Sprite& sprite = particle.sprite;
+
+			D2D1_POINT_2F poisition = sprite.GetPosition();
+			poisition = Math::AddVector(poisition,
+				Math::ScaleVector(particle.direction, particle.speed * deltaTime));
+			sprite.SetPosition(poisition);
+
+			float opacity = sprite.GetOpacity();
+			opacity -= 1.0f * deltaTime;
+			sprite.SetOpacity(opacity);
+
+			if (opacity <= 0.0f)
+			{
+				sprite.SetActive(false);
+			}
 		}
 	}
 
@@ -1294,7 +1355,6 @@ bool MainScene::Update(const float deltaTime)
 				{
 					.monster = &monster,
 					.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
-					/*.hpOffset { 0.0f, -10.0f },*/
 					.maxHp = RUN_MONSTER_MAX_HP
 				}
 			);
@@ -2752,4 +2812,20 @@ void MainScene::deadMonsterEffect(const MonsterDeadSoundDesc& desc)
 			monster->deadEffectTimer = 0.0f;
 		}
 	}
+}
+
+void MainScene::spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition)
+{
+	ASSERT(particle != nullptr);
+
+	D2D1_POINT_2F& direction = particle->direction;
+
+	direction = Math::SubtractVector(spawnPosition, mHero.sprite.GetPosition());
+	direction = Math::NormalizeVector(direction);
+	direction = Math::RotateVector(direction, getRandom(-60.0f, 60.0));
+
+	Sprite& sprite = particle->sprite;
+	sprite.SetPosition(spawnPosition);
+	sprite.SetActive(true);
+	sprite.SetOpacity(1.0f);
 }

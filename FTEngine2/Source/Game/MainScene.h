@@ -200,6 +200,7 @@ private:
 	void updateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
+	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
 
 private:
 	Texture mRectangleTexture{};
@@ -256,7 +257,7 @@ private:
 	bool mIsColliderKeyDown = false;
 
 	// 플레이어
-	static constexpr uint32_t HERO_MAX_HP = 0;
+	static constexpr uint32_t HERO_MAX_HP = 1000;
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 
 	Player mHero{};
@@ -402,4 +403,8 @@ private:
 	// 충돌 관련
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
+
+	static constexpr uint32_t PARTICLE_COUNT = 100;
+	Particle mParticles[PARTICLE_COUNT]{};
+	int32_t mSpawnParticleCount = 10;
 };
