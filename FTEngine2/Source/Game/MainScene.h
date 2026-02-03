@@ -44,6 +44,13 @@ enum class eCollision_State
 	Exit
 };
 
+enum class eSpawnEffect_State
+{
+	Bigger,
+	Smaller,
+	End
+};
+
 struct GizmoLine
 {
 	D2D1_POINT_2F point0;
@@ -96,6 +103,7 @@ struct Monster
 	// 충돌 관련
 	bool isBulletColliding;
 
+	eSpawnEffect_State spawnState;
 	float spawnStartEffectTimer;
 	float spawnEndEffectTimer;
 	float deadEffectTimer;
@@ -156,10 +164,10 @@ struct MonsterSpawnEffectDesc
 struct MonsterDeadSoundDesc
 {
 	Monster* monster;
-	D2D1_SIZE_F startScale;
-	D2D1_SIZE_F endScale;
-	float time;
-	float deltaTime;
+	const D2D1_SIZE_F originalScale;
+	const D2D1_SIZE_F effectScale;
+	const float time;
+	const float deltaTime;
 };
 
 class MainScene final : public Scene

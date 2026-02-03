@@ -175,6 +175,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
+			monster.spawnState = eSpawnEffect_State::Bigger;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -218,6 +219,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
+			monster.spawnState = eSpawnEffect_State::Bigger;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -265,6 +267,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
+			monster.spawnState = eSpawnEffect_State::Bigger;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -828,8 +831,8 @@ bool MainScene::Update(const float deltaTime)
 
 					float opacity = bulletSprite.GetOpacity();
 
-					D2D1_POINT_2F lerp = { opacity, opacity };
-					lerp = Math::LerpVector(lerp, { 1.0f, 1.0f }, 10.0f * deltaTime);
+					D2D1_POINT_2F lerp = { .x = opacity, .y = opacity };
+					lerp = Math::LerpVector(lerp, { .x = 1.0f, .y = 1.0f }, 10.0f * deltaTime);
 					bulletSprite.SetOpacity(lerp.x);
 				}
 			}
@@ -1126,8 +1129,6 @@ bool MainScene::Update(const float deltaTime)
 			{
 				if (monster.sprite.IsActive())
 				{
-					monster.backgroundHpBar.SetActive(true);
-					monster.hpBar.SetActive(true);
 					continue;
 				}
 
@@ -1157,7 +1158,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					.monster = &monster,
 					.originalScale { MONSTER_SCALE, MONSTER_SCALE },
-					.effectScale{ 3.0f, 3.0f },
+					.effectScale{ 4.0f, 4.0f },
 					.time = 0.3f,
 					.deltaTime = deltaTime
 				}
@@ -1259,12 +1260,18 @@ bool MainScene::Update(const float deltaTime)
 			MonsterDeadEffect(
 				{
 					.monster = &monster,
-					.startScale = {.width = 3.0f, .height = 3.0f },
-					.endScale = {.width = 0.1f, .height = 0.1f },
+					.originalScale = {.width = MONSTER_SCALE, .height = MONSTER_SCALE },
+					.effectScale = {.width = 0.1f, .height = 0.1f },
 					.time = MONSTER_DIE_EFFECT_TIME,
 					.deltaTime = deltaTime
 				}
 			);
+
+			if (monster.spawnState == eSpawnEffect_State::End)
+			{
+				monster.backgroundHpBar.SetActive(true);
+				monster.hpBar.SetActive(true);
+			}
 		}
 	}
 
@@ -1316,7 +1323,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				.monster = &monster,
 				.originalScale { RUN_MONSTER_SCALE, RUN_MONSTER_SCALE },
-				.effectScale{ 3.0f, 3.0f },
+				.effectScale{ 3.3f, 3.3f },
 				.time = 0.5f,
 				.deltaTime = deltaTime
 			}
@@ -1450,8 +1457,8 @@ bool MainScene::Update(const float deltaTime)
 		MonsterDeadEffect(
 			{
 				.monster = &monster,
-				.startScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
-				.endScale = {.width = 0.1f, .height = 0.1f },
+				.originalScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
+				.effectScale = {.width = 0.1f, .height = 0.1f },
 				.time = RUN_MONSTER_DIE_EFFECT_TIME,
 				.deltaTime = deltaTime
 			}
@@ -1520,12 +1527,18 @@ bool MainScene::Update(const float deltaTime)
 					.monster = &monster,
 					.originalScale { SLOW_MONSTER_SCALE, SLOW_MONSTER_SCALE },
 					.effectScale{ 2.0f, 2.0f },
-					.time = 0.7f,
+					.time = 0.5f,
 					.deltaTime = deltaTime
 				}
 			);
 
-			mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+			if (monster.spawnState == eSpawnEffect_State::End)
+			{
+				monster.backgroundHpBar.SetActive(true);
+				monster.hpBar.SetActive(true);
+
+				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+			}
 		}
 
 		// 느린 몬스터와 그림자가 이동한다.
@@ -1570,9 +1583,6 @@ bool MainScene::Update(const float deltaTime)
 
 			case eSlow_Monster_State::Stop:
 			{
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-
 				mSlowMonsterStopTimers[i] += deltaTime;
 
 				if (mSlowMonsterStopTimers[i] >= STOP_TIME)
@@ -1692,8 +1702,8 @@ bool MainScene::Update(const float deltaTime)
 			MonsterDeadEffect(
 				{
 					.monster = &monster,
-					.startScale = {.width = 3.0f, .height = 3.0f },
-					.endScale = {.width = 0.1f, .height = 0.1f },
+					.originalScale = {.width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE },
+					.effectScale = {.width = 0.1f, .height = 0.1f },
 					.time = SLOW_MONSTER_DIE_EFFECT_TIME,
 					.deltaTime = deltaTime
 				}
@@ -2593,6 +2603,7 @@ void MainScene::SpawnMonster(const MonsterSpawnDesc& desc)
 
 	// 초기 정보를 업데이트한다.
 	monster->state = eMonster_State::Spawn;
+	monster->spawnState = eSpawnEffect_State::Bigger;
 	monster->hp = maxHp;
 
 	monster->backgroundHpBar.SetActive(false);
@@ -2625,28 +2636,37 @@ void MainScene::UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc)
 	const float time = desc.time;
 	const float deltaTime = desc.deltaTime;
 
-	monster->spawnStartEffectTimer += desc.deltaTime;
-	float startT = monster->spawnStartEffectTimer / time;
-	startT = std::clamp(startT, 0.0f, 1.0f);
-	D2D1_POINT_2F scale = Math::LerpVector({ monster->sprite.GetScale().width, monster->sprite.GetScale().height }, { effectScale.width, effectScale.height }, startT);
-
-	if (startT >= 1.0f)
+	if (monster->spawnState == eSpawnEffect_State::Bigger)
 	{
-		monster->spawnStartEffectTimer = 0.0f;
+		monster->spawnStartEffectTimer += desc.deltaTime;
+		float biggerT = monster->spawnStartEffectTimer / time;
+		biggerT = std::clamp(biggerT, 0.0f, 1.0f);
+		D2D1_POINT_2F scale = Math::LerpVector({ .x = originalScale.width, .y = originalScale.height }, { .x = effectScale.width, .y = effectScale.height }, biggerT);
+
+		if (biggerT >= 1.0f)
+		{
+			monster->spawnStartEffectTimer = 0.0f;
+			monster->spawnState = eSpawnEffect_State::Smaller;
+		}
+
+		monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
 	}
-
-	monster->spawnEndEffectTimer += desc.deltaTime;
-	float endT = monster->spawnEndEffectTimer / time;
-	endT = std::clamp(endT, 0.0f, 1.0f);
-	scale = Math::LerpVector({ scale.x, scale.y }, { originalScale.width, originalScale.height }, endT);
-
-	if (endT >= 1.0f)
+	else if (monster->spawnState == eSpawnEffect_State::Smaller)
 	{
-		monster->state = eMonster_State::Life;
-		monster->spawnEndEffectTimer = 0.0f;
-	}
+		monster->spawnEndEffectTimer += desc.deltaTime;
+		float smallerT = monster->spawnEndEffectTimer / time;
+		smallerT = std::clamp(smallerT, 0.0f, 1.0f);
+		D2D1_POINT_2F scale = Math::LerpVector({ .x = effectScale.width, .y = effectScale.height }, { .x = originalScale.width, .y = originalScale.height }, smallerT);
 
-	monster->sprite.SetScale({ scale.x, scale.y });
+		if (smallerT >= 1.0f)
+		{
+			monster->state = eMonster_State::Life;
+			monster->spawnState = eSpawnEffect_State::End;
+			monster->spawnEndEffectTimer = 0.0f;
+		}
+
+		monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
+	}
 }
 
 void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime)
@@ -2662,8 +2682,8 @@ void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const
 void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 {
 	Monster* monster = desc.monster;
-	const D2D1_SIZE_F startScale = desc.startScale;
-	const D2D1_SIZE_F endScale = desc.endScale;
+	const D2D1_SIZE_F originalScale = desc.originalScale;
+	const D2D1_SIZE_F effectScale = desc.effectScale;
 	const float time = desc.time;
 	const float deltaTime = desc.deltaTime;
 
@@ -2685,7 +2705,7 @@ void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
 		float t = monster->deadEffectTimer / time;
 		t = std::clamp(t, 0.0f, 1.0f);
 
-		D2D1_POINT_2F scale = Math::LerpVector({ .x = startScale.width, .y = startScale.height }, { .x = endScale.width, .y = endScale.height }, t);
+		D2D1_POINT_2F scale = Math::LerpVector({ .x = originalScale.width, .y = originalScale.height }, { .x = effectScale.width, .y = effectScale.height }, t);
 		monster->sprite.SetScale({ scale.x , scale.y });
 
 		if (t >= 1.0f)
