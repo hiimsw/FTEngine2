@@ -14,6 +14,8 @@ void StartScene::Initialize()
 	SetSpriteLayers(mSpriteLayers.data(), uint32_t(mSpriteLayers.size()));
 	SetCamera(&mMainCamera);
 
+	srand(unsigned int(time(nullptr)));
+
 	// 시작버튼을 초기화한다. 
 	{
 		mStartIdleButtonTexture.Initialize(GetHelper(), L"Resource/start_idle_button.png");
@@ -34,8 +36,30 @@ void StartScene::Initialize()
 		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mExitButton);
 	}
 
+	// 배경을 초기화한다.
 	{
+		mRedStarTexture.Initialize(GetHelper(), L"Resource/RedStar.png");
 
+		const D2D1_SIZE_F screenScale = { .width = float(Constant::Get().GetWidth()) * 0.5f, .height = float(Constant::Get().GetHeight()) * 0.5f };
+		constexpr float TITLE_RECT_OFFSET = 50.0f;
+
+		for (Star& red : mRedStars)
+		{
+			red.isVisible = false;
+			red.speed = getRandom(0.09f, 1.0f);
+
+			const D2D1_POINT_2F screenPoint =
+			{
+				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
+				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
+			};
+
+			Sprite& sprite = red.sprite;
+			sprite.SetPosition(screenPoint);
+			sprite.SetOpacity(0.0f);
+			sprite.SetTexture(&mRedStarTexture);
+			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+		}
 	}
 }
 
@@ -45,37 +69,75 @@ void StartScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 bool StartScene::Update(const float deltaTime)
 {
+	// 키를 업데이트한다.
 	if (Input::Get().GetKeyDown(VK_ESCAPE))
 	{
 		PostQuitMessage(0);
 	}
 
-	if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mStartButton, mStartIdleButtonTexture), getMouseWorldPosition()))
+	// 배경 투명도를 업데이트한다.
 	{
-		mStartButton.SetTexture(&mStartContactButtonTexture);	
-
-		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+		float speed[RED_COUNT];
+		for (Star& red : mRedStars)
 		{
-			mIsUpdate = false;
+			float opacity = red.sprite.GetOpacity();
+
+			if (red.isVisible)
+			{
+				opacity -= red.speed * deltaTime;
+
+				if (opacity <= 0.0f)
+				{
+					opacity = 0.0f;
+					red.isVisible = false;
+				}
+			}
+			else
+			{
+				opacity += red.speed * deltaTime;
+
+				if (opacity >= 1.0f)
+				{
+					opacity = 1.0f;
+					red.isVisible = true;
+				}
+			}
+
+			red.sprite.SetOpacity(opacity);
 		}
 	}
-	else
-	{
-		mStartButton.SetTexture(&mStartIdleButtonTexture);
-	}
 
-	if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mExitButton, mExitIdleButtonTexture), getMouseWorldPosition()))
+	// 충돌을 업데이트한다.
 	{
-		mExitButton.SetTexture(&mExitContactButtonTexture);
-
-		if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+		// Start Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mStartButton, mStartIdleButtonTexture), getMouseWorldPosition()))
 		{
-			PostQuitMessage(0);
+			mStartButton.SetTexture(&mStartContactButtonTexture);
+
+			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+			{
+				mIsUpdate = false;
+			}
 		}
-	}
-	else
-	{
-		mExitButton.SetTexture(&mExitIdleButtonTexture);
+		else
+		{
+			mStartButton.SetTexture(&mStartIdleButtonTexture);
+		}
+
+		// Exit Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mExitButton, mExitIdleButtonTexture), getMouseWorldPosition()))
+		{
+			mExitButton.SetTexture(&mExitContactButtonTexture);
+
+			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+			{
+				PostQuitMessage(0);
+			}
+		}
+		else
+		{
+			mExitButton.SetTexture(&mExitIdleButtonTexture);
+		}
 	}
 
 	return mIsUpdate;
@@ -92,6 +154,8 @@ void StartScene::Finalize()
 
 	mExitIdleButtonTexture.Finalize();
 	mExitContactButtonTexture.Finalize();
+
+	mRedStarTexture.Finalize();
 }
 
 D2D1_POINT_2F StartScene::getMouseWorldPosition() const
@@ -132,4 +196,10 @@ D2D1_RECT_F StartScene::getRectangleFromSprite(const Sprite& sprite, const Textu
 	};
 
 	return rect;
+}
+
+float StartScene::getRandom(const float min, const float max)
+{
+	const float result = float(rand()) / RAND_MAX * (max - min) + min;
+	return result;
 }

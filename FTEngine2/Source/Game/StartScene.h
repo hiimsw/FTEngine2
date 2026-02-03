@@ -4,6 +4,13 @@
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
 
+struct Star
+{
+	Sprite sprite;
+	bool isVisible;
+	float speed;
+};
+
 class StartScene final : public Scene
 {
 public:
@@ -20,6 +27,7 @@ public:
 private:
 	D2D1_POINT_2F getMouseWorldPosition() const;
 	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite, const Texture texture);
+	float getRandom(const float min, const float max);
 
 private:
 	bool mIsUpdate = true;
@@ -35,6 +43,7 @@ private:
 	Texture mExitIdleButtonTexture{};
 	Texture mExitContactButtonTexture{};
 
-	Sprite mRedStar{};
+	static constexpr uint32_t RED_COUNT = 10;
+	Star mRedStars[RED_COUNT]{};
 	Texture mRedStarTexture{};
 };
