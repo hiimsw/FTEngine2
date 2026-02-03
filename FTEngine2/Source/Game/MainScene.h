@@ -46,6 +46,7 @@ enum class eCollision_State
 
 enum class eSpawnEffect_State
 {
+	None,
 	Bigger,
 	Smaller,
 	End
@@ -61,8 +62,8 @@ struct Player
 {
 	Sprite sprite;
 	D2D1_POINT_2F velocity;
-	float hitEffectTimer;
 	bool isHitEffect;
+	bool isHitBoundry;
 	int32_t hp;
 	int32_t prevHp;
 };
@@ -226,7 +227,7 @@ private:
 
 	// 공용
 	static constexpr float IN_BOUNDARY_RADIUS = 60.0f;
-	static constexpr float BOUNDARY_RADIUS = 500.0f;
+	static constexpr float BOUNDARY_RADIUS = 700.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 
@@ -234,6 +235,7 @@ private:
 
 	static constexpr uint32_t PLAYER_ATTACK_VALUE = 10;
 	static constexpr uint32_t MONSTER_ATTACK_VALUE = 10;
+	static constexpr uint32_t BIG_MONSTER_ATTACK_VALUE = 10;
 	static constexpr uint32_t BULLET_ATTACK_VALUE = 10;
 	static constexpr uint32_t BOUNDRY_ATTACK_VALUE = 10;
 
@@ -254,7 +256,7 @@ private:
 	bool mIsColliderKeyDown = false;
 
 	// 플레이어
-	static constexpr uint32_t HERO_MAX_HP = 1500;
+	static constexpr uint32_t HERO_MAX_HP = 0;
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 
 	Player mHero{};
@@ -290,7 +292,7 @@ private:
 
 	// 플레이어 쉴드 스킬
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
-	static constexpr float SHELD_MAX_RADIUS = 150.0f;
+	static constexpr float SHELD_MAX_RADIUS = 170.0f;
 
 	Shield mShield{};
 	Sound mShieldSound{};
@@ -328,7 +330,7 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 1;
+	static constexpr uint32_t MONSTER_COUNT = 6;
 	static constexpr uint32_t MONSTER_MAX_HP = 20;
 	static constexpr float MONSTER_SCALE = 1.2f;
 	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
@@ -346,7 +348,7 @@ private:
 	Sound mMonsterDeadSound{};
 
 	// 돌진 몬스터
-	static constexpr uint32_t RUN_MONSTER_COUNT = 1;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 4;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
 
@@ -369,7 +371,7 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;

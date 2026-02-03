@@ -96,8 +96,8 @@ void MainScene::Initialize()
 	// 플레이어를 초기화한다.
 	{
 		mHero.velocity = {};
-		mHero.hitEffectTimer = {};
 		mHero.isHitEffect = false;
+		mHero.isHitBoundry = false;
 
 		mHero.hp = HERO_MAX_HP;
 		mHero.prevHp = mHero.hp;
@@ -175,7 +175,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::Bigger;
+			monster.spawnState = eSpawnEffect_State::None;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -219,7 +219,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::Bigger;
+			monster.spawnState = eSpawnEffect_State::None;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -267,7 +267,7 @@ void MainScene::Initialize()
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
 			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::Bigger;
+			monster.spawnState = eSpawnEffect_State::None;
 			monster.spawnStartEffectTimer = {};
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
@@ -421,7 +421,7 @@ void MainScene::Initialize()
 
 			const D2D1_POINT_2F position = mUiBackgroundHpBar.GetPosition();
 			float barOffsetX = mUiBackgroundHpBar.GetScale().width * mWhiteBarTexture.GetWidth();
-			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 40.0f, .y = position.y };
+			const D2D1_POINT_2F offset = { .x = position.x + barOffsetX + 55.0f, .y = position.y };
 			mBulletLabel.SetPosition(offset);
 
 			mBulletLabel.SetText(std::to_wstring(mBulletValue) + L"/" + std::to_wstring(BULLET_COUNT));
@@ -579,8 +579,8 @@ bool MainScene::Update(const float deltaTime)
 	{
 		// 이동을 업데이트한다.
 		{
-			constexpr float MAX_SPEED = 300.0f;
-			constexpr float ACC = 32.0f; // 가속도
+			constexpr float MAX_SPEED = 400.0f;
+			constexpr float ACC = 50.0f; // 가속도
 
 			const int32_t moveX = Input::Get().GetKey('D') - Input::Get().GetKey('A');
 			const int32_t moveY = Input::Get().GetKey('W') - Input::Get().GetKey('S');
@@ -795,7 +795,7 @@ bool MainScene::Update(const float deltaTime)
 						}
 					}
 
-					// 카메라 흔들기를 시작합니다.
+					// 카메라 흔들기를 시작한다.
 					{
 						const float amplitude = Constant::Get().GetHeight() * getRandom(0.008f, 0.012f);
 						const float duration = getRandom(0.05f, 0.08f);
@@ -953,7 +953,7 @@ bool MainScene::Update(const float deltaTime)
 			{
 				mShieldKeyLabel.SetActive(false);
 
-				mShield.speed = 50.0f;
+				mShield.speed = 100.0f;
 
 				mShield.scale.width += mShield.speed * deltaTime;
 				mShield.scale.height += mShield.speed * deltaTime;
@@ -1163,7 +1163,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
 		}
 
 		// 몬스터를 이동시킨다.
@@ -1201,6 +1200,12 @@ bool MainScene::Update(const float deltaTime)
 
 				monster.backgroundHpBar.SetPosition(offset);
 				monster.hpBar.SetPosition(offset);
+
+				if (sprite.GetPosition().x != 0.0f)
+				{
+					monster.backgroundHpBar.SetActive(true);
+					monster.hpBar.SetActive(true);
+				}
 			}
 		}
 
@@ -1266,12 +1271,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
-			if (monster.spawnState == eSpawnEffect_State::End)
-			{
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-			}
 		}
 	}
 
@@ -1534,9 +1533,6 @@ bool MainScene::Update(const float deltaTime)
 
 			if (monster.spawnState == eSpawnEffect_State::End)
 			{
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-
 				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
 			}
 		}
@@ -1559,49 +1555,49 @@ bool MainScene::Update(const float deltaTime)
 			// 느린 몬스터가 이동한다.
 			switch (mSlowMonsterState[i])
 			{
-			case eSlow_Monster_State::Moving:
-			{
-				mSlowMonsterMovingTimers[i] += deltaTime;
-
-				float t = mSlowMonsterMovingTimers[i] / MOVE_TIME;
-				t = std::clamp(t, 0.0f, 1.0f);
-
-				// 갈수록 느려지는 효과이다.
-				float easeOutT = 1.0f - (1.0f - t) * (1.0f - t);
-
-				D2D1_POINT_2F position = Math::LerpVector(mSlowMonsterStartPositions[i], mSlowMonsterEndPositions[i], easeOutT);
-				sprite.SetPosition(position);
-
-				if (easeOutT >= 1.0f)
+				case eSlow_Monster_State::Moving:
 				{
-					mSlowMonsterState[i] = eSlow_Monster_State::Stop;
-					mSlowMonsterStopTimers[i] = 0.0f;
+					mSlowMonsterMovingTimers[i] += deltaTime;
+
+					float t = mSlowMonsterMovingTimers[i] / MOVE_TIME;
+					t = std::clamp(t, 0.0f, 1.0f);
+
+					// 갈수록 느려지는 효과이다.
+					float easeOutT = 1.0f - (1.0f - t) * (1.0f - t);
+
+					D2D1_POINT_2F position = Math::LerpVector(mSlowMonsterStartPositions[i], mSlowMonsterEndPositions[i], easeOutT);
+					sprite.SetPosition(position);
+
+					if (easeOutT >= 1.0f)
+					{
+						mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+						mSlowMonsterStopTimers[i] = 0.0f;
+					}
+
+					break;
 				}
 
-				break;
-			}
+				case eSlow_Monster_State::Stop:
+				{				
+					mSlowMonsterStopTimers[i] += deltaTime;
 
-			case eSlow_Monster_State::Stop:
-			{
-				mSlowMonsterStopTimers[i] += deltaTime;
+					if (mSlowMonsterStopTimers[i] >= STOP_TIME)
+					{
+						mSlowMonsterShadowCoolTimer = 0.0f;
+						mSlowMonsterMovingTimers[i] = 0.0f;
 
-				if (mSlowMonsterStopTimers[i] >= STOP_TIME)
-				{
-					mSlowMonsterShadowCoolTimer = 0.0f;
-					mSlowMonsterMovingTimers[i] = 0.0f;
+						mSlowMonsterStartPositions[i] = sprite.GetPosition();
 
-					mSlowMonsterStartPositions[i] = sprite.GetPosition();
+						D2D1_POINT_2F direction = Math::SubtractVector({}, mSlowMonsterStartPositions[i]);
+						direction = Math::NormalizeVector(direction);
 
-					D2D1_POINT_2F direction = Math::SubtractVector({}, mSlowMonsterStartPositions[i]);
-					direction = Math::NormalizeVector(direction);
+						mSlowMonsterEndPositions[i] = Math::AddVector(mSlowMonsterStartPositions[i], Math::ScaleVector(direction, LENGTH));
 
-					mSlowMonsterEndPositions[i] = Math::AddVector(mSlowMonsterStartPositions[i], Math::ScaleVector(direction, LENGTH));
+						mSlowMonsterState[i] = eSlow_Monster_State::Moving;
+					}
 
-					mSlowMonsterState[i] = eSlow_Monster_State::Moving;
+					break;
 				}
-
-				break;
-			}
 			}
 
 			// 그림자가 이동한다.
@@ -1642,6 +1638,12 @@ bool MainScene::Update(const float deltaTime)
 
 			monster.backgroundHpBar.SetPosition(offset);
 			monster.hpBar.SetPosition(offset);
+
+			if (sprite.GetPosition().x != 0.0f)
+			{
+				monster.backgroundHpBar.SetActive(true);
+				monster.hpBar.SetActive(true);
+			}
 		}
 
 		// 총알 이펙트가 생성된다.
@@ -1722,6 +1724,10 @@ bool MainScene::Update(const float deltaTime)
 		if (mHero.hp <= 0)
 		{
 			mBackgroundSound.Pause();
+			mMonsterDeadSound.Pause();
+			mRunMonsterDeadSound.Pause();
+			mSlowMonsterDeadSound.Pause();
+
 			mEndingSound.Play();
 
 			mEndingLabel.SetActive(true);
@@ -1741,28 +1747,48 @@ bool MainScene::Update(const float deltaTime)
 			mHero.prevHp = mHero.hp;
 		}
 
+		float opacity = mHero.sprite.GetOpacity();
 		if (mHero.isHitEffect)
 		{
-			mHero.hitEffectTimer += deltaTime;
+			opacity -= 3.0f * deltaTime;
 
-			float opacity = mHero.sprite.GetOpacity();
-			opacity -= 10.0f * deltaTime;
-			mHero.sprite.SetOpacity(opacity);
-
-			if (mHero.hitEffectTimer >= 0.2f)
+			if (opacity <= 0.0f)
 			{
-				mHero.sprite.SetOpacity(1.0f);
+				opacity = 0.0f;
 				mHero.isHitEffect = false;
-				mHero.hitEffectTimer = 0.0f;
 			}
+		}
+		else
+		{
+			opacity += 3.0f * deltaTime;
 
+			if (opacity >= 1.0f)
+			{
+				opacity = 1.0f;
+			}
+		}
+
+		mHero.sprite.SetOpacity(opacity);
+
+		// 외부, 내부 원과 충돌이 될 때 텍스처가 바뀐다.
+		if (mHero.isHitBoundry)
+		{
+			mHero.sprite.SetTexture(&mRedRectangleTexture);
+
+			if (opacity <= 0.0f)
+			{
+				mHero.isHitBoundry = false;
+			}
+		}
+		else
+		{
+			mHero.sprite.SetTexture(&mPinkRectangleTexture);
 		}
 
 		// 플레이어 체력바를 업데이트한다.
 		D2D1_POINT_2F scale = { mUiHpBar.GetScale().width, mUiHpBar.GetScale().height };
 		scale = Math::LerpVector(scale,
-			{ UI_HP_SCALE_WIDTH * (float(mHero.hp) / float(HERO_MAX_HP)), scale.y },
-			10.0f * deltaTime);
+			{ UI_HP_SCALE_WIDTH * (float(mHero.hp) / float(HERO_MAX_HP)), scale.y }, 10.0f * deltaTime);
 		mUiHpBar.SetScale({ scale.x, scale.y });
 	}
 
@@ -1929,6 +1955,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					monster.hp -= RUN_MONSTER_MAX_HP;
 					mHero.hp -= MONSTER_ATTACK_VALUE;
+					mHero.isHitBoundry = true;
 				}
 			}
 
@@ -1940,6 +1967,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					monster.hp -= RUN_MONSTER_MAX_HP;
 					mHero.hp -= MONSTER_ATTACK_VALUE;
+					mHero.isHitBoundry = true;
 				}
 			}
 
@@ -2603,7 +2631,7 @@ void MainScene::spawnMonster(const MonsterSpawnDesc& desc)
 
 	// 초기 정보를 업데이트한다.
 	monster->state = eMonster_State::Spawn;
-	monster->spawnState = eSpawnEffect_State::Bigger;
+	monster->spawnState = eSpawnEffect_State::None;
 	monster->hp = maxHp;
 
 	monster->backgroundHpBar.SetActive(false);
@@ -2636,36 +2664,46 @@ void MainScene::spawnMonsterEffect(const MonsterSpawnEffectDesc& desc)
 	const float time = desc.time;
 	const float deltaTime = desc.deltaTime;
 
-	if (monster->spawnState == eSpawnEffect_State::Bigger)
+	switch (monster->spawnState)
 	{
-		monster->spawnStartEffectTimer += desc.deltaTime;
-		float biggerT = monster->spawnStartEffectTimer / time;
-		biggerT = std::clamp(biggerT, 0.0f, 1.0f);
-		D2D1_POINT_2F scale = Math::LerpVector({ .x = originalScale.width, .y = originalScale.height }, { .x = effectScale.width, .y = effectScale.height }, biggerT);
-
-		if (biggerT >= 1.0f)
+		case eSpawnEffect_State::None:
 		{
-			monster->spawnStartEffectTimer = 0.0f;
-			monster->spawnState = eSpawnEffect_State::Smaller;
+			monster->spawnState = eSpawnEffect_State::Bigger;
+			break;
 		}
-
-		monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
-	}
-	else if (monster->spawnState == eSpawnEffect_State::Smaller)
-	{
-		monster->spawnEndEffectTimer += desc.deltaTime;
-		float smallerT = monster->spawnEndEffectTimer / time;
-		smallerT = std::clamp(smallerT, 0.0f, 1.0f);
-		D2D1_POINT_2F scale = Math::LerpVector({ .x = effectScale.width, .y = effectScale.height }, { .x = originalScale.width, .y = originalScale.height }, smallerT);
-
-		if (smallerT >= 1.0f)
+		case eSpawnEffect_State::Bigger:
 		{
-			monster->state = eMonster_State::Life;
-			monster->spawnState = eSpawnEffect_State::End;
-			monster->spawnEndEffectTimer = 0.0f;
-		}
+			monster->spawnStartEffectTimer += desc.deltaTime;
+			float biggerT = monster->spawnStartEffectTimer / time;
+			biggerT = std::clamp(biggerT, 0.0f, 1.0f);
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = originalScale.width, .y = originalScale.height }, { .x = effectScale.width, .y = effectScale.height }, biggerT);
 
-		monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
+			if (biggerT >= 1.0f)
+			{
+				monster->spawnStartEffectTimer = 0.0f;
+				monster->spawnState = eSpawnEffect_State::Smaller;
+			}
+
+			monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
+			break;
+		}
+		case eSpawnEffect_State::Smaller:
+		{
+			monster->spawnEndEffectTimer += desc.deltaTime;
+			float smallerT = monster->spawnEndEffectTimer / time;
+			smallerT = std::clamp(smallerT, 0.0f, 1.0f);
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = effectScale.width, .y = effectScale.height }, { .x = originalScale.width, .y = originalScale.height }, smallerT);
+
+			if (smallerT >= 1.0f)
+			{
+				monster->spawnState = eSpawnEffect_State::End;
+				monster->state = eMonster_State::Life;
+				monster->spawnEndEffectTimer = 0.0f;
+			}
+
+			monster->sprite.SetScale({ .width = scale.x, .height = scale.y });
+			break;
+		}
 	}
 }
 
