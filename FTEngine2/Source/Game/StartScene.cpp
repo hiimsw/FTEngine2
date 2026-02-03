@@ -9,10 +9,7 @@
 
 void StartScene::Initialize()
 {
-	for (std::vector<Sprite*>& layer : mSpriteLayers)
-	{
-		mSpriteLayers[uint32_t(Layer::Background)].reserve(32);
-	}
+	mSpriteLayers[uint32_t(Layer::Background)].reserve(32);
 
 	SetSpriteLayers(mSpriteLayers.data(), uint32_t(mSpriteLayers.size()));
 	SetCamera(&mMainCamera);
@@ -24,7 +21,7 @@ void StartScene::Initialize()
 
 		mStartButton.SetPosition({ .x = 0.0f, .y = -100.0f });
 		mStartButton.SetTexture(&mStartIdleButtonTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mStartButton);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mStartButton);
 	}
 
 	// 종료버튼을 초기화한다. 
@@ -34,7 +31,11 @@ void StartScene::Initialize()
 
 		mExitButton.SetPosition({ .x = 0.0f, .y = -220.0f });
 		mExitButton.SetTexture(&mExitIdleButtonTexture);
-		mSpriteLayers[uint32_t(Layer::Player)].push_back(&mExitButton);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mExitButton);
+	}
+
+	{
+
 	}
 }
 

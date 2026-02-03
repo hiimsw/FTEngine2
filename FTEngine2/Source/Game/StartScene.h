@@ -34,4 +34,7 @@ private:
 	Sprite mExitButton{};
 	Texture mExitIdleButtonTexture{};
 	Texture mExitContactButtonTexture{};
+
+	Sprite mRedStar{};
+	Texture mRedStarTexture{};
 };
