@@ -202,14 +202,6 @@ void MainScene::Initialize()
 			hpBar.SetTexture(&mRedBarTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
-
-		for (Sprite& effect : mBigMonsterToBulletEffects)
-		{
-			effect.SetScale({ .width = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.width, .height = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height });
-			effect.SetActive(false);
-			effect.SetTexture(&mSkyBlueRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&effect);
-		}
 	}
 
 	// 돌진 몬스터를 초기화한다.
@@ -317,6 +309,26 @@ void MainScene::Initialize()
 		}
 	}
 
+	// 이펙트를 초기화한다.
+	{
+		for (Sprite& effect : mLongEffect)
+		{
+			effect.SetScale({ LONG_EFFECT_SCALE.width, LONG_EFFECT_SCALE.height });
+			effect.SetActive(false);
+			effect.SetTexture(&mSkyBlueRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&effect);
+		}
+
+		for (BulletEffect& effect : mCyanEffect)
+		{
+			effect.position = {};
+			effect.scale = {};
+			effect.thick = {};
+			effect.isActive = false;
+			effect.timer = {};
+		}
+	}
+
 	// 파티클을 초기화한다.
 	{
 		for (Particle& particle : mParticles)
@@ -328,7 +340,7 @@ void MainScene::Initialize()
 			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
 			sprite.SetActive(false);
 			sprite.SetTexture(&mBlueRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
+			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
 		}
 	}
 
@@ -1225,43 +1237,42 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.		
+		// 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
 		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mBigMonsters[i];
-			if (monster.state == eMonster_State::Dead)
-			{
-				continue;
-			}
-
 			if (not monster.isBulletColliding)
 			{
 				continue;
 			}
 
-			Sprite& effect = mBigMonsterToBulletEffects[i];
-			D2D1_POINT_2F position = monster.sprite.GetPosition();
-			effect.SetPosition(position);
-			effect.SetActive(true);
+			Sprite& effect = mLongEffect[i];
 
-			const D2D1_POINT_2F direction = Math::NormalizeVector(monster.sprite.GetPosition());
+			if (monster.hp > 0)
+			{
+				effect.SetTexture(&mSkyBlueRectangleTexture);
+			}
+			else
+			{
+				effect.SetTexture(&mBlueRectangleTexture);
+			}
+
+			if (effect.IsActive())
+			{
+				monster.isBulletColliding = false;
+				continue;
+			}
+
+			const D2D1_POINT_2F position = monster.sprite.GetPosition();
+			effect.SetPosition(position);
+
+			D2D1_POINT_2F direction = Math::SubtractVector(position, mHero.sprite.GetPosition());
+			direction = Math::NormalizeVector(direction);
+
 			float angle = Math::ConvertRadianToDegree(direction.y);
 			effect.SetAngle(-angle);
 
-			// 이펙트가 생성된다.
-			mBigMonsterToBulletEffectsTimers[i] += deltaTime;
-			float t = mBigMonsterToBulletEffectsTimers[i] / BIG_MONSTER_DIE_EFFECT_TIME;
-			D2D1_POINT_2F scale = Math::LerpVector({ .x = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.width, .y = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height },
-				{ .x = 0.1f, .y = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height }, t);
-			effect.SetScale({ .width = scale.x, .height = scale.y });
-
-			if (t >= 1.0f)
-			{
-				monster.isBulletColliding = false;
-				effect.SetActive(false);
-				mBigMonsterToBulletEffectsTimers[i] = 0.0f;
-			}
-
+			effect.SetActive(true);
 			break;
 		}
 
@@ -1309,37 +1320,11 @@ bool MainScene::Update(const float deltaTime)
 		}
 	}
 
-	{
-		for (Particle& particle : mParticles)
-		{
-			if (not particle.sprite.IsActive())
-			{
-				continue;
-			}
-
-			Sprite& sprite = particle.sprite;
-
-			D2D1_POINT_2F poisition = sprite.GetPosition();
-			poisition = Math::AddVector(poisition,
-				Math::ScaleVector(particle.direction, particle.speed * deltaTime));
-			sprite.SetPosition(poisition);
-
-			float opacity = sprite.GetOpacity();
-			opacity -= 1.0f * deltaTime;
-			sprite.SetOpacity(opacity);
-
-			if (opacity <= 0.0f)
-			{
-				sprite.SetActive(false);
-			}
-		}
-	}
-
 	// 돌진 몬스터를 업데이트한다.
 	//{
 		// 몬스터를 일정 시간마다 스폰한다.
 	mRunMonsterSpawnTimer += deltaTime;
-	if (mRunMonsterSpawnTimer >= 0.5f)
+	if (mRunMonsterSpawnTimer >= 2.0f)
 	{
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
@@ -1395,7 +1380,8 @@ bool MainScene::Update(const float deltaTime)
 		Monster& monster = mRunMonsters[i];
 		Sprite& sprite = monster.sprite;
 
-		if (monster.state != eMonster_State::Life)
+		if (monster.state != eMonster_State::Life
+			and monster.state == eMonster_State::Dead)
 		{
 			continue;
 		}
@@ -1461,41 +1447,26 @@ bool MainScene::Update(const float deltaTime)
 		monster.hpBar.SetPosition(offset);
 	}
 
-	// 돌진 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.
+	// 돌진 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
 	for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 	{
 		Monster& monster = mRunMonsters[i];
-		if (monster.state == eMonster_State::Dead)
-		{
-			continue;
-		}
-
 		if (not monster.isBulletColliding)
 		{
 			continue;
 		}
 
-		BulletEffect& effect = mRunMonsterToBulletEffects[i];
-
-		effect.timer += deltaTime;
-
-		// 크기를 보간한다.
-		D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
-		scale = Math::LerpVector(scale, { 80.0f , 80.0f }, 5.0f * deltaTime);
-		effect.scale = { scale.x, scale.y };
-
-		// 두께를 보간한다.
-		effect.thick = { .x = 50.0f, .y = 50.0f };
-		float t = effect.timer / (RUN_MONSTER_DIE_EFFECT_TIME - 0.1f);
-		t = std::clamp(t, 0.0f, 1.0f);
-		effect.thick = Math::LerpVector(effect.thick, { 0.1f , 0.1f }, t);
-
-		if (t >= 1.0f)
+		BulletEffect& effect = mCyanEffect[i];
+		if (effect.isActive)
 		{
 			monster.isBulletColliding = false;
-			effect.timer = 0.0f;
+			continue;
 		}
 
+		effect.position = monster.sprite.GetPosition();
+		effect.scale = {};
+		effect.thick = { .x = 50.0f, .y = 50.0f };
+		effect.isActive = true;
 		break;
 	}
 
@@ -1509,8 +1480,10 @@ bool MainScene::Update(const float deltaTime)
 		if (monster.hp <= 0
 			and monster.state == eMonster_State::Life)
 		{
-			monster.state == eMonster_State::Dead;
+			monster.state = eMonster_State::Dead;
 			mRunMonsterDeadSound.Replay();
+
+			monster.sprite.SetActive(false);
 		}
 
 		deadMonsterEffect(
@@ -1518,7 +1491,7 @@ bool MainScene::Update(const float deltaTime)
 				.monster = &monster,
 				.originalScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
 				.effectScale = {.width = 0.1f, .height = 0.1f },
-				.time = RUN_MONSTER_DIE_EFFECT_TIME,
+				.time = CYAN_EFFECT_TIME,
 				.deltaTime = deltaTime
 			}
 		);
@@ -1528,7 +1501,7 @@ bool MainScene::Update(const float deltaTime)
 	{
 		// 몬스터를 일정 시간마다 스폰한다.
 		mSlowMonsterSpawnTimer += deltaTime;
-		if (mSlowMonsterSpawnTimer >= 0.5f)
+		if (mSlowMonsterSpawnTimer >= 1.0f)
 		{
 			for (Monster& monster : mSlowMonsters)
 			{
@@ -1706,7 +1679,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 총알 이펙트가 생성된다.
+		// 느린 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
 			Monster& slowMonster = mSlowMonsters[i];
@@ -1721,7 +1694,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			BulletEffect& effect = mSlowMonsterToBulletEffects[i];
+			BulletEffect& effect = mGreenEffect[i];
 
 			effect.timer += deltaTime;
 
@@ -1757,7 +1730,7 @@ bool MainScene::Update(const float deltaTime)
 			if (monster.hp <= 0
 				and monster.state == eMonster_State::Life)
 			{
-				monster.state == eMonster_State::Dead;
+				monster.state = eMonster_State::Dead;
 				mSlowMonsterDeadSound.Replay();
 			}
 
@@ -1776,6 +1749,83 @@ bool MainScene::Update(const float deltaTime)
 				mSlowMonsterShadows[i][j].SetActive(false);
 			}
 		}
+	}
+
+	// 이펙트를 업데이트한다.
+	{
+		// 큰 몬스터와 총알
+		for (uint32_t i = 0; i < LONG_EFFECT_COUNT; ++i)
+		{
+			Sprite& effect = mLongEffect[i];
+			if (not effect.IsActive())
+			{
+				continue;
+			}
+
+			mLongEffectTimer[i] += deltaTime;
+			float t = mLongEffectTimer[i] / BIG_MONSTER_DIE_EFFECT_TIME;
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = LONG_EFFECT_SCALE.width, .y = LONG_EFFECT_SCALE.height },
+				{ .x = 0.1f, .y = LONG_EFFECT_SCALE.height }, t);
+			effect.SetScale({ .width = scale.x, .height = scale.y });
+
+			if (t >= 1.0f)
+			{
+				effect.SetActive(false);
+				mLongEffectTimer[i] = 0.0f;
+			}
+		}
+
+		for (BulletEffect& effect : mCyanEffect)
+		{
+			if (not effect.isActive)
+			{
+				continue;
+			}
+
+			// 크기를 보간한다.
+			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
+			scale = Math::LerpVector(scale, { 80.0f , 80.0f }, 3.0f * deltaTime);
+			effect.scale = { scale.x, scale.y };
+
+			// 두께를 보간한다.
+			effect.timer += deltaTime;
+			float t = effect.timer / CYAN_EFFECT_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
+
+			if (t >= 1.0f)
+			{
+				effect.isActive = false;
+				effect.timer = 0.0f;
+			}
+		}
+	}
+
+	// 파티클을 업데이트한다.
+	{	
+		for (Particle& particle : mParticles)
+		{
+			if (not particle.sprite.IsActive())
+			{
+				continue;
+			}
+
+			Sprite& sprite = particle.sprite;
+
+			D2D1_POINT_2F poisition = sprite.GetPosition();
+			poisition = Math::AddVector(poisition,
+				Math::ScaleVector(particle.direction, particle.speed * deltaTime));
+			sprite.SetPosition(poisition);
+
+			float opacity = sprite.GetOpacity();
+			opacity -= 1.0f * deltaTime;
+			sprite.SetOpacity(opacity);
+
+			if (opacity <= 0.0f)
+			{
+				sprite.SetActive(false);
+			}
+		}	
 	}
 
 	// 플레이어 체력에 관련된 부분을 업데이트한다.
@@ -2396,33 +2446,24 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 		}
 	}
 
-	// 총알과 돌진 몬스터가 충돌하면, 이펙트를 그린다.
+	// CYAN 이펙트를 그린다.
 	{
-		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+		for (uint32_t i = 0; i < CYAN_EFFECT_COUNT; ++i)
 		{
-			Monster& monster = mRunMonsters[i];
-
-			if (monster.state != eMonster_State::Life)
+			BulletEffect effect = mCyanEffect[i];
+			if (not effect.isActive)
 			{
 				continue;
 			}
-
-			if (not monster.isBulletColliding)
-			{
-				continue;
-			}
-
-			Sprite& sprite = monster.sprite;
 
 			const Matrix3x2F worldView =
 				Transformation::getWorldMatrix(
 					{
-						.x = sprite.GetPosition().x,
-						.y = sprite.GetPosition().y + 50.0f
+						.x = effect.position.x,
+						.y = effect.position.y + 50.0f
 					}, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
-			const BulletEffect effect = mRunMonsterToBulletEffects[i];
 
 			const D2D1_RECT_F colliderSize =
 			{
@@ -2433,6 +2474,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			};
 
 			renderTarget->DrawRectangle(colliderSize, mCyanBrush, effect.thick.x);
+
 		}
 	}
 
@@ -2462,7 +2504,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 					}, 45.0f) * view;
 			renderTarget->SetTransform(worldView);
 
-			const BulletEffect effect = mSlowMonsterToBulletEffects[i];
+			const BulletEffect effect = mGreenEffect[i];
 
 			const D2D1_RECT_F colliderSize =
 			{

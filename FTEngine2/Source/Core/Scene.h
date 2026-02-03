@@ -12,6 +12,7 @@ public:
 	{
 		Background,
 		Monster,
+		Effect,
 		Player,
 		UI,
 		End

@@ -133,9 +133,11 @@ struct Casing
 
 struct BulletEffect
 {
-	float timer;
-	D2D1_POINT_2F thick;
+	D2D1_POINT_2F position;
 	D2D1_SIZE_F scale;
+	D2D1_POINT_2F thick;
+	bool isActive;
+	float timer;
 };
 
 struct Particle
@@ -341,18 +343,12 @@ private:
 	Monster mBigMonsters[BIG_MONSTER_COUNT]{};
 	float mBigMonsterSpawnTimer{};
 
-	static constexpr D2D1_SIZE_F BIG_MONSTER_TO_BULLET_EFFECT_SCALE = { 1.2f, 50.0f };
-	Sprite mBigMonsterToBulletEffects[BIG_MONSTER_COUNT]{};
-	float mBigMonsterToBulletEffectsTimers[BIG_MONSTER_COUNT]{};
-
 	Sound mBigMonsterDeadSound{};
 
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 4;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
-
-	static constexpr float RUN_MONSTER_DIE_EFFECT_TIME = 0.5f;
 
 	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
 	float mRunMonsterSpawnTimer{};
@@ -365,8 +361,6 @@ private:
 	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
 	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
 	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
-
-	BulletEffect mRunMonsterToBulletEffects[RUN_MONSTER_COUNT]{};
 
 	Sound mRunMonsterDeadSound{};
 
@@ -391,9 +385,6 @@ private:
 	D2D1_POINT_2F mSlowMonsterStartPositions[SLOW_MONSTER_COUNT]{};
 	D2D1_POINT_2F mSlowMonsterEndPositions[SLOW_MONSTER_COUNT]{};
 
-	// 이펙트 관련
-	BulletEffect mSlowMonsterToBulletEffects[SLOW_MONSTER_COUNT]{};
-
 	Sound mSlowMonsterDeadSound{};
 
 	// 그림자 관련
@@ -404,6 +395,20 @@ private:
 	Sprite* mTargetMonster = nullptr;
 	Sprite* mTargetBullet = nullptr;
 
+	// 이펙트 관련
+	static constexpr uint32_t LONG_EFFECT_COUNT = BIG_MONSTER_COUNT;
+	static constexpr D2D1_SIZE_F LONG_EFFECT_SCALE = { 1.2f, 50.0f };
+	Sprite mLongEffect[LONG_EFFECT_COUNT]{};
+	float mLongEffectTimer[LONG_EFFECT_COUNT]{};
+
+	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
+	static constexpr float CYAN_EFFECT_TIME = 0.3f;
+	BulletEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
+
+	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
+	BulletEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
+
+	// 파티클 관련
 	static constexpr uint32_t PARTICLE_COUNT = 100;
 	Particle mParticles[PARTICLE_COUNT]{};
 	int32_t mSpawnParticleCount = 10;
