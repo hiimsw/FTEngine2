@@ -1132,7 +1132,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				SpawnMonster(
+				spawnMonster(
 					{
 						.monster = &monster,
 						.scale {.width = MONSTER_SCALE , .height = MONSTER_SCALE },
@@ -1154,7 +1154,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			UpdateMonsterSpawnEffect(
+			spawnMonsterEffect(
 				{
 					.monster = &monster,
 					.originalScale { MONSTER_SCALE, MONSTER_SCALE },
@@ -1247,7 +1247,7 @@ bool MainScene::Update(const float deltaTime)
 		for (Monster& monster : mMonsters)
 		{
 			// 체력바를 업데이트한다.
-			UpdateMonsterHp(&monster, MONSTER_HP_BAR_WIDTH, MONSTER_MAX_HP, deltaTime);
+			updateMonsterHp(&monster, MONSTER_HP_BAR_WIDTH, MONSTER_MAX_HP, deltaTime);
 
 			// 몬스터가 죽으면 이펙트가 생성된다.
 			if (monster.hp <= 0
@@ -1257,7 +1257,7 @@ bool MainScene::Update(const float deltaTime)
 				mMonsterDeadSound.Replay();
 			}
 
-			MonsterDeadEffect(
+			deadMonsterEffect(
 				{
 					.monster = &monster,
 					.originalScale = {.width = MONSTER_SCALE, .height = MONSTER_SCALE },
@@ -1291,7 +1291,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			SpawnMonster(
+			spawnMonster(
 				{
 					.monster = &monster,
 					.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
@@ -1319,7 +1319,7 @@ bool MainScene::Update(const float deltaTime)
 			continue;
 		}
 
-		UpdateMonsterSpawnEffect(
+		spawnMonsterEffect(
 			{
 				.monster = &monster,
 				.originalScale { RUN_MONSTER_SCALE, RUN_MONSTER_SCALE },
@@ -1443,7 +1443,7 @@ bool MainScene::Update(const float deltaTime)
 	for (Monster& monster : mRunMonsters)
 	{
 		// 체력바를 업데이트한다.
-		UpdateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
+		updateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
 
 
 		// 몬스터가 죽으면 이펙트가 생성된다.
@@ -1454,7 +1454,7 @@ bool MainScene::Update(const float deltaTime)
 			mRunMonsterDeadSound.Replay();
 		}
 
-		MonsterDeadEffect(
+		deadMonsterEffect(
 			{
 				.monster = &monster,
 				.originalScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
@@ -1479,7 +1479,7 @@ bool MainScene::Update(const float deltaTime)
 					continue;
 				}
 
-				SpawnMonster(
+				spawnMonster(
 					{
 						.monster = &monster,
 						.scale {.width = SLOW_MONSTER_SCALE , .height = SLOW_MONSTER_SCALE },
@@ -1522,7 +1522,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			UpdateMonsterSpawnEffect(
+			spawnMonsterEffect(
 				{
 					.monster = &monster,
 					.originalScale { SLOW_MONSTER_SCALE, SLOW_MONSTER_SCALE },
@@ -1689,7 +1689,7 @@ bool MainScene::Update(const float deltaTime)
 			Monster& monster = mSlowMonsters[i];
 
 			// 체력바를 업데이트한다.
-			UpdateMonsterHp(&monster, SLOW_MONSTER_HP_BAR_WIDTH, SLOW_MONSTER_MAX_HP, deltaTime);
+			updateMonsterHp(&monster, SLOW_MONSTER_HP_BAR_WIDTH, SLOW_MONSTER_MAX_HP, deltaTime);
 
 			// 몬스터가 죽으면 이펙트가 생성된다.
 			if (monster.hp <= 0
@@ -1699,7 +1699,7 @@ bool MainScene::Update(const float deltaTime)
 				mSlowMonsterDeadSound.Replay();
 			}
 
-			MonsterDeadEffect(
+			deadMonsterEffect(
 				{
 					.monster = &monster,
 					.originalScale = {.width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE },
@@ -2595,11 +2595,11 @@ D2D1_POINT_2F MainScene::updateCameraShake(const float deltaTime)
 	return D2D1_POINT_2F{};
 }
 
-void MainScene::SpawnMonster(const MonsterSpawnDesc& desc)
+void MainScene::spawnMonster(const MonsterSpawnDesc& desc)
 {
 	Monster* monster = desc.monster;
-	D2D1_SIZE_F scale = desc.scale;
-	int32_t maxHp = desc.maxHp;
+	const D2D1_SIZE_F scale = desc.scale;
+	const int32_t maxHp = desc.maxHp;
 
 	// 초기 정보를 업데이트한다.
 	monster->state = eMonster_State::Spawn;
@@ -2628,7 +2628,7 @@ void MainScene::SpawnMonster(const MonsterSpawnDesc& desc)
 	sprite.SetActive(true);
 }
 
-void MainScene::UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc)
+void MainScene::spawnMonsterEffect(const MonsterSpawnEffectDesc& desc)
 {
 	Monster* monster = desc.monster;
 	const D2D1_SIZE_F originalScale = desc.originalScale;
@@ -2669,7 +2669,7 @@ void MainScene::UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc)
 	}
 }
 
-void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime)
+void MainScene::updateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime)
 {
 	ASSERT(monster != nullptr);
 
@@ -2679,7 +2679,7 @@ void MainScene::UpdateMonsterHp(Monster* monster, const float maxWidthBar, const
 	hpBar.SetScale({ scale.x, scale.y });
 }
 
-void MainScene::MonsterDeadEffect(const MonsterDeadSoundDesc& desc)
+void MainScene::deadMonsterEffect(const MonsterDeadSoundDesc& desc)
 {
 	Monster* monster = desc.monster;
 	const D2D1_SIZE_F originalScale = desc.originalScale;

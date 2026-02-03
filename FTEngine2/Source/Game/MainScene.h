@@ -195,10 +195,10 @@ private:
 	void initializeCameraShake(const float amplitude, const float duration, const float frequency);
 	D2D1_POINT_2F updateCameraShake(const float deltaTime);
 
-	void SpawnMonster(const MonsterSpawnDesc& desc);
-	void UpdateMonsterSpawnEffect(const MonsterSpawnEffectDesc& desc);
-	void UpdateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
-	void MonsterDeadEffect(const MonsterDeadSoundDesc& desc);
+	void spawnMonster(const MonsterSpawnDesc& desc);
+	void updateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
+	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
+	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
 
 private:
 	Texture mRectangleTexture{};
