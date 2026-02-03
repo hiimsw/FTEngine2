@@ -74,20 +74,20 @@ void MainScene::Initialize()
 		mHeroHitSound.Initialize(GetHelper(), "Resource/Sound/hit.mp3", false);
 		mHeroHitSound.SetVolume(1.0f);
 
-		//mShieldSound.Initialize(GetHelper(), "Resource/Sound/E_Skill.mp3", false);
-		//mShieldSound.SetVolume(0.2f);
+		mShieldSound.Initialize(GetHelper(), "Resource/Sound/E_Skill.mp3", false);
+		mShieldSound.SetVolume(0.2f);
 
-		//mOrbitSound.Initialize(GetHelper(), "Resource/Sound/Q_Skill.mp3", false);
-		//mOrbitSound.SetVolume(0.2f);
+		mOrbitSound.Initialize(GetHelper(), "Resource/Sound/Q_Skill.mp3", false);
+		mOrbitSound.SetVolume(0.2f);
 
-		//mMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break.mp3", false);
-		//mMonsterDeadSound.SetVolume(0.5f);
+		mMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break.mp3", false);
+		mMonsterDeadSound.SetVolume(0.5f);
 
-		//mRunMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break2.mp3", false);
-		//mRunMonsterDeadSound.SetVolume(0.5f);
+		mRunMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break2.mp3", false);
+		mRunMonsterDeadSound.SetVolume(0.5f);
 
-		//mSlowMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break3.mp3", false);
-		//mSlowMonsterDeadSound.SetVolume(0.5f);
+		mSlowMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break3.mp3", false);
+		mSlowMonsterDeadSound.SetVolume(0.5f);
 
 		mEndingSound.Initialize(GetHelper(), "Resource/Sound/game_over.mp3", false);
 		mEndingSound.SetVolume(0.3f);
@@ -526,7 +526,7 @@ bool MainScene::Update(const float deltaTime)
 		// 게임을 종료한다.
 		if (Input::Get().GetKeyDown(VK_ESCAPE))
 		{
-			mIsUpdate = false;
+			PostQuitMessage(0);
 		}
 
 		// 마우스 커서를 설정한다.
@@ -919,7 +919,7 @@ bool MainScene::Update(const float deltaTime)
 			if (mShield.state == eShield_State::End
 				and Input::Get().GetKeyDown('E'))
 			{
-				//mShieldSound.Replay();
+				mShieldSound.Replay();
 
 				mShieldLabel.SetActive(true);
 				mShield.state = eShield_State::Growing;
@@ -1003,7 +1003,7 @@ bool MainScene::Update(const float deltaTime)
 
 			case eShield_State::CoolTime:
 			{
-				//mShieldSound.Pause();
+				mShieldSound.Pause();
 
 				mShield.coolTimer += deltaTime;
 
@@ -1032,7 +1032,7 @@ bool MainScene::Update(const float deltaTime)
 			if (Input::Get().GetKeyDown('Q')
 				and mOrbit.state == eOrbit_State::End)
 			{
-				//mOrbitSound.Replay();
+				mOrbitSound.Replay();
 
 				mOrbitLabel.SetActive(true);
 				mOrbit.state = eOrbit_State::Rotating;
@@ -1094,7 +1094,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 			case eOrbit_State::CoolTime:
 			{
-				//mOrbitSound.Pause();
+				mOrbitSound.Pause();
 
 				mOrbit.coolTimer += deltaTime;
 
@@ -1253,7 +1253,7 @@ bool MainScene::Update(const float deltaTime)
 				and monster.state == eMonster_State::Life)
 			{
 				monster.state == eMonster_State::Dead;
-				//mMonsterDeadSound.Replay();
+				mMonsterDeadSound.Replay();
 			}
 
 			MonsterDeadEffect(
@@ -1444,7 +1444,7 @@ bool MainScene::Update(const float deltaTime)
 			and monster.state == eMonster_State::Life)
 		{
 			monster.state == eMonster_State::Dead;
-			//mRunMonsterDeadSound.Replay();
+			mRunMonsterDeadSound.Replay();
 		}
 
 		MonsterDeadEffect(
@@ -1686,7 +1686,7 @@ bool MainScene::Update(const float deltaTime)
 				and monster.state == eMonster_State::Life)
 			{
 				monster.state == eMonster_State::Dead;
-				//mSlowMonsterDeadSound.Replay();
+				mSlowMonsterDeadSound.Replay();
 			}
 
 			MonsterDeadEffect(

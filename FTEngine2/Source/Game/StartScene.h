@@ -18,11 +18,20 @@ public:
 	void Finalize() override;
 
 private:
+	D2D1_POINT_2F getMouseWorldPosition() const;
+	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite, const Texture texture);
+
+private:
 	bool mIsUpdate = true;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
 	Camera mMainCamera{};
 
 	Sprite mStartButton{};
-	Texture mStartButtonTexture{};
+	Texture mStartIdleButtonTexture{};
+	Texture mStartContactButtonTexture{};
+
+	Sprite mExitButton{};
+	Texture mExitIdleButtonTexture{};
+	Texture mExitContactButtonTexture{};
 };
