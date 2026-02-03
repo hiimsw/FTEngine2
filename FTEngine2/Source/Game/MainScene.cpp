@@ -80,8 +80,8 @@ void MainScene::Initialize()
 		mOrbitSound.Initialize(GetHelper(), "Resource/Sound/Q_Skill.mp3", false);
 		mOrbitSound.SetVolume(0.2f);
 
-		mMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break.mp3", false);
-		mMonsterDeadSound.SetVolume(0.5f);
+		mBigMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break.mp3", false);
+		mBigMonsterDeadSound.SetVolume(0.5f);
 
 		mRunMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break2.mp3", false);
 		mRunMonsterDeadSound.SetVolume(0.5f);
@@ -170,7 +170,7 @@ void MainScene::Initialize()
 
 	// 몬스터를 초기화한다.
 	{
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			// 기본 정보를 초기화한다.
 			monster.state = eMonster_State::Spawn;
@@ -180,32 +180,32 @@ void MainScene::Initialize()
 			monster.spawnEndEffectTimer = {};
 			monster.deadEffectTimer = {};
 			monster.moveSpeed = {};
-			monster.hp = MONSTER_MAX_HP;
+			monster.hp = BIG_MONSTER_MAX_HP;
 
 			Sprite& sprite = monster.sprite;
-			sprite.SetScale({ .width = MONSTER_SCALE, .height = MONSTER_SCALE });
+			sprite.SetScale({ .width = BIG_MONSTER_SCALE, .height = BIG_MONSTER_SCALE });
 			sprite.SetActive(false);
 			sprite.SetTexture(&mRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
 
 			Sprite& hpBackground = monster.backgroundHpBar;
-			hpBackground.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
+			hpBackground.SetScale({ .width = BIG_MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			hpBackground.SetCenter({ .x = -0.5f, .y = 0.0f });
 			hpBackground.SetActive(false);
 			hpBackground.SetTexture(&mWhiteBarTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBackground);
 
 			Sprite& hpBar = monster.hpBar;
-			hpBar.SetScale({ .width = MONSTER_HP_BAR_WIDTH, .height = 0.7f });
+			hpBar.SetScale({ .width = BIG_MONSTER_HP_BAR_WIDTH, .height = 0.7f });
 			hpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
 			hpBar.SetActive(false);
 			hpBar.SetTexture(&mRedBarTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 		}
 
-		for (Sprite& effect : mMonsterToBulletEffects)
+		for (Sprite& effect : mBigMonsterToBulletEffects)
 		{
-			effect.SetScale({ .width = MONSTER_TO_BULLET_EFFECT_SCALE.width, .height = MONSTER_TO_BULLET_EFFECT_SCALE.height });
+			effect.SetScale({ .width = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.width, .height = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height });
 			effect.SetActive(false);
 			effect.SetTexture(&mSkyBlueRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&effect);
@@ -1122,10 +1122,10 @@ bool MainScene::Update(const float deltaTime)
 	// 몬스터를 업데이트한다.
 	{
 		// 일반 몬스터를 일정 시간마다 스폰한다.
-		mMonsterSpawnTimer += deltaTime;
-		if (mMonsterSpawnTimer >= 0.5f)
+		mBigMonsterSpawnTimer += deltaTime;
+		if (mBigMonsterSpawnTimer >= 0.5f)
 		{
-			for (Monster& monster : mMonsters)
+			for (Monster& monster : mBigMonsters)
 			{
 				if (monster.sprite.IsActive())
 				{
@@ -1135,19 +1135,19 @@ bool MainScene::Update(const float deltaTime)
 				spawnMonster(
 					{
 						.monster = &monster,
-						.scale {.width = MONSTER_SCALE , .height = MONSTER_SCALE },
-						.maxHp = MONSTER_MAX_HP
+						.scale {.width = BIG_MONSTER_SCALE , .height = BIG_MONSTER_SCALE },
+						.maxHp = BIG_MONSTER_MAX_HP
 					}
 				);
 
 				monster.moveSpeed = getRandom(10.0f, 80.0f);
-				mMonsterSpawnTimer = 0.0f;
+				mBigMonsterSpawnTimer = 0.0f;
 				break;
 			}
 		}
 
 		// 몬스터를 스폰 시 이펙트가 발생한다.
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Spawn)
 			{
@@ -1157,7 +1157,7 @@ bool MainScene::Update(const float deltaTime)
 			spawnMonsterEffect(
 				{
 					.monster = &monster,
-					.originalScale { MONSTER_SCALE, MONSTER_SCALE },
+					.originalScale { BIG_MONSTER_SCALE, BIG_MONSTER_SCALE },
 					.effectScale{ 4.0f, 4.0f },
 					.time = 0.3f,
 					.deltaTime = deltaTime
@@ -1167,7 +1167,7 @@ bool MainScene::Update(const float deltaTime)
 
 		// 몬스터를 이동시킨다.
 		constexpr D2D1_POINT_2F HP_OFFSET = { .x = 3.5f, .y = 10.0f };
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Life)
 			{
@@ -1210,9 +1210,9 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 몬스터와 총알이 충돌하면, 총알 이펙트가 생성된다.		
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
 		{
-			Monster& monster = mMonsters[i];
+			Monster& monster = mBigMonsters[i];
 			if (monster.state == eMonster_State::Dead)
 			{
 				continue;
@@ -1224,7 +1224,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			D2D1_POINT_2F position = monster.sprite.GetPosition();
-			Sprite& effect = mMonsterToBulletEffects[i];
+			Sprite& effect = mBigMonsterToBulletEffects[i];
 			effect.SetPosition(position);
 			effect.SetActive(true);
 
@@ -1233,41 +1233,41 @@ bool MainScene::Update(const float deltaTime)
 			effect.SetAngle(-angle);
 
 			// 이펙트가 생성된다.
-			mMonsterToBulletEffectsTimers[i] += deltaTime;
-			float t = mMonsterToBulletEffectsTimers[i] / MONSTER_DIE_EFFECT_TIME;
-			D2D1_POINT_2F scale = Math::LerpVector({ .x = MONSTER_TO_BULLET_EFFECT_SCALE.width, .y = MONSTER_TO_BULLET_EFFECT_SCALE.height },
-				{ .x = 0.1f, .y = MONSTER_TO_BULLET_EFFECT_SCALE.height }, t);
+			mBigMonsterToBulletEffectsTimers[i] += deltaTime;
+			float t = mBigMonsterToBulletEffectsTimers[i] / BIG_MONSTER_DIE_EFFECT_TIME;
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.width, .y = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height },
+				{ .x = 0.1f, .y = BIG_MONSTER_TO_BULLET_EFFECT_SCALE.height }, t);
 			effect.SetScale({ .width = scale.x, .height = scale.y });
 
 			if (t >= 1.0f)
 			{
 				monster.isBulletColliding = false;
 				effect.SetActive(false);
-				mMonsterToBulletEffectsTimers[i] = 0.0f;
+				mBigMonsterToBulletEffectsTimers[i] = 0.0f;
 			}
 
 			break;
 		}
 
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			// 체력바를 업데이트한다.
-			updateMonsterHp(&monster, MONSTER_HP_BAR_WIDTH, MONSTER_MAX_HP, deltaTime);
+			updateMonsterHp(&monster, BIG_MONSTER_HP_BAR_WIDTH, BIG_MONSTER_MAX_HP, deltaTime);
 
 			// 몬스터가 죽으면 이펙트가 생성된다.
 			if (monster.hp <= 0
 				and monster.state == eMonster_State::Life)
 			{
 				monster.state == eMonster_State::Dead;
-				mMonsterDeadSound.Replay();
+				mBigMonsterDeadSound.Replay();
 			}
 
 			deadMonsterEffect(
 				{
 					.monster = &monster,
-					.originalScale = {.width = MONSTER_SCALE, .height = MONSTER_SCALE },
+					.originalScale = {.width = BIG_MONSTER_SCALE, .height = BIG_MONSTER_SCALE },
 					.effectScale = {.width = 0.1f, .height = 0.1f },
-					.time = MONSTER_DIE_EFFECT_TIME,
+					.time = BIG_MONSTER_DIE_EFFECT_TIME,
 					.deltaTime = deltaTime
 				}
 			);
@@ -1724,7 +1724,7 @@ bool MainScene::Update(const float deltaTime)
 		if (mHero.hp <= 0)
 		{
 			mBackgroundSound.Pause();
-			mMonsterDeadSound.Pause();
+			mBigMonsterDeadSound.Pause();
 			mRunMonsterDeadSound.Pause();
 			mSlowMonsterDeadSound.Pause();
 
@@ -1897,7 +1897,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			Sprite& sprite = monster.sprite;
 			if (not sprite.IsActive())
@@ -1917,7 +1917,7 @@ bool MainScene::Update(const float deltaTime)
 
 				if (isCollision and monster.hp > 0)
 				{
-					monster.hp -= MONSTER_MAX_HP;
+					monster.hp -= BIG_MONSTER_MAX_HP;
 					mHero.hp -= MONSTER_ATTACK_VALUE;
 				}
 			}
@@ -1927,7 +1927,7 @@ bool MainScene::Update(const float deltaTime)
 				const bool isCollision = Collision::IsCollidedSqureWithSqure(getRectangleFromSprite(mHero.sprite), getRectangleFromSprite(monster.sprite));
 				if (isCollision and monster.hp > 0)
 				{
-					monster.hp -= MONSTER_MAX_HP;
+					monster.hp -= BIG_MONSTER_MAX_HP;
 					mHero.hp -= MONSTER_ATTACK_VALUE;
 				}
 			}
@@ -2047,7 +2047,7 @@ bool MainScene::Update(const float deltaTime)
 			Sprite* targetMonster = nullptr;
 			float targetMonsterDistance = 999.9f;
 
-			for (Monster& monster : mMonsters)
+			for (Monster& monster : mBigMonsters)
 			{
 				if (monster.state != eMonster_State::Life)
 				{
@@ -2150,7 +2150,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 플레이어 쉴드와 몬스터가 충돌하면 몬스터는 삭제된다.
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Life)
 			{
@@ -2168,7 +2168,7 @@ bool MainScene::Update(const float deltaTime)
 			
 			if (isCollision and monster.hp > 0)
 			{
-				monster.hp -= MONSTER_MAX_HP;
+				monster.hp -= BIG_MONSTER_MAX_HP;
 			}
 		}
 
@@ -2217,7 +2217,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 플레이어 주변을 공전하는 원과 몬스터가 충돌하면 몬스터는 삭제된다.
-		for (Monster& monster : mMonsters)
+		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Life)
 			{
@@ -2235,7 +2235,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (isCollision and monster.hp > 0)
 			{
-				monster.hp -= MONSTER_MAX_HP;
+				monster.hp -= BIG_MONSTER_MAX_HP;
 			}
 		}
 
@@ -2418,9 +2418,9 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// 몬스터 충돌박스를 그린다.
 	{
-		for (uint32_t i = 0; i < MONSTER_COUNT; ++i)
+		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
 		{
-			Sprite& monsterSprite = mMonsters[i].sprite;
+			Sprite& monsterSprite = mBigMonsters[i].sprite;
 
 			if (mIsColliderKeyDown and monsterSprite.IsActive())
 			{

@@ -235,7 +235,7 @@ private:
 
 	static constexpr uint32_t PLAYER_ATTACK_VALUE = 10;
 	static constexpr uint32_t MONSTER_ATTACK_VALUE = 10;
-	static constexpr uint32_t BIG_MONSTER_ATTACK_VALUE = 10;
+	static constexpr uint32_t BIG_MONSTER_ATTACK_VALUE = 20;
 	static constexpr uint32_t BULLET_ATTACK_VALUE = 10;
 	static constexpr uint32_t BOUNDRY_ATTACK_VALUE = 10;
 
@@ -330,22 +330,21 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t MONSTER_COUNT = 6;
-	static constexpr uint32_t MONSTER_MAX_HP = 20;
-	static constexpr float MONSTER_SCALE = 1.2f;
-	static constexpr float MONSTER_HP_BAR_WIDTH = 0.1f;
+	static constexpr uint32_t BIG_MONSTER_COUNT = 6;
+	static constexpr uint32_t BIG_MONSTER_MAX_HP = 20;
+	static constexpr float BIG_MONSTER_SCALE = 1.2f;
+	static constexpr float BIG_MONSTER_HP_BAR_WIDTH = 0.1f;
 
-	static constexpr float MONSTER_DIE_EFFECT_TIME = 0.2f;
+	static constexpr float BIG_MONSTER_DIE_EFFECT_TIME = 0.2f;
 
-	Monster mMonsters[MONSTER_COUNT]{};
-	float mMonsterSpawnTimer{};
-	bool mIsMonsterHp[MONSTER_COUNT]{};
+	Monster mBigMonsters[BIG_MONSTER_COUNT]{};
+	float mBigMonsterSpawnTimer{};
 
-	static constexpr D2D1_SIZE_F MONSTER_TO_BULLET_EFFECT_SCALE = { 1.2f, 50.0f };
-	Sprite mMonsterToBulletEffects[MONSTER_COUNT]{};
-	float mMonsterToBulletEffectsTimers[MONSTER_COUNT]{};
+	static constexpr D2D1_SIZE_F BIG_MONSTER_TO_BULLET_EFFECT_SCALE = { 1.2f, 50.0f };
+	Sprite mBigMonsterToBulletEffects[BIG_MONSTER_COUNT]{};
+	float mBigMonsterToBulletEffectsTimers[BIG_MONSTER_COUNT]{};
 
-	Sound mMonsterDeadSound{};
+	Sound mBigMonsterDeadSound{};
 
 	// 돌진 몬스터
 	static constexpr uint32_t RUN_MONSTER_COUNT = 4;
