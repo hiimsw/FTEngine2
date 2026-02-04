@@ -75,6 +75,9 @@ void MainScene::Initialize()
 		mHeroHitSound.Initialize(GetHelper(), "Resource/Sound/hit.mp3", false);
 		mHeroHitSound.SetVolume(1.0f);
 
+		mDashSound.Initialize(GetHelper(), "Resource/Sound/dash.mp3", false);
+		mDashSound.SetVolume(0.3f);
+
 		mShieldSound.Initialize(GetHelper(), "Resource/Sound/E_Skill.mp3", false);
 		mShieldSound.SetVolume(0.2f);
 
@@ -634,6 +637,8 @@ bool MainScene::Update(const float deltaTime)
 						mIsDashing = true;
 						mDashShadowCoolTimer = 0.0f;
 					}
+
+					mDashSound.Replay();
 				}
 
 				const D2D1_POINT_2F position = Math::AddVector(mHero.sprite.GetPosition(), adjustVelocity);
@@ -2785,6 +2790,7 @@ void MainScene::Finalize()
 	mBackgroundSound.Finalize();
 
 	mHeroHitSound.Finalize();
+	mDashSound.Finalize();
 
 	mBulletSound.Finalize();
 	mReloadSound.Finalize();

@@ -304,6 +304,7 @@ private:
 	float mDashShadowCoolTimer{};
 	float mDashSpeed = 0.0f;
 	bool mIsDashing = false;
+	Sound mDashSound{};
 
 	// 플레이어 총알
 	static constexpr uint32_t BULLET_COUNT = 100;
