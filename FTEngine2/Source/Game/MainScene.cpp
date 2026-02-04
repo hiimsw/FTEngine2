@@ -2773,6 +2773,15 @@ void MainScene::Finalize()
 	mRedBarTexture.Finalize();
 	mYellowBarTexture.Finalize();
 
+	mRedStarTexture.Finalize();
+	mOrangeStarTexture.Finalize();
+	mYellowStarTexture.Finalize();
+	mGreenStarTexture.Finalize();
+	mBlueStarTexture.Finalize();
+	mPurpleStarTexture.Finalize();
+
+
+	// Sound
 	mBackgroundSound.Finalize();
 
 	mHeroHitSound.Finalize();
