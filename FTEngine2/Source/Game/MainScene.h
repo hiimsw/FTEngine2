@@ -103,6 +103,8 @@ struct Monster
 
 	// 충돌 관련
 	bool isBulletColliding;
+	bool isShieldColliding;
+	bool isOrbitColliding;
 
 	eSpawnEffect_State spawnState;
 	float spawnStartEffectTimer;

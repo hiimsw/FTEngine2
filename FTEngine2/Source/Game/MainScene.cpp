@@ -1347,7 +1347,6 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterisMoveables[i] = false;
 				mRunMonsterStartBars[i].SetPosition({ .x = sprite.GetPosition().x - 10.0f, .y = sprite.GetPosition().y - 20.0f });
 				mRunMonsterStartBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
-				mRunMonsterStartBars[i].SetActive(true);
 
 				mRunMonsterSpawnTimer = 0.0f;
 				break;
@@ -1393,6 +1392,11 @@ bool MainScene::Update(const float deltaTime)
 				D2D1_SIZE_F scale = mRunMonsterStartBars[i].GetScale();
 				if (scale.width < RUN_MONSTER_START_BAR_WIDTH)
 				{
+					if (monster.sprite.GetPosition().x != 0.0f)
+					{
+						mRunMonsterStartBars[i].SetActive(true);
+					}
+
 					scale.width += barSpeed * deltaTime;
 					mRunMonsterStartBars[i].SetScale(scale);
 					continue;
@@ -1471,8 +1475,10 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		for (Monster& monster : mRunMonsters)
+		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
+			Monster& monster = mRunMonsters[i];
+
 			// 체력바를 업데이트한다.
 			updateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
 
@@ -1485,6 +1491,7 @@ bool MainScene::Update(const float deltaTime)
 				mRunMonsterDeadSound.Replay();
 
 				monster.sprite.SetActive(false);
+				mRunMonsterStartBars[i].SetActive(false);
 			}
 
 			deadMonsterEffect(
