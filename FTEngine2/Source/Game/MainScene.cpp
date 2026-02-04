@@ -1539,8 +1539,6 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				effect.position = monster.sprite.GetPosition();
-				effect.scale = {};
-				effect.thick = { .x = 50.0f, .y = 50.0f };
 				effect.isActive = true;
 
 				spawned = true;
@@ -1571,8 +1569,6 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				effect.position = monster.sprite.GetPosition();
-				effect.scale = {};
-				effect.thick = { .x = 50.0f, .y = 50.0f };
 				effect.isActive = true;
 
 				spawned = true;
@@ -1850,8 +1846,6 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				effect.position = monster.sprite.GetPosition();
-				effect.scale = {};
-				effect.thick = { .x = 30.0f, .y = 30.0f };
 				effect.isActive = true;
 
 				spawned = true;
@@ -1882,8 +1876,6 @@ bool MainScene::Update(const float deltaTime)
 				}
 
 				effect.position = monster.sprite.GetPosition();
-				effect.scale = {};
-				effect.thick = { .x = 30.0f, .y = 30.0f };
 				effect.isActive = true;
 
 				spawned = true;
@@ -1961,15 +1953,14 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 크기를 보간한다.
-			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
-			scale = Math::LerpVector(scale, { 80.0f , 80.0f }, 3.0f * deltaTime);
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = 80.0f , .y = 80.0f }, { .x = 0.1f , .y = 0.1f }, 3.0f * deltaTime);
 			effect.scale = { scale.x, scale.y };
 
 			// 두께를 보간한다.
 			effect.thickTimer += deltaTime;
 			float t = effect.thickTimer / CYAN_EFFECT_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
-			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
+			effect.thick = Math::LerpVector({ .x = 50.0f , .y = 50.0f }, { .x = 0.1f , .y = 0.1f }, t);
 
 			if (t >= 1.0f)
 			{
@@ -1987,23 +1978,16 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 크기를 보간한다.
-			effect.scaleTimer += deltaTime;
-			float scaleT = effect.scaleTimer / GREEN_EFFECT_TIME;
-			D2D1_POINT_2F scale = Math::LerpVector({ .x = 100.0f, .y = 100.0f }, { 0.1f , 0.1f }, scaleT);
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = 70.0f, .y = 70.0f }, { .x = 0.1f, .y = 0.1f }, 3.0f * deltaTime);
 			effect.scale = { scale.x, scale.y };
 			
-			if (scaleT >= 1.0f)
-			{
-				effect.thickTimer = 0.0f;
-			}
-
 			// 두께를 보간한다.
 			effect.thickTimer += deltaTime;
-			float thickT = effect.thickTimer / GREEN_EFFECT_TIME;
-			thickT = std::clamp(thickT, 0.0f, 1.0f);
-			effect.thick = Math::LerpVector(effect.thick, { .x = 0.1f , .y = 0.1f }, thickT);
+			float t = effect.thickTimer / GREEN_EFFECT_TIME;
+			t = std::clamp(t, 0.0f, 1.0f);
+			effect.thick = Math::LerpVector({ .x = 50.0f , .y = 50.0f }, { .x = 0.1f , .y = 0.1f }, t);
 
-			if (thickT >= 1.0f)
+			if (t >= 1.0f)
 			{
 				effect.isActive = false;
 				effect.thickTimer = 0.0f;
@@ -2778,7 +2762,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			(
 				{
 					.effect = effect, 
-					.positionOffset = {.x = 0.0f, .y = 50.0f }, 
+					.positionOffset = {.x = 0.0f, .y = 40.0f }, 
 					.angle = 45.0f, 
 					.renderTarget = renderTarget, 
 					.brush = mCyanBrush, 
@@ -2801,7 +2785,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			(
 				{
 					.effect = effect,
-					.positionOffset = {.x = 0.0f, .y = 5.0f },
+					.positionOffset = {.x = 0.0f, .y = 50.0f },
 					.angle = 45.0f,
 					.renderTarget = renderTarget,
 					.brush = mDarkGreen,

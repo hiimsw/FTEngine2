@@ -140,7 +140,6 @@ struct DiamondEffect
 	D2D1_POINT_2F thick;
 	bool isActive;
 	float thickTimer;
-	float scaleTimer;
 };
 
 struct Particle
@@ -300,7 +299,7 @@ private:
 	bool mIsColliderKeyDown = false;
 
 	// 플레이어
-	static constexpr uint32_t HERO_MAX_HP = 10;
+	static constexpr uint32_t HERO_MAX_HP = 500;
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 
 	Player mHero{};
@@ -447,11 +446,11 @@ private:
 	float mLongEffectTimer[LONG_EFFECT_COUNT]{};
 
 	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
-	static constexpr float CYAN_EFFECT_TIME = 0.3f;
+	static constexpr float CYAN_EFFECT_TIME = 0.4f;
 	DiamondEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
-	static constexpr float GREEN_EFFECT_TIME = 1.0f;
+	static constexpr float GREEN_EFFECT_TIME = 0.7f;
 	DiamondEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련
