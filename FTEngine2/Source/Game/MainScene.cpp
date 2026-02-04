@@ -2050,6 +2050,8 @@ bool MainScene::Update(const float deltaTime)
 			mBigMonsterDeadSound.Pause();
 			mRunMonsterDeadSound.Pause();
 			mSlowMonsterDeadSound.Pause();
+			mShieldSound.Pause();
+			mOrbitSound.Pause();
 
 			mHero.hp = 0;
 			mHero.velocity = {};
@@ -2058,9 +2060,13 @@ bool MainScene::Update(const float deltaTime)
 
 			mIsDashing = false;
 			mDashSpeed = 0.0f;
+			mDashCount = 0;
 
 			misKeyDownReload = false;
 			mBulletValue = 0.0f;
+
+			mShield.state = eShield_State::End;
+			mOrbit.state = eOrbit_State::End;
 
 			mEndingSound.Play();
 		}
