@@ -237,10 +237,7 @@ void MainScene::Initialize()
 				Sprite& shadow = mSlowMonsterShadows[i][j];
 
 				shadow.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
-
-				float opacity = 0.8f - (float(j) / SHADOW_COUNT);
-				shadow.SetOpacity(opacity);
-
+				shadow.SetOpacity(1.0f);
 				shadow.SetActive(false);
 				shadow.SetTexture(&mRectangleTexture);
 
@@ -265,7 +262,7 @@ void MainScene::Initialize()
 			effect.scale = {};
 			effect.thick = {};
 			effect.isActive = false;
-			effect.timer = {};
+			effect.thickTimer = {};
 		}
 
 		for (DiamondEffect& effect : mGreenEffect)
@@ -274,21 +271,40 @@ void MainScene::Initialize()
 			effect.scale = {};
 			effect.thick = {};
 			effect.isActive = false;
-			effect.timer = {};
+			effect.thickTimer = {};
 		}
 	}
 
 	// 파티클을 초기화한다.
 	{
-		for (Particle& particle : mParticles)
+		mRedStarTexture.Initialize(GetHelper(), L"Resource/RedStar.png");
+		mOrangeStarTexture.Initialize(GetHelper(), L"Resource/OrangeStar.png");
+		mYellowStarTexture.Initialize(GetHelper(), L"Resource/YellowStar.png");
+		mGreenStarTexture.Initialize(GetHelper(), L"Resource/GreenStar.png");
+		mBlueStarTexture.Initialize(GetHelper(), L"Resource/BlueStar.png");
+		mPurpleStarTexture.Initialize(GetHelper(), L"Resource/PurpleStar.png");
+
+		constexpr uint32_t COLOR_COUNT = 6;
+		Texture* particleTextures[COLOR_COUNT] =
 		{
+			&mRedStarTexture,
+			&mOrangeStarTexture,
+			&mYellowStarTexture,
+			&mGreenStarTexture,
+			&mBlueStarTexture,
+			&mPurpleStarTexture
+		};
+
+		for (uint32_t i = 0; i < PARTICLE_COUNT; ++i)
+		{
+			Particle& particle = mParticles[i];
 			particle.direction = {};
 			particle.speed = getRandom(100.0f, 300.0f);
 
 			Sprite& sprite = particle.sprite;
 			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
 			sprite.SetActive(false);
-			sprite.SetTexture(&mBlueRectangleTexture);
+			sprite.SetTexture(particleTextures[i % COLOR_COUNT]);
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
 		}
 	}
@@ -1192,6 +1208,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			bool spawned = false;
+			int32_t spawnCount = 6;
 
 			for (Particle& particle : mParticles)
 			{
@@ -1202,12 +1219,10 @@ bool MainScene::Update(const float deltaTime)
 
 				spawnParticle(&particle, monster.sprite.GetPosition());
 				spawned = true;
+				--spawnCount;
 
-				--mSpawnParticleCount;
-
-				if (mSpawnParticleCount <= 0)
+				if (spawnCount <= 0)
 				{
-					mSpawnParticleCount = 10;
 					break;
 				}
 			}
@@ -1440,6 +1455,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			bool spawned = false;
+			int32_t spawnCount = 6;
 
 			for (Particle& particle : mParticles)
 			{
@@ -1450,12 +1466,10 @@ bool MainScene::Update(const float deltaTime)
 
 				spawnParticle(&particle, monster.sprite.GetPosition());
 				spawned = true;
+				--spawnCount;
 
-				--mSpawnParticleCount;
-
-				if (mSpawnParticleCount <= 0)
+				if (spawnCount <= 0)
 				{
-					mSpawnParticleCount = 10;
 					break;
 				}
 			}
@@ -1588,27 +1602,6 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 그림자를 업데이트한다.
-		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
-		{
-			for (Sprite& shadow : mSlowMonsterShadows[i])
-			{
-				if (not shadow.IsActive())
-				{
-					continue;
-				}
-
-				float opacity = shadow.GetOpacity();
-				opacity -= 5.0f * deltaTime;
-				shadow.SetOpacity(opacity);
-
-				if (opacity <= 0.0f)
-				{
-					shadow.SetActive(false);
-				}
-			}
-		}
-
 		// 느린 몬스터가 스폰되면, 커졌다가 작아진다.
 		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
 		{
@@ -1631,6 +1624,27 @@ bool MainScene::Update(const float deltaTime)
 			if (monster.spawnState == eSpawnEffect_State::End)
 			{
 				mSlowMonsterState[i] = eSlow_Monster_State::Stop;
+			}
+		}
+
+		// 그림자를 업데이트한다.
+		for (uint32_t i = 0; i < SLOW_MONSTER_COUNT; ++i)
+		{
+			for (Sprite& shadow : mSlowMonsterShadows[i])
+			{
+				if (not shadow.IsActive())
+				{
+					continue;
+				}
+
+				float opacity = shadow.GetOpacity();
+				opacity -= 5.0f * deltaTime;
+				shadow.SetOpacity(opacity);
+
+				if (opacity <= 0.0f)
+				{
+					shadow.SetActive(false);
+				}
 			}
 		}
 
@@ -1671,6 +1685,28 @@ bool MainScene::Update(const float deltaTime)
 						mSlowMonsterStopTimers[i] = 0.0f;
 					}
 
+					// hp를 좌표를 업데이트한다.
+					const D2D1_SIZE_F scaleOffset =
+					{
+						.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+						.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+					};
+
+					const D2D1_POINT_2F offset =
+					{
+						.x = sprite.GetPosition().x - scaleOffset.width + 2.0f,
+						.y = sprite.GetPosition().y - scaleOffset.height - 10.0f
+					};
+
+					monster.backgroundHpBar.SetPosition(offset);
+					monster.hpBar.SetPosition(offset);
+
+					if (sprite.GetPosition().x != 0.0f)
+					{
+						monster.backgroundHpBar.SetActive(true);
+						monster.hpBar.SetActive(true);
+					}
+
 					break;
 				}
 
@@ -1706,7 +1742,7 @@ bool MainScene::Update(const float deltaTime)
 				{
 					Sprite& shadow = mSlowMonsterShadows[i][j];
 
-					if (mSlowMonsterState[i] == eSlow_Monster_State::Stop)
+					if (shadow.IsActive())
 					{
 						continue;
 					}
@@ -1717,33 +1753,11 @@ bool MainScene::Update(const float deltaTime)
 					break;
 				}
 
-				mSlowMonsterShadowCoolTimer = 0.05f;
-			}
-
-			// hp를 좌표를 업데이트한다.
-			const D2D1_SIZE_F scaleOffset =
-			{
-				.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-				.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
-			};
-
-			const D2D1_POINT_2F offset =
-			{
-				.x = sprite.GetPosition().x - scaleOffset.width + 2.0f,
-				.y = sprite.GetPosition().y - scaleOffset.height - 10.0f
-			};
-
-			monster.backgroundHpBar.SetPosition(offset);
-			monster.hpBar.SetPosition(offset);
-
-			if (sprite.GetPosition().x != 0.0f)
-			{
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
+				mSlowMonsterShadowCoolTimer = 0.02f;
 			}
 		}
 
-		// 총알 - 돌진 몬스터의 파티클을 스폰한다.
+		// 총알 - 느린 몬스터의 파티클을 스폰한다.
 		for (Monster& monster : mSlowMonsters)
 		{
 			if (not monster.isBulletColliding)
@@ -1752,6 +1766,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			bool spawned = false;
+			int32_t spawnCount = 6;
 
 			for (Particle& particle : mParticles)
 			{
@@ -1762,12 +1777,10 @@ bool MainScene::Update(const float deltaTime)
 
 				spawnParticle(&particle, monster.sprite.GetPosition());
 				spawned = true;
+				--spawnCount;
 
-				--mSpawnParticleCount;
-
-				if (mSpawnParticleCount <= 0)
+				if (spawnCount <= 0)
 				{
-					mSpawnParticleCount = 10;
 					break;
 				}
 			}
@@ -1778,7 +1791,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 쉴드 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		// 쉴드 스킬 - 느린 몬스터는 Green Effect를 스폰한다.
 		for (Monster& monster : mSlowMonsters)
 		{
 			if (not monster.isShieldColliding)
@@ -1810,7 +1823,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 공전 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		// 공전 스킬 - 느린 몬스터는 Green Effect를 스폰한다.
 		for (Monster& monster : mSlowMonsters)
 		{
 			if (not monster.isOrbitColliding)
@@ -1855,6 +1868,11 @@ bool MainScene::Update(const float deltaTime)
 			{
 				monster.state = eMonster_State::Dead;
 				mSlowMonsterDeadSound.Replay();
+
+				for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
+				{
+					mSlowMonsterShadows[i][j].SetActive(false);
+				}
 			}
 
 			deadMonsterEffect(
@@ -1866,11 +1884,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
-			for (uint32_t j = 0; j < SHADOW_COUNT; ++j)
-			{
-				mSlowMonsterShadows[i][j].SetActive(false);
-			}
 		}
 	}
 
@@ -1912,15 +1925,15 @@ bool MainScene::Update(const float deltaTime)
 			effect.scale = { scale.x, scale.y };
 
 			// 두께를 보간한다.
-			effect.timer += deltaTime;
-			float t = effect.timer / CYAN_EFFECT_TIME;
+			effect.thickTimer += deltaTime;
+			float t = effect.thickTimer / CYAN_EFFECT_TIME;
 			t = std::clamp(t, 0.0f, 1.0f);
 			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
 
 			if (t >= 1.0f)
 			{
 				effect.isActive = false;
-				effect.timer = 0.0f;
+				effect.thickTimer = 0.0f;
 			}
 		}
 
@@ -1933,20 +1946,26 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			// 크기를 보간한다.
-			D2D1_POINT_2F scale = { effect.scale.width, effect.scale.height };
-			scale = Math::LerpVector(scale, { 70.0f , 70.0f }, 3.0f * deltaTime);
+			effect.scaleTimer += deltaTime;
+			float scaleT = effect.scaleTimer / GREEN_EFFECT_TIME;
+			D2D1_POINT_2F scale = Math::LerpVector({ .x = 100.0f, .y = 100.0f }, { 0.1f , 0.1f }, scaleT);
 			effect.scale = { scale.x, scale.y };
+			
+			if (scaleT >= 1.0f)
+			{
+				effect.thickTimer = 0.0f;
+			}
 
 			// 두께를 보간한다.
-			effect.timer += deltaTime;
-			float t = effect.timer / GREEN_EFFECT_TIME;
-			t = std::clamp(t, 0.0f, 1.0f);
-			effect.thick = Math::LerpVector(effect.thick, { 0.5f , 0.5f }, t);
+			effect.thickTimer += deltaTime;
+			float thickT = effect.thickTimer / GREEN_EFFECT_TIME;
+			thickT = std::clamp(thickT, 0.0f, 1.0f);
+			effect.thick = Math::LerpVector(effect.thick, { .x = 0.1f , .y = 0.1f }, thickT);
 
-			if (t >= 1.0f)
+			if (thickT >= 1.0f)
 			{
 				effect.isActive = false;
-				effect.timer = 0.0f;
+				effect.thickTimer = 0.0f;
 			}
 		}
 	}
@@ -2638,10 +2657,10 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 			(
 				{
 					.effect = effect,
-					.positionOffset = {.x = 0.0f, .y = 40.0f },
+					.positionOffset = {.x = 0.0f, .y = 5.0f },
 					.angle = 45.0f,
 					.renderTarget = renderTarget,
-					.brush = mCyanBrush,
+					.brush = mDarkGreen,
 					.view = view
 				}
 			);

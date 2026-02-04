@@ -139,7 +139,8 @@ struct DiamondEffect
 	D2D1_SIZE_F scale;
 	D2D1_POINT_2F thick;
 	bool isActive;
-	float timer;
+	float thickTimer;
+	float scaleTimer;
 };
 
 struct Particle
@@ -433,11 +434,18 @@ private:
 	DiamondEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
-	static constexpr float GREEN_EFFECT_TIME = 0.4f;
+	static constexpr float GREEN_EFFECT_TIME = 1.0f;
 	DiamondEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련
-	static constexpr uint32_t PARTICLE_COUNT = 100;
+	static constexpr uint32_t PARTICLE_COUNT = 102;
+	static constexpr uint32_t PARTICLE_PER = 6;
 	Particle mParticles[PARTICLE_COUNT]{};
-	int32_t mSpawnParticleCount = 10;
+
+	Texture mRedStarTexture{};
+	Texture mOrangeStarTexture{};
+	Texture mYellowStarTexture{};
+	Texture mGreenStarTexture{};
+	Texture mBlueStarTexture{};
+	Texture mPurpleStarTexture{};
 };
