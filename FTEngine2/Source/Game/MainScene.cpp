@@ -65,6 +65,7 @@ void MainScene::Initialize()
 	{
 		mBackgroundSound.Initialize(GetHelper(), "Resource/Sound/DST-TowerDefenseTheme.mp3", true);
 		mBackgroundSound.SetVolume(0.3f);
+		mBackgroundSound.Play();
 
 		mBulletSound.Initialize(GetHelper(), "Resource/Sound/shoot_sound.wav", false);
 
@@ -549,8 +550,6 @@ void MainScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& vi
 
 bool MainScene::Update(const float deltaTime)
 {
-	mBackgroundSound.Play();
-
 	// 키를 업데이트한다.
 	{
 		// 게임을 종료한다.
@@ -1148,7 +1147,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 몬스터를 업데이트한다.
 	{
-		// 일반 몬스터를 일정 시간마다 스폰한다.
+		// 큰 몬스터를 일정 시간마다 스폰한다.
 		mBigMonsterSpawnTimer += deltaTime;
 		if (mBigMonsterSpawnTimer >= 0.5f)
 		{
@@ -1173,7 +1172,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 몬스터를 스폰 시 이펙트가 발생한다.
+		// 큰 몬스터를 스폰 시 이펙트가 발생한다.
 		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Spawn)
@@ -1193,7 +1192,7 @@ bool MainScene::Update(const float deltaTime)
 
 		}
 
-		// 몬스터를 이동시킨다.
+		// 큰 몬스터가 이동한다.
 		constexpr D2D1_POINT_2F HP_OFFSET = { .x = 3.5f, .y = 10.0f };
 		for (Monster& monster : mBigMonsters)
 		{
@@ -1237,7 +1236,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		// 큰 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
 		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mBigMonsters[i];
@@ -1281,7 +1280,7 @@ bool MainScene::Update(const float deltaTime)
 			// 체력바를 업데이트한다.
 			updateMonsterHp(&monster, BIG_MONSTER_HP_BAR_WIDTH, BIG_MONSTER_MAX_HP, deltaTime);
 
-			// 몬스터가 죽으면 이펙트가 생성된다.
+			// 큰 몬스터가 죽으면 이펙트가 생성된다.
 			if (monster.hp <= 0
 				and monster.state == eMonster_State::Life)
 			{
@@ -1321,181 +1320,181 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 돌진 몬스터를 업데이트한다.
-	//{
-		// 몬스터를 일정 시간마다 스폰한다.
-	mRunMonsterSpawnTimer += deltaTime;
-	if (mRunMonsterSpawnTimer >= 2.0f)
 	{
+		// 몬스터를 일정 시간마다 스폰한다.
+		mRunMonsterSpawnTimer += deltaTime;
+		if (mRunMonsterSpawnTimer >= 2.0f)
+		{
+			for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
+			{
+				Monster& monster = mRunMonsters[i];
+				Sprite& sprite = monster.sprite;
+
+				if (sprite.IsActive())
+				{
+					continue;
+				}
+
+				spawnMonster(
+					{
+						.monster = &monster,
+						.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
+						.maxHp = RUN_MONSTER_MAX_HP
+					}
+				);
+
+				// 출발바를 생성한다.
+				mRunMonsterisMoveables[i] = false;
+				mRunMonsterStartBars[i].SetPosition({ .x = sprite.GetPosition().x - 10.0f, .y = sprite.GetPosition().y - 20.0f });
+				mRunMonsterStartBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
+				mRunMonsterStartBars[i].SetActive(true);
+
+				mRunMonsterSpawnTimer = 0.0f;
+				break;
+			}
+		}
+
+		// 돌진 몬스터가 스폰되면, 커졌다가 작아진다.
+		for (Monster& monster : mRunMonsters)
+		{
+			if (monster.state != eMonster_State::Spawn)
+			{
+				continue;
+			}
+
+			spawnMonsterEffect(
+				{
+					.monster = &monster,
+					.originalScale { RUN_MONSTER_SCALE, RUN_MONSTER_SCALE },
+					.effectScale{ 3.3f, 3.3f },
+					.time = 0.5f,
+					.deltaTime = deltaTime
+				}
+			);
+		}
+
+		// 돌진 몬스터가 이동한다.
 		for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mRunMonsters[i];
 			Sprite& sprite = monster.sprite;
 
-			if (sprite.IsActive())
+			if (monster.state != eMonster_State::Life)
 			{
 				continue;
 			}
 
-			spawnMonster(
+			if (not mRunMonsterisMoveables[i])
+			{
+				// 출발바가 꽉 차면 돌진 몬스터는 이동한다.
+				constexpr float START_COOL_TIME = 2.0f;
+				float barSpeed = RUN_MONSTER_START_BAR_WIDTH / START_COOL_TIME;
+
+				D2D1_SIZE_F scale = mRunMonsterStartBars[i].GetScale();
+				if (scale.width < RUN_MONSTER_START_BAR_WIDTH)
+				{
+					scale.width += barSpeed * deltaTime;
+					mRunMonsterStartBars[i].SetScale(scale);
+
+					continue;
+				}
+				else
+				{
+					scale.width = RUN_MONSTER_START_BAR_WIDTH;
+					mRunMonsterStartBars[i].SetScale(scale);
+
+					const D2D1_POINT_2F monsterPosition = sprite.GetPosition();
+					const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
+
+					mRunMonsterMoveSpeeds[i] = 0.0f;
+
+					mRunMonsterMoveDirections[i] = Math::SubtractVector(heroPosition, monsterPosition);
+					mRunMonsterMoveDirections[i] = Math::NormalizeVector(mRunMonsterMoveDirections[i]);
+
+					mRunMonsterStartBars[i].SetActive(false);
+					mRunMonsterisMoveables[i] = true;
+
+					// hp바를 생성한다.
+					monster.backgroundHpBar.SetActive(true);
+					monster.hpBar.SetActive(true);
+				}
+			}
+
+			constexpr float MOVE_ACC = 5.0f;
+			mRunMonsterMoveSpeeds[i] = min(mRunMonsterMoveSpeeds[i] + MOVE_ACC, 400.0f);
+			D2D1_POINT_2F velocity = Math::ScaleVector(mRunMonsterMoveDirections[i], mRunMonsterMoveSpeeds[i] * deltaTime);
+
+			D2D1_POINT_2F position = sprite.GetPosition();
+			position = Math::AddVector(position, velocity);
+			sprite.SetPosition(position);
+
+			// hp를 좌표를 업데이트한다.
+			const D2D1_SIZE_F scaleOffset =
+			{
+				.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+				.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+			};
+
+			const D2D1_POINT_2F offset =
+			{
+				.x = position.x - scaleOffset.width,
+				.y = position.y - scaleOffset.height - 10.0f
+			};
+
+			monster.backgroundHpBar.SetPosition(offset);
+			monster.hpBar.SetPosition(offset);
+		}
+
+		// 돌진 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		for (Monster& monster : mRunMonsters)
+		{
+			if (not monster.isBulletColliding)
+			{
+				continue;
+			}
+
+			for (BulletEffect& effect : mCyanEffect)
+			{
+				if (effect.isActive)
+				{
+					monster.isBulletColliding = false;
+					continue;
+				}
+
+				effect.position = monster.sprite.GetPosition();
+				effect.scale = {};
+				effect.thick = { .x = 50.0f, .y = 50.0f };
+				effect.isActive = true;
+				break;
+			}
+		}
+
+		for (Monster& monster : mRunMonsters)
+		{
+			// 체력바를 업데이트한다.
+			updateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
+
+
+			// 몬스터가 죽으면 이펙트가 생성된다.
+			if (monster.hp <= 0
+				and monster.state == eMonster_State::Life)
+			{
+				monster.state = eMonster_State::Dead;
+				mRunMonsterDeadSound.Replay();
+
+				monster.sprite.SetActive(false);
+			}
+
+			deadMonsterEffect(
 				{
 					.monster = &monster,
-					.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
-					.maxHp = RUN_MONSTER_MAX_HP
+					.originalScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
+					.effectScale = {.width = 0.1f, .height = 0.1f },
+					.time = CYAN_EFFECT_TIME,
+					.deltaTime = deltaTime
 				}
 			);
-
-			// 출발바를 생성한다.
-			mRunMonsterisMoveables[i] = false;
-			mRunMonsterStartBars[i].SetPosition({ .x = sprite.GetPosition().x - 10.0f, .y = sprite.GetPosition().y - 20.0f });
-			mRunMonsterStartBars[i].SetScale({ .width = 0.0f, .height = 0.1f });
-			mRunMonsterStartBars[i].SetActive(true);
-
-			mRunMonsterSpawnTimer = 0.0f;
-			break;
 		}
-	}
-
-	// 돌진 몬스터가 스폰되면, 커졌다가 작아진다.
-	for (Monster& monster : mRunMonsters)
-	{
-		if (monster.state != eMonster_State::Spawn)
-		{
-			continue;
-		}
-
-		spawnMonsterEffect(
-			{
-				.monster = &monster,
-				.originalScale { RUN_MONSTER_SCALE, RUN_MONSTER_SCALE },
-				.effectScale{ 3.3f, 3.3f },
-				.time = 0.5f,
-				.deltaTime = deltaTime
-			}
-		);
-	}
-
-	// 돌진 몬스터가 이동한다.
-	for (uint32_t i = 0; i < RUN_MONSTER_COUNT; ++i)
-	{
-		Monster& monster = mRunMonsters[i];
-		Sprite& sprite = monster.sprite;
-
-		if (monster.state != eMonster_State::Life
-			and monster.state == eMonster_State::Dead)
-		{
-			continue;
-		}
-
-		if (not mRunMonsterisMoveables[i])
-		{
-			// 출발바가 꽉 차면 돌진 몬스터는 이동한다.
-			constexpr float START_COOL_TIME = 2.0f;
-			float barSpeed = RUN_MONSTER_START_BAR_WIDTH / START_COOL_TIME;
-
-			D2D1_SIZE_F scale = mRunMonsterStartBars[i].GetScale();
-			if (scale.width < RUN_MONSTER_START_BAR_WIDTH)
-			{
-				scale.width += barSpeed * deltaTime;
-				mRunMonsterStartBars[i].SetScale(scale);
-
-				continue;
-			}
-			else
-			{
-				scale.width = RUN_MONSTER_START_BAR_WIDTH;
-				mRunMonsterStartBars[i].SetScale(scale);
-
-				const D2D1_POINT_2F monsterPosition = sprite.GetPosition();
-				const D2D1_POINT_2F heroPosition = mHero.sprite.GetPosition();
-
-				mRunMonsterMoveSpeeds[i] = 0.0f;
-
-				mRunMonsterMoveDirections[i] = Math::SubtractVector(heroPosition, monsterPosition);
-				mRunMonsterMoveDirections[i] = Math::NormalizeVector(mRunMonsterMoveDirections[i]);
-
-				mRunMonsterStartBars[i].SetActive(false);
-				mRunMonsterisMoveables[i] = true;
-
-				// hp바를 생성한다.
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-			}
-		}
-
-		constexpr float MOVE_ACC = 5.0f;
-		mRunMonsterMoveSpeeds[i] = min(mRunMonsterMoveSpeeds[i] + MOVE_ACC, 400.0f);
-		D2D1_POINT_2F velocity = Math::ScaleVector(mRunMonsterMoveDirections[i], mRunMonsterMoveSpeeds[i] * deltaTime);
-
-		D2D1_POINT_2F position = sprite.GetPosition();
-		position = Math::AddVector(position, velocity);
-		sprite.SetPosition(position);
-
-		// hp를 좌표를 업데이트한다.
-		const D2D1_SIZE_F scaleOffset =
-		{
-			.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-			.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
-		};
-
-		const D2D1_POINT_2F offset =
-		{
-			.x = position.x - scaleOffset.width,
-			.y = position.y - scaleOffset.height - 10.0f
-		};
-
-		monster.backgroundHpBar.SetPosition(offset);
-		monster.hpBar.SetPosition(offset);
-	}
-
-	// 돌진 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
-	for (Monster& monster : mRunMonsters)
-	{
-		if (not monster.isBulletColliding)
-		{
-			continue;
-		}
-
-		for (BulletEffect& effect : mCyanEffect)
-		{
-			if (effect.isActive)
-			{
-				monster.isBulletColliding = false;
-				continue;
-			}
-
-			effect.position = monster.sprite.GetPosition();
-			effect.scale = {};
-			effect.thick = { .x = 50.0f, .y = 50.0f };
-			effect.isActive = true;
-			break;
-		}
-	}
-
-	for (Monster& monster : mRunMonsters)
-	{
-		// 체력바를 업데이트한다.
-		updateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
-
-
-		// 몬스터가 죽으면 이펙트가 생성된다.
-		if (monster.hp <= 0
-			and monster.state == eMonster_State::Life)
-		{
-			monster.state = eMonster_State::Dead;
-			mRunMonsterDeadSound.Replay();
-
-			monster.sprite.SetActive(false);
-		}
-
-		deadMonsterEffect(
-			{
-				.monster = &monster,
-				.originalScale = {.width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE },
-				.effectScale = {.width = 0.1f, .height = 0.1f },
-				.time = CYAN_EFFECT_TIME,
-				.deltaTime = deltaTime
-			}
-		);
 	}
 
 	// 느린 몬스터를 업데이트한다.
@@ -2622,6 +2621,22 @@ void MainScene::Finalize()
 	mWhiteBarTexture.Finalize();
 	mRedBarTexture.Finalize();
 	mYellowBarTexture.Finalize();
+
+	mBackgroundSound.Finalize();
+
+	mHeroHitSound.Finalize();
+
+	mBulletSound.Finalize();
+	mReloadSound.Finalize();
+
+	mShieldSound.Finalize();
+	mOrbitSound.Finalize();
+
+	mBigMonsterDeadSound.Finalize();
+	mRunMonsterDeadSound.Finalize();
+	mSlowMonsterDeadSound.Finalize();
+
+	mEndingSound.Finalize();
 }
 
 D2D1_RECT_F MainScene::getRectangleFromSprite(const Sprite& sprite)
