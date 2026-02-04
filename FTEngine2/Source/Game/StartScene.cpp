@@ -22,143 +22,106 @@ void StartScene::Initialize()
 	mBackgroundSound.SetVolume(0.3f);
 	mBackgroundSound.Play();
 
-	const D2D1_SIZE_F screenScale = { .width = float(Constant::Get().GetWidth()) * 0.5f, .height = float(Constant::Get().GetHeight()) * 0.5f };
+	mButtonSound.Initialize(GetHelper(), "Resource/Sound/button_sound.wav", false);
+	mButtonSound.SetVolume(1.0f);
 
-	// Red Star를 초기화한다.
+	// Star를 초기화한다.
 	{
 		mRedStarTexture.Initialize(GetHelper(), L"Resource/RedStar.png");
+		mOrangeStarTexture.Initialize(GetHelper(), L"Resource/OrangeStar.png");
+		mYellowStarTexture.Initialize(GetHelper(), L"Resource/YellowStar.png");
+		mGreenStarTexture.Initialize(GetHelper(), L"Resource/GreenStar.png");
+		mBlueStarTexture.Initialize(GetHelper(), L"Resource/BlueStar.png");
+		mPurpleStarTexture.Initialize(GetHelper(), L"Resource/PurpleStar.png");
 
 		for (Star& star : mRedStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mRedStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mRedStarTexture
+				}
+			);
 		}
-	}
-
-	// Orange Star를 초기화한다.
-	{
-		mOrangeStarTexture.Initialize(GetHelper(), L"Resource/OrangeStar.png");
 
 		for (Star& star : mOrangeStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mOrangeStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mOrangeStarTexture
+				}
+			);
 		}
-	}
-
-	// Yellow Star를 초기화한다.
-	{
-		mYellowStarTexture.Initialize(GetHelper(), L"Resource/YellowStar.png");	
 
 		for (Star& star : mYellowStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mYellowStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mYellowStarTexture
+				}
+			);
 		}
-	}
-
-	// Green Star를 초기화한다.
-	{
-		mGreenStarTexture.Initialize(GetHelper(), L"Resource/GreenStar.png");
 
 		for (Star& star : mGreenStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mGreenStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mGreenStarTexture
+				}
+			);
 		}
-	}
-
-	// Blue Star를 초기화한다.
-	{
-		mBlueStarTexture.Initialize(GetHelper(), L"Resource/BlueStar.png");
 
 		for (Star& star : mBlueStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mBlueStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mBlueStarTexture
+				}
+			);
 		}
-	}
-
-	// Purple Star를 초기화한다.
-	{
-		mPurpleStarTexture.Initialize(GetHelper(), L"Resource/PurpleStar.png");
 
 		for (Star& star : mPurpleStars)
 		{
-			star.isVisible = false;
-			star.speed = getRandom(0.09f, 1.0f);
-
-			const D2D1_POINT_2F screenPoint =
-			{
-				.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-				.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-			};
-
-			Sprite& sprite = star.sprite;
-			sprite.SetPosition(screenPoint);
-			sprite.SetOpacity(0.0f);
-			sprite.SetTexture(&mPurpleStarTexture);
-			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+			initializeStar
+			(
+				{
+					.star = &star,
+					.isVisible = false,
+					.minSpeed = 0.09f,
+					.maxSpeed = 1.0f,
+					.opacity = 0.0f,
+					.texture = &mPurpleStarTexture
+				}
+			);
 		}
 	}
 
@@ -240,36 +203,67 @@ bool StartScene::Update(const float deltaTime)
 		}
 	}
 
-	// 충돌을 업데이트한다.
+	// 버튼을 업데이트한다.
 	{
-		// Start Button
-		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mStartButton, mStartIdleButtonTexture), getMouseWorldPosition()))
-		{
-			mStartButton.SetTexture(&mStartContactButtonTexture);
+		updateButtonState
+		(
+			{
+				.sprite = &mStartButton,
+				.isColliding = mIsStartButtonColliding,
+				.originalTexture = &mStartIdleButtonTexture,
+				.effectTexture = &mStartContactButtonTexture,
+				.isSoundPlay = &mIsStartButtonSoundPlay
+			}
+		);
 
+		if (mIsStartButtonColliding)
+		{
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
 				mIsUpdate = false;
 			}
 		}
-		else
-		{
-			mStartButton.SetTexture(&mStartIdleButtonTexture);
-		}
 
-		// Exit Button
-		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mExitButton, mExitIdleButtonTexture), getMouseWorldPosition()))
-		{
-			mExitButton.SetTexture(&mExitContactButtonTexture);
+		updateButtonState
+		(
+			{
+				.sprite = &mExitButton,
+				.isColliding = mIsExitButtonColliding,
+				.originalTexture = &mExitIdleButtonTexture,
+				.effectTexture = &mExitContactButtonTexture,
+				.isSoundPlay = &mIsExitButtonSoundPlay
+			}
+		);
 
+		if (mIsExitButtonColliding)
+		{
 			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
 			{
 				PostQuitMessage(0);
 			}
 		}
+	}
+
+	// 충돌을 업데이트한다.
+	{
+		// Start Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mStartButton, mStartIdleButtonTexture), getMouseWorldPosition()))
+		{
+			mIsStartButtonColliding = true;
+		}
 		else
 		{
-			mExitButton.SetTexture(&mExitIdleButtonTexture);
+			mIsStartButtonColliding = false;
+		}
+
+		// Exit Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mExitButton, mExitIdleButtonTexture), getMouseWorldPosition()))
+		{
+			mIsExitButtonColliding = true;
+		}
+		else
+		{
+			mIsExitButtonColliding = false;
 		}
 	}
 
@@ -296,6 +290,7 @@ void StartScene::Finalize()
 	mPurpleStarTexture.Finalize();
 
 	mBackgroundSound.Finalize();
+	mButtonSound.Finalize();
 }
 
 D2D1_POINT_2F StartScene::getMouseWorldPosition() const
@@ -344,6 +339,39 @@ float StartScene::getRandom(const float min, const float max)
 	return result;
 }
 
+void StartScene::initializeStar(const StarDesc& desc)
+{
+	Star* star = desc.star;
+	const bool isVisible = desc.isVisible;
+	const float minSpeed = desc.minSpeed;
+	const float maxSpeed = desc.maxSpeed;
+	const float opacity = desc.opacity;
+	Texture* texture = desc.texture;
+
+	star->isVisible = isVisible;
+	star->speed = getRandom(minSpeed, maxSpeed);
+
+	const D2D1_SIZE_F screenScale = 
+	{ 
+		.width = float(Constant::Get().GetWidth()) * 0.5f, 
+		.height = float(Constant::Get().GetHeight()) * 0.5f 
+	};
+
+	constexpr float TITLE_RECT_OFFSET = 50.0f;
+
+	const D2D1_POINT_2F screenPoint =
+	{
+		.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
+		.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
+	};
+
+	Sprite& sprite = star->sprite;
+	sprite.SetPosition(screenPoint);
+	sprite.SetOpacity(opacity);
+	sprite.SetTexture(texture);
+	mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+}
+
 void StartScene::updateFadeEffect(Star* star, const float deltaTime)
 {
 	ASSERT(star != nullptr);
@@ -376,4 +404,29 @@ void StartScene::updateFadeEffect(Star* star, const float deltaTime)
 	}
 
 	sprite.SetOpacity(opacity);
+}
+
+void StartScene::updateButtonState(const ButtonDesc& desc)
+{
+	Sprite* sprite = desc.sprite;
+	const bool isColliding = desc.isColliding;
+	Texture* originalTexture = desc.originalTexture;
+	Texture* effectTexture = desc.effectTexture;
+	bool* isSoundPlay = desc.isSoundPlay;
+
+	if (isColliding)
+	{
+		sprite->SetTexture(effectTexture);
+
+		if (not *isSoundPlay)
+		{
+			mButtonSound.Replay();
+			*isSoundPlay = true;
+		}
+	}
+	else
+	{
+		*isSoundPlay = false;
+		sprite->SetTexture(originalTexture);
+	}
 }

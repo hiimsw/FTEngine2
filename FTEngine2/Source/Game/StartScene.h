@@ -5,23 +5,30 @@
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
 
-enum class eColor_Type
-{
-	Red,
-	Orange,
-	Yellow,
-	Green,
-	Blue,
-	Purple
-};
-
 struct Star
 {
 	Sprite sprite;
-	eColor_Type type;
-
 	bool isVisible;
 	float speed;
+};
+
+struct StarDesc
+{
+	Star* star;
+	const bool isVisible;
+	const float minSpeed;
+	const float maxSpeed;
+	const float opacity;
+	Texture* texture;
+};
+
+struct ButtonDesc
+{
+	Sprite* sprite;
+	const bool isColliding;
+	Texture* originalTexture;
+	Texture* effectTexture;
+	bool* isSoundPlay;
 };
 
 class StartScene final : public Scene
@@ -41,11 +48,12 @@ private:
 	D2D1_POINT_2F getMouseWorldPosition() const;
 	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite, const Texture texture);
 	float getRandom(const float min, const float max);
+	void initializeStar(const StarDesc& desc);
 	void updateFadeEffect(Star* star, const float deltaTime);
+	void updateButtonState(const ButtonDesc& desc);
 
 private:
 	bool mIsUpdate = true;
-	static constexpr float TITLE_RECT_OFFSET = 50.0f;
 
 	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
 	Camera mMainCamera{};
@@ -70,10 +78,14 @@ private:
 	Texture mPurpleStarTexture{};
 
 	Sprite mStartButton{};
+	bool mIsStartButtonColliding = false;
+	bool mIsStartButtonSoundPlay = false;
 	Texture mStartIdleButtonTexture{};
 	Texture mStartContactButtonTexture{};
 
 	Sprite mExitButton{};
+	bool mIsExitButtonColliding = false;
+	bool mIsExitButtonSoundPlay = false;
 	Texture mExitIdleButtonTexture{};
 	Texture mExitContactButtonTexture{};
 
@@ -81,4 +93,5 @@ private:
 	Texture mTitleTexture{};
 
 	Sound mBackgroundSound{};
+	Sound mButtonSound{};
 };
