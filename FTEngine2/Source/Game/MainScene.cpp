@@ -259,7 +259,7 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&effect);
 		}
 
-		for (DrawEffect& effect : mCyanEffect)
+		for (DiamondEffect& effect : mCyanEffect)
 		{
 			effect.position = {};
 			effect.scale = {};
@@ -268,7 +268,7 @@ void MainScene::Initialize()
 			effect.timer = {};
 		}
 
-		for (DrawEffect& effect : mGreenEffect)
+		for (DiamondEffect& effect : mGreenEffect)
 		{
 			effect.position = {};
 			effect.scale = {};
@@ -1120,7 +1120,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 큰 몬스터를 스폰 시 이펙트가 발생한다.
+		// 큰 몬스터 스폰 시 이펙트가 발생한다.
 		for (Monster& monster : mBigMonsters)
 		{
 			if (monster.state != eMonster_State::Spawn)
@@ -1184,9 +1184,8 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 총알 - 큰 몬스터의 파티클을 스폰한다.
-		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		for (Monster& monster : mBigMonsters)
 		{
-			Monster& monster = mBigMonsters[i];
 			if (not monster.isBulletColliding)
 			{
 				continue;
@@ -1219,10 +1218,9 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 쉴드 스킬 - 큰 몬스터는 LongEffect를 스폰한다.
-		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		// 쉴드 스킬 - 큰 몬스터는 Long Effect를 스폰한다.
+		for (Monster& monster : mBigMonsters)
 		{
-			Monster& monster = mBigMonsters[i];
 			if (not monster.isShieldColliding)
 			{
 				continue;
@@ -1248,10 +1246,9 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 공전 스킬 - 큰 몬스터는 LongEffect를 스폰한다.
-		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		// 공전 스킬 - 큰 몬스터는 Long Effect를 스폰한다.
+		for (Monster& monster : mBigMonsters)
 		{
-			Monster& monster = mBigMonsters[i];
 			if (not monster.isOrbitColliding)
 			{
 				continue;
@@ -1434,7 +1431,7 @@ bool MainScene::Update(const float deltaTime)
 			monster.hpBar.SetPosition(offset);
 		}
 
-		// 돌진 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		// 총알 - 돌진 몬스터의 파티클을 스폰한다.
 		for (Monster& monster : mRunMonsters)
 		{
 			if (not monster.isBulletColliding)
@@ -1442,11 +1439,47 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			for (DrawEffect& effect : mCyanEffect)
+			bool spawned = false;
+
+			for (Particle& particle : mParticles)
+			{
+				if (particle.sprite.IsActive())
+				{
+					continue;
+				}
+
+				spawnParticle(&particle, monster.sprite.GetPosition());
+				spawned = true;
+
+				--mSpawnParticleCount;
+
+				if (mSpawnParticleCount <= 0)
+				{
+					mSpawnParticleCount = 10;
+					break;
+				}
+			}
+
+			if (spawned)
+			{
+				monster.isBulletColliding = false;
+			}
+		}
+
+		// 쉴드 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		for (Monster& monster : mRunMonsters)
+		{
+			if (not monster.isShieldColliding)
+			{
+				continue;
+			}
+
+			bool spawned = false;
+
+			for (DiamondEffect& effect : mCyanEffect)
 			{
 				if (effect.isActive)
 				{
-					monster.isBulletColliding = false;
 					continue;
 				}
 
@@ -1454,7 +1487,46 @@ bool MainScene::Update(const float deltaTime)
 				effect.scale = {};
 				effect.thick = { .x = 50.0f, .y = 50.0f };
 				effect.isActive = true;
+
+				spawned = true;
 				break;
+			}
+
+			if (spawned)
+			{
+				monster.isShieldColliding = false;
+			}
+		}
+
+		// 공전 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		for (Monster& monster : mRunMonsters)
+		{
+			if (not monster.isOrbitColliding)
+			{
+				continue;
+			}
+
+			bool spawned = false;
+
+			for (DiamondEffect& effect : mCyanEffect)
+			{
+				if (effect.isActive)
+				{
+					continue;
+				}
+
+				effect.position = monster.sprite.GetPosition();
+				effect.scale = {};
+				effect.thick = { .x = 50.0f, .y = 50.0f };
+				effect.isActive = true;
+
+				spawned = true;
+				break;
+			}
+
+			if (spawned)
+			{
+				monster.isOrbitColliding = false;
 			}
 		}
 
@@ -1671,7 +1743,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-	// 느린 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		// 총알 - 돌진 몬스터의 파티클을 스폰한다.
 		for (Monster& monster : mSlowMonsters)
 		{
 			if (not monster.isBulletColliding)
@@ -1679,11 +1751,47 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			for (DrawEffect& effect : mGreenEffect)
+			bool spawned = false;
+
+			for (Particle& particle : mParticles)
+			{
+				if (particle.sprite.IsActive())
+				{
+					continue;
+				}
+
+				spawnParticle(&particle, monster.sprite.GetPosition());
+				spawned = true;
+
+				--mSpawnParticleCount;
+
+				if (mSpawnParticleCount <= 0)
+				{
+					mSpawnParticleCount = 10;
+					break;
+				}
+			}
+
+			if (spawned)
+			{
+				monster.isBulletColliding = false;
+			}
+		}
+
+		// 쉴드 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		for (Monster& monster : mSlowMonsters)
+		{
+			if (not monster.isShieldColliding)
+			{
+				continue;
+			}
+
+			bool spawned = false;
+
+			for (DiamondEffect& effect : mGreenEffect)
 			{
 				if (effect.isActive)
 				{
-					monster.isBulletColliding = false;
 					continue;
 				}
 
@@ -1691,7 +1799,46 @@ bool MainScene::Update(const float deltaTime)
 				effect.scale = {};
 				effect.thick = { .x = 30.0f, .y = 30.0f };
 				effect.isActive = true;
+
+				spawned = true;
 				break;
+			}
+
+			if (spawned)
+			{
+				monster.isShieldColliding = false;
+			}
+		}
+
+		// 공전 스킬 - 돌진 몬스터는 Cyan Effect를 스폰한다.
+		for (Monster& monster : mSlowMonsters)
+		{
+			if (not monster.isOrbitColliding)
+			{
+				continue;
+			}
+
+			bool spawned = false;
+
+			for (DiamondEffect& effect : mGreenEffect)
+			{
+				if (effect.isActive)
+				{
+					continue;
+				}
+
+				effect.position = monster.sprite.GetPosition();
+				effect.scale = {};
+				effect.thick = { .x = 30.0f, .y = 30.0f };
+				effect.isActive = true;
+
+				spawned = true;
+				break;
+			}
+
+			if (spawned)
+			{
+				monster.isOrbitColliding = false;
 			}
 		}
 
@@ -1752,7 +1899,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// Update Cyan Effect
-		for (DrawEffect& effect : mCyanEffect)
+		for (DiamondEffect& effect : mCyanEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -1778,7 +1925,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// Update Green Effect
-		for (DrawEffect& effect : mGreenEffect)
+		for (DiamondEffect& effect : mGreenEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -2457,14 +2604,14 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// CYAN 이펙트를 그린다.
 	{
-		for (const DrawEffect& effect : mCyanEffect)
+		for (const DiamondEffect& effect : mCyanEffect)
 		{
 			if (not effect.isActive)
 			{
 				continue;
 			}
 
-			drawEffect
+			drawDiamondEffect
 			(
 				{
 					.effect = effect, 
@@ -2480,14 +2627,14 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Green 이펙트를 그린다.
 	{
-		for (const DrawEffect& effect : mGreenEffect)
+		for (const DiamondEffect& effect : mGreenEffect)
 		{
 			if (not effect.isActive)
 			{
 				continue;
 			}
 
-			drawEffect
+			drawDiamondEffect
 			(
 				{
 					.effect = effect,
@@ -2871,9 +3018,9 @@ void MainScene::spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosit
 	sprite.SetOpacity(1.0f);
 }
 
-void MainScene::drawEffect(const DrawEffectDesc& desc)
+void MainScene::drawDiamondEffect(const DrawDiamondEffectDesc& desc)
 {
-	const DrawEffect& effect = desc.effect;
+	const DiamondEffect& effect = desc.effect;
 	const D2D1_POINT_2F positionOffset = desc.positionOffset;
 	const float angle = desc.angle;
 	ID2D1HwndRenderTarget* renderTarget = desc.renderTarget;

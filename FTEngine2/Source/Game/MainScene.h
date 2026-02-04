@@ -133,7 +133,7 @@ struct Casing
 	float casingTimer;
 };
 
-struct DrawEffect
+struct DiamondEffect
 {
 	D2D1_POINT_2F position;
 	D2D1_SIZE_F scale;
@@ -175,9 +175,9 @@ struct MonsterDeadSoundDesc
 	const float deltaTime;
 };
 
-struct DrawEffectDesc
+struct DrawDiamondEffectDesc
 {
-	const DrawEffect& effect;
+	const DiamondEffect& effect;
 	const D2D1_POINT_2F positionOffset;
 	const float angle;
 	ID2D1HwndRenderTarget* renderTarget;
@@ -219,14 +219,17 @@ private:
 	void initializeCameraShake(const float amplitude, const float duration, const float frequency);
 	D2D1_POINT_2F updateCameraShake(const float deltaTime);
 
+	void initializeMonster(const MonsterInitDesc& desc);
 	void spawnMonster(const MonsterSpawnDesc& desc);
 	void updateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
+	
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
+	
 	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
-	void drawEffect(const DrawEffectDesc& desc);
-	void initializeMonster(const MonsterInitDesc& desc);
 	void spawnLongEffect(Sprite* effect, Texture* texture, const Monster& monster);
+
+	void drawDiamondEffect(const DrawDiamondEffectDesc& desc);
 
 private:
 	Texture mRectangleTexture{};
@@ -427,11 +430,11 @@ private:
 
 	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
 	static constexpr float CYAN_EFFECT_TIME = 0.3f;
-	DrawEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
+	DiamondEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
 	static constexpr float GREEN_EFFECT_TIME = 0.4f;
-	DrawEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
+	DiamondEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련
 	static constexpr uint32_t PARTICLE_COUNT = 100;
