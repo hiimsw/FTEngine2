@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/Camera.h"
 #include "Core/Scene.h"
+#include "Core/Sound.h"
 #include "Core/Sprite.h"
 #include "Core/Texture.h"
 
@@ -49,14 +50,6 @@ private:
 	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
 	Camera mMainCamera{};
 
-	Sprite mStartButton{};
-	Texture mStartIdleButtonTexture{};
-	Texture mStartContactButtonTexture{};
-
-	Sprite mExitButton{};
-	Texture mExitIdleButtonTexture{};
-	Texture mExitContactButtonTexture{};
-
 	static constexpr uint32_t COUNT = 3;
 	Star mRedStars[COUNT]{};
 	Texture mRedStarTexture{};
@@ -75,4 +68,17 @@ private:
 
 	Star mPurpleStars[COUNT]{};
 	Texture mPurpleStarTexture{};
+
+	Sprite mStartButton{};
+	Texture mStartIdleButtonTexture{};
+	Texture mStartContactButtonTexture{};
+
+	Sprite mExitButton{};
+	Texture mExitIdleButtonTexture{};
+	Texture mExitContactButtonTexture{};
+
+	Sprite mTitle{};
+	Texture mTitleTexture{};
+
+	Sound mBackgroundSound{};
 };

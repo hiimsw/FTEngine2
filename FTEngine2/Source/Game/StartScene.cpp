@@ -18,27 +18,11 @@ void StartScene::Initialize()
 
 	srand(unsigned int(time(nullptr)));
 
+	mBackgroundSound.Initialize(GetHelper(), "Resource/Sound/DST-RailJet-LongSeamlessLoop.mp3", true);
+	mBackgroundSound.SetVolume(0.3f);
+	mBackgroundSound.Play();
+
 	const D2D1_SIZE_F screenScale = { .width = float(Constant::Get().GetWidth()) * 0.5f, .height = float(Constant::Get().GetHeight()) * 0.5f };
-
-	// 시작버튼을 초기화한다. 
-	{
-		mStartIdleButtonTexture.Initialize(GetHelper(), L"Resource/start_idle_button.png");
-		mStartContactButtonTexture.Initialize(GetHelper(), L"Resource/start_contact_button.png");
-
-		mStartButton.SetPosition({ .x = 0.0f, .y = -100.0f });
-		mStartButton.SetTexture(&mStartIdleButtonTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mStartButton);
-	}
-
-	// 종료버튼을 초기화한다. 
-	{
-		mExitIdleButtonTexture.Initialize(GetHelper(), L"Resource/exit_idle_button.png");
-		mExitContactButtonTexture.Initialize(GetHelper(), L"Resource/exit_contact_button.png");
-
-		mExitButton.SetPosition({ .x = 0.0f, .y = -220.0f });
-		mExitButton.SetTexture(&mExitIdleButtonTexture);
-		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mExitButton);
-	}
 
 	// Red Star를 초기화한다.
 	{
@@ -177,6 +161,38 @@ void StartScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
 		}
 	}
+
+	// 타이틀을 초기화한다.
+	{
+		mTitleTexture.Initialize(GetHelper(), L"Resource/Title.png");
+
+		mTitle.SetPosition({ .x = 0.0f, .y = 100.0f });
+		mTitle.SetScale({ .width = 2.0f, .height = 2.0f });
+		mTitle.SetTexture(&mTitleTexture);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mTitle);
+	}
+
+	// 시작버튼을 초기화한다. 
+	{
+		mStartIdleButtonTexture.Initialize(GetHelper(), L"Resource/start_idle_button.png");
+		mStartContactButtonTexture.Initialize(GetHelper(), L"Resource/start_contact_button.png");
+
+		mStartButton.SetPosition({ .x = 0.0f, .y = -100.0f });
+		mStartButton.SetScale({ .width = 0.7f, .height = 0.7f });
+		mStartButton.SetTexture(&mStartIdleButtonTexture);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mStartButton);
+	}
+
+	// 종료버튼을 초기화한다. 
+	{
+		mExitIdleButtonTexture.Initialize(GetHelper(), L"Resource/exit_idle_button.png");
+		mExitContactButtonTexture.Initialize(GetHelper(), L"Resource/exit_contact_button.png");
+
+		mExitButton.SetPosition({ .x = 0.0f, .y = -220.0f });
+		mExitButton.SetScale({ .width = 0.7f, .height = 0.7f });
+		mExitButton.SetTexture(&mExitIdleButtonTexture);
+		mSpriteLayers[uint32_t(Layer::Background)].push_back(&mExitButton);
+	}
 }
 
 void StartScene::PreDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& viewForUI)
@@ -278,6 +294,8 @@ void StartScene::Finalize()
 	mGreenStarTexture.Finalize();
 	mBlueStarTexture.Finalize();
 	mPurpleStarTexture.Finalize();
+
+	mBackgroundSound.Finalize();
 }
 
 D2D1_POINT_2F StartScene::getMouseWorldPosition() const
