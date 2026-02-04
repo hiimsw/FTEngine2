@@ -1137,7 +1137,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
 		}
 
 		// 큰 몬스터가 이동한다.
@@ -1184,7 +1183,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		// 큰 몬스터와 총알이 충돌하면, 이펙트를 스폰한다.	
+		// 총알 - 큰 몬스터의 파티클을 스폰한다.
 		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
 		{
 			Monster& monster = mBigMonsters[i];
@@ -1193,34 +1192,89 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			Sprite& effect = mLongEffect[i];
+			bool spawned = false;
 
-			if (monster.hp > 0)
+			for (Particle& particle : mParticles)
 			{
-				effect.SetTexture(&mSkyBlueRectangleTexture);
-			}
-			else
-			{
-				effect.SetTexture(&mBlueRectangleTexture);
+				if (particle.sprite.IsActive())
+				{
+					continue;
+				}
+
+				spawnParticle(&particle, monster.sprite.GetPosition());
+				spawned = true;
+
+				--mSpawnParticleCount;
+
+				if (mSpawnParticleCount <= 0)
+				{
+					mSpawnParticleCount = 10;
+					break;
+				}
 			}
 
-			if (effect.IsActive())
+			if (spawned)
 			{
 				monster.isBulletColliding = false;
+			}
+		}
+
+		// 쉴드 스킬 - 큰 몬스터는 LongEffect를 스폰한다.
+		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		{
+			Monster& monster = mBigMonsters[i];
+			if (not monster.isShieldColliding)
+			{
 				continue;
 			}
 
-			const D2D1_POINT_2F position = monster.sprite.GetPosition();
-			effect.SetPosition(position);
+			bool spawned = false;
 
-			D2D1_POINT_2F direction = Math::SubtractVector(position, mHero.sprite.GetPosition());
-			direction = Math::NormalizeVector(direction);
+			for (Sprite& effect : mLongEffect)
+			{
+				if (effect.IsActive())
+				{
+					continue;
+				}
 
-			float angle = Math::ConvertRadianToDegree(direction.y);
-			effect.SetAngle(-angle);
+				spawnLongEffect(&effect, &mSkyBlueRectangleTexture, monster);
+				spawned = true;
+				break;
+			}
 
-			effect.SetActive(true);
-			break;
+			if (spawned)
+			{
+				monster.isShieldColliding = false;
+			}
+		}
+
+		// 공전 스킬 - 큰 몬스터는 LongEffect를 스폰한다.
+		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		{
+			Monster& monster = mBigMonsters[i];
+			if (not monster.isOrbitColliding)
+			{
+				continue;
+			}
+
+			bool spawned = false;
+
+			for (Sprite& effect : mLongEffect)
+			{
+				if (effect.IsActive())
+				{
+					continue;
+				}
+
+				spawnLongEffect(&effect, &mBlueRectangleTexture, monster);
+				spawned = true;
+				break;
+			}
+
+			if (spawned)
+			{
+				monster.isOrbitColliding = false;
+			}
 		}
 
 		for (Monster& monster : mBigMonsters)
@@ -1234,25 +1288,6 @@ bool MainScene::Update(const float deltaTime)
 			{
 				monster.state = eMonster_State::Dead;
 				mBigMonsterDeadSound.Replay();
-
-				// 파티클을 생성한다.
-				for (Particle& particle : mParticles)
-				{
-					if (particle.sprite.IsActive())
-					{
-						continue;
-					}
-
-					spawnParticle(&particle, monster.sprite.GetPosition());
-
-					--mSpawnParticleCount;
-
-					if (mSpawnParticleCount <= 0)
-					{
-						mSpawnParticleCount = 10;
-						break;
-					}
-				}
 			}
 
 			deadMonsterEffect(
@@ -1694,7 +1729,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 이펙트를 업데이트한다.
 	{
-		// 큰 몬스터와 총알
+		// Update Long Effect
 		for (uint32_t i = 0; i < LONG_EFFECT_COUNT; ++i)
 		{
 			Sprite& effect = mLongEffect[i];
@@ -1716,6 +1751,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		// Update Cyan Effect
 		for (DrawEffect& effect : mCyanEffect)
 		{
 			if (not effect.isActive)
@@ -1741,6 +1777,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
+		// Update Green Effect
 		for (DrawEffect& effect : mGreenEffect)
 		{
 			if (not effect.isActive)
@@ -2244,6 +2281,7 @@ bool MainScene::Update(const float deltaTime)
 			
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isShieldColliding = true;
 				monster.hp -= BIG_MONSTER_MAX_HP;
 			}
 		}
@@ -2266,6 +2304,7 @@ bool MainScene::Update(const float deltaTime)
 			
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isShieldColliding = true;
 				monster.hp -= RUN_MONSTER_MAX_HP;
 			}
 		}
@@ -2288,6 +2327,7 @@ bool MainScene::Update(const float deltaTime)
 			
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isShieldColliding = true;
 				monster.hp -= SLOW_MONSTER_MAX_HP;
 			}
 		}
@@ -2311,6 +2351,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isOrbitColliding = true;
 				monster.hp -= BIG_MONSTER_MAX_HP;
 			}
 		}
@@ -2333,6 +2374,7 @@ bool MainScene::Update(const float deltaTime)
 			
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isOrbitColliding = true;
 				monster.hp -= RUN_MONSTER_MAX_HP;
 			}
 		}
@@ -2355,6 +2397,7 @@ bool MainScene::Update(const float deltaTime)
 
 			if (isCollision and monster.hp > 0)
 			{
+				monster.isOrbitColliding = true;
 				monster.hp -= SLOW_MONSTER_MAX_HP;
 			}
 		}
@@ -2904,4 +2947,23 @@ void MainScene::initializeMonster(const MonsterInitDesc& desc)
 	hpBar.SetActive(false);
 	hpBar.SetTexture(&mRedBarTexture);
 	mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
+}
+
+void MainScene::spawnLongEffect(Sprite* effect, Texture* texture, const Monster& monster)
+{
+	ASSERT(effect != nullptr);
+	ASSERT(texture != nullptr);
+
+	effect->SetTexture(texture);
+
+	const D2D1_POINT_2F position = monster.sprite.GetPosition();
+	effect->SetPosition(position);
+
+	D2D1_POINT_2F direction = Math::SubtractVector(position, mHero.sprite.GetPosition());
+	direction = Math::NormalizeVector(direction);
+
+	float angle = Math::ConvertRadianToDegree(direction.y);
+	effect->SetAngle(-angle);
+
+	effect->SetActive(true);
 }

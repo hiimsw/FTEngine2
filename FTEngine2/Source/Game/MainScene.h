@@ -226,6 +226,7 @@ private:
 	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
 	void drawEffect(const DrawEffectDesc& desc);
 	void initializeMonster(const MonsterInitDesc& desc);
+	void spawnLongEffect(Sprite* effect, Texture* texture, const Monster& monster);
 
 private:
 	Texture mRectangleTexture{};
