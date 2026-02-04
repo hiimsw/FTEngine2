@@ -320,7 +320,7 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&effect);
 		}
 
-		for (BulletEffect& effect : mCyanEffect)
+		for (DrawEffect& effect : mCyanEffect)
 		{
 			effect.position = {};
 			effect.scale = {};
@@ -1395,7 +1395,6 @@ bool MainScene::Update(const float deltaTime)
 				{
 					scale.width += barSpeed * deltaTime;
 					mRunMonsterStartBars[i].SetScale(scale);
-
 					continue;
 				}
 				else
@@ -1415,8 +1414,11 @@ bool MainScene::Update(const float deltaTime)
 					mRunMonsterisMoveables[i] = true;
 
 					// hp바를 생성한다.
-					monster.backgroundHpBar.SetActive(true);
-					monster.hpBar.SetActive(true);
+					if (sprite.GetPosition().x != 0.0f)
+					{
+						monster.backgroundHpBar.SetActive(true);
+						monster.hpBar.SetActive(true);
+					}
 				}
 			}
 
@@ -1453,7 +1455,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			for (BulletEffect& effect : mCyanEffect)
+			for (DrawEffect& effect : mCyanEffect)
 			{
 				if (effect.isActive)
 				{
@@ -1687,7 +1689,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			for (BulletEffect& effect : mGreenEffect)
+			for (DrawEffect& effect : mGreenEffect)
 			{
 				if (effect.isActive)
 				{
@@ -1759,7 +1761,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		for (BulletEffect& effect : mCyanEffect)
+		for (DrawEffect& effect : mCyanEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -1784,7 +1786,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 		}
 
-		for (BulletEffect& effect : mGreenEffect)
+		for (DrawEffect& effect : mGreenEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -2457,7 +2459,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// CYAN 이펙트를 그린다.
 	{
-		for (const BulletEffect& effect : mCyanEffect)
+		for (const DrawEffect& effect : mCyanEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -2480,7 +2482,7 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 	// Green 이펙트를 그린다.
 	{
-		for (const BulletEffect& effect : mGreenEffect)
+		for (const DrawEffect& effect : mGreenEffect)
 		{
 			if (not effect.isActive)
 			{
@@ -2873,7 +2875,7 @@ void MainScene::spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosit
 
 void MainScene::drawEffect(const DrawEffectDesc& desc)
 {
-	const BulletEffect& effect = desc.effect;
+	const DrawEffect& effect = desc.effect;
 	const D2D1_POINT_2F positionOffset = desc.positionOffset;
 	const float angle = desc.angle;
 	ID2D1HwndRenderTarget* renderTarget = desc.renderTarget;

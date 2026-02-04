@@ -131,7 +131,7 @@ struct Casing
 	float casingTimer;
 };
 
-struct BulletEffect
+struct DrawEffect
 {
 	D2D1_POINT_2F position;
 	D2D1_SIZE_F scale;
@@ -175,7 +175,7 @@ struct MonsterDeadSoundDesc
 
 struct DrawEffectDesc
 {
-	const BulletEffect& effect;
+	const DrawEffect& effect;
 	const D2D1_POINT_2F positionOffset;
 	const float angle;
 	ID2D1HwndRenderTarget* renderTarget;
@@ -344,7 +344,7 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t BIG_MONSTER_COUNT = 6;
+	static constexpr uint32_t BIG_MONSTER_COUNT = 1;
 	static constexpr uint32_t BIG_MONSTER_MAX_HP = 20;
 	static constexpr float BIG_MONSTER_SCALE = 1.2f;
 	static constexpr float BIG_MONSTER_HP_BAR_WIDTH = 0.1f;
@@ -357,7 +357,7 @@ private:
 	Sound mBigMonsterDeadSound{};
 
 	// 돌진 몬스터
-	static constexpr uint32_t RUN_MONSTER_COUNT = 4;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
 
@@ -376,7 +376,7 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 10;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
@@ -414,11 +414,11 @@ private:
 
 	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
 	static constexpr float CYAN_EFFECT_TIME = 0.3f;
-	BulletEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
+	DrawEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
 	static constexpr float GREEN_EFFECT_TIME = 0.4f;
-	BulletEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
+	DrawEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련
 	static constexpr uint32_t PARTICLE_COUNT = 100;
