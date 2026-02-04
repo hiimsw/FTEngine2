@@ -195,6 +195,15 @@ struct MonsterInitDesc
 	const D2D1_SIZE_F hpScale;
 };
 
+struct ButtonDesc
+{
+	Sprite* sprite;
+	const bool isColliding;
+	Texture* originalTexture;
+	Texture* effectTexture;
+	bool* isSoundPlay;
+};
+
 class MainScene final : public Scene
 {
 public:
@@ -210,6 +219,7 @@ public:
 
 private:
 	D2D1_RECT_F getRectangleFromSprite(const Sprite& sprite);
+	D2D1_RECT_F getRectangleFromSprite( const Sprite& sprite, Texture& texture);
 	D2D1_ELLIPSE getCircleFromSprite(const Sprite& sprite);
 
 	float getRandom(const float min, const float max);
@@ -232,12 +242,15 @@ private:
 
 	void drawDiamondEffect(const DrawDiamondEffectDesc& desc);
 
+	void updateButtonState(const ButtonDesc& desc);
+
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
 	Texture mBlueRectangleTexture{};
 	Texture mPinkRectangleTexture{};
 	Texture mSkyBlueRectangleTexture{};
+	Texture mBlackRectangleTexture{};
 
 	Texture mCircleTexture{};
 	Texture mRedCircleTexture{};
@@ -287,7 +300,7 @@ private:
 	bool mIsColliderKeyDown = false;
 
 	// 플레이어
-	static constexpr uint32_t HERO_MAX_HP = 1000;
+	static constexpr uint32_t HERO_MAX_HP = 10;
 	static constexpr float UI_HP_SCALE_WIDTH = 1.5f;
 
 	Player mHero{};
@@ -357,8 +370,11 @@ private:
 	Label mTimerLabel{};
 	float mGameTimer{};
 
+	Sprite mEndingBackground{};
 	Font mEndingFont{};
 	Label mEndingLabel{};
+	float mEndingTimer{};
+	bool mIsEnding = false;
 	Sound mEndingSound{};
 
 	// 몬스터
@@ -449,4 +465,18 @@ private:
 	Texture mGreenStarTexture{};
 	Texture mBlueStarTexture{};
 	Texture mPurpleStarTexture{};
+
+	Sprite mResumeButton{};
+	bool mIsResumeButtonColliding = false;
+	bool mIsResumeButtonSoundPlay = false;
+	Texture mResumeIdleButtonTexture{};
+	Texture mResumeContactButtonTexture{};
+
+	Sprite mExitButton{};
+	bool mIsExitButtonColliding = false;
+	bool mIsExitButtonSoundPlay = false;
+	Texture mExitIdleButtonTexture{};
+	Texture mExitContactButtonTexture{};
+
+	Sound mButtonSound{};
 };

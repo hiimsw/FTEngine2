@@ -406,7 +406,7 @@ void StartScene::updateFadeEffect(Star* star, const float deltaTime)
 	sprite.SetOpacity(opacity);
 }
 
-void StartScene::updateButtonState(const ButtonDesc& desc)
+void StartScene::updateButtonState(const StartSceneButtonDesc& desc)
 {
 	Sprite* sprite = desc.sprite;
 	const bool isColliding = desc.isColliding;

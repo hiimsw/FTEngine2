@@ -52,6 +52,7 @@ void MainScene::Initialize()
 		mBlueRectangleTexture.Initialize(GetHelper(), L"Resource/BlueRectangle.png");
 		mPinkRectangleTexture.Initialize(GetHelper(), L"Resource/PinkRectangle.png");
 		mSkyBlueRectangleTexture.Initialize(GetHelper(), L"Resource/SkyBlueRectangle.png");
+		mBlackRectangleTexture.Initialize(GetHelper(), L"Resource/BlackRectangle.png");
 
 		mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
 		mRedCircleTexture.Initialize(GetHelper(), L"Resource/RedCircle.png");
@@ -95,6 +96,9 @@ void MainScene::Initialize()
 
 		mEndingSound.Initialize(GetHelper(), "Resource/Sound/game_over.mp3", false);
 		mEndingSound.SetVolume(0.3f);
+
+		mButtonSound.Initialize(GetHelper(), "Resource/Sound/button_sound.wav", false);
+		mButtonSound.SetVolume(1.0f);
 	}
 
 	// 플레이어를 초기화한다.
@@ -482,12 +486,44 @@ void MainScene::Initialize()
 
 		// 엔딩
 		{
+			mEndingBackground.SetPosition({ .x = 0.0f, .y = -60.0f });
+			mEndingBackground.SetScale({ 10.0f, 6.0f });
+			mEndingBackground.SetUI(true);
+			mEndingBackground.SetActive(false);
+			mEndingBackground.SetTexture(&mBlackRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mEndingBackground);
+
 			mEndingLabel.SetFont(&mEndingFont);
 			mEndingLabel.SetUI(true);
-			mEndingLabel.SetPosition({});
 			mEndingLabel.SetActive(false);
 			mEndingLabel.SetText(L"GameOver");
 			mLabels.push_back(&mEndingLabel);
+		}
+
+		// 다시 시작 버튼
+		{
+			mResumeIdleButtonTexture.Initialize(GetHelper(), L"Resource/resume_idle_button.png");
+			mResumeContactButtonTexture.Initialize(GetHelper(), L"Resource/resume_contact_button.png");
+
+			mResumeButton.SetPosition({ .x = 0.0f, .y = 0.0f });
+			mResumeButton.SetScale({ .width = 0.7f, .height = 0.7f });
+			mResumeButton.SetUI(true);
+			mResumeButton.SetActive(false);
+			mResumeButton.SetTexture(&mResumeIdleButtonTexture);
+			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mResumeButton);
+		}
+
+		// 종료 버튼
+		{
+			mExitIdleButtonTexture.Initialize(GetHelper(), L"Resource/exit_idle_button.png");
+			mExitContactButtonTexture.Initialize(GetHelper(), L"Resource/exit_contact_button.png");
+
+			mExitButton.SetPosition({ .x = 0.0f, .y = -120.0f });
+			mExitButton.SetScale({ .width = 0.7f, .height = 0.7f });
+			mExitButton.SetUI(true);
+			mExitButton.SetActive(false);
+			mExitButton.SetTexture(&mExitIdleButtonTexture);
+			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mExitButton);
 		}
 	}
 }
@@ -2008,17 +2044,94 @@ bool MainScene::Update(const float deltaTime)
 		if (mHero.hp <= 0)
 		{
 			mBackgroundSound.Pause();
+			mDashSound.Pause();
+			mBulletSound.Pause();
+			mReloadSound.Pause();
 			mBigMonsterDeadSound.Pause();
 			mRunMonsterDeadSound.Pause();
 			mSlowMonsterDeadSound.Pause();
 
-			mEndingSound.Play();
-
-			mEndingLabel.SetActive(true);
-
 			mHero.hp = 0;
 			mHero.velocity = {};
+			mHero.sprite.SetPosition({});
 			mHero.sprite.SetActive(false);
+
+			mIsDashing = false;
+			mDashSpeed = 0.0f;
+
+			misKeyDownReload = false;
+			mBulletValue = 0.0f;
+
+			mEndingSound.Play();
+		}
+
+		// UI 버튼 관련
+		{
+			// 플레이어가 죽었을 때 딱 한 번 실행된다.
+			if (not mIsEnding
+				and mHero.hp <= 0)
+			{
+				mEndingLabel.SetActive(true);
+
+				mEndingTimer += deltaTime;
+
+				if (mEndingTimer >= 2.0f)
+				{
+					mIsEnding = true;
+					mEndingLabel.SetActive(false);
+
+					Input::Get().SetCursorVisible(true);
+					mZoom.SetActive(false);
+
+					mEndingBackground.SetActive(true);
+					mResumeButton.SetActive(true);
+					mExitButton.SetActive(true);
+
+					mEndingTimer = 0.0f;
+				}
+			}
+
+			// UI 버튼을 업데이트한다.
+			if (mIsEnding)
+			{
+				updateButtonState
+				(
+					{
+						.sprite = &mResumeButton,
+						.isColliding = mIsResumeButtonColliding,
+						.originalTexture = &mResumeIdleButtonTexture,
+						.effectTexture = &mResumeContactButtonTexture,
+						.isSoundPlay = &mIsResumeButtonSoundPlay
+					}
+				);
+
+				updateButtonState
+				(
+					{
+						.sprite = &mExitButton,
+						.isColliding = mIsExitButtonColliding,
+						.originalTexture = &mExitIdleButtonTexture,
+						.effectTexture = &mExitContactButtonTexture,
+						.isSoundPlay = &mIsExitButtonSoundPlay
+					}
+				);
+
+				if (mIsResumeButtonColliding)
+				{
+					if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+					{
+						mIsUpdate = false;
+					}
+				}
+
+				if (mIsExitButtonColliding)
+				{
+					if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+					{
+						PostQuitMessage(0);
+					}
+				}
+			}
 		}
 
 		// 플레이어 체력 라벨을 업데이트 한다.
@@ -2119,7 +2232,27 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 충돌 처리를 업데이트한다.
-	{
+	{		
+		// Resume Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mResumeButton, mResumeIdleButtonTexture), getMouseWorldPosition()))
+		{
+			mIsResumeButtonColliding = true;
+		}
+		else
+		{
+			mIsResumeButtonColliding = false;
+		}
+
+		// Exit Button
+		if (Collision::IsCollidedSqureWithPoint(getRectangleFromSprite(mExitButton, mExitIdleButtonTexture), getMouseWorldPosition()))
+		{
+			mIsExitButtonColliding = true;
+		}
+		else
+		{
+			mIsExitButtonColliding = false;
+		}
+
 		// 플레이어 - 외부 원
 		{
 			if (not Collision::IsCollidedSqureWithCircle(getRectangleFromSprite(mHero.sprite), {}, BOUNDARY_RADIUS))
@@ -2770,6 +2903,7 @@ void MainScene::Finalize()
 	mBlueRectangleTexture.Finalize();
 	mPinkRectangleTexture.Finalize();
 	mSkyBlueRectangleTexture.Finalize();
+	mBlackRectangleTexture.Finalize();
 
 	mCircleTexture.Finalize();
 	mRedCircleTexture.Finalize();
@@ -2785,6 +2919,8 @@ void MainScene::Finalize()
 	mBlueStarTexture.Finalize();
 	mPurpleStarTexture.Finalize();
 
+	mExitIdleButtonTexture.Finalize();
+	mExitContactButtonTexture.Finalize();
 
 	// Sound
 	mBackgroundSound.Finalize();
@@ -2813,6 +2949,30 @@ D2D1_RECT_F MainScene::getRectangleFromSprite(const Sprite& sprite)
 	{
 		.width = scale.width * mRectangleTexture.GetWidth() * 0.5f,
 		.height = scale.height * mRectangleTexture.GetHeight() * 0.5f
+	};
+
+	const D2D1_POINT_2F position = sprite.GetPosition();
+
+	const D2D1_RECT_F rect =
+	{
+		.left = position.x - offset.width,
+		.top = position.y + offset.height,
+		.right = position.x + offset.width,
+		.bottom = position.y - offset.height
+	};
+
+	return rect;
+}
+
+D2D1_RECT_F MainScene::getRectangleFromSprite(const Sprite& sprite, Texture& texture)
+{
+
+	const D2D1_SIZE_F scale = sprite.GetScale();
+
+	const D2D1_SIZE_F offset =
+	{
+		.width = scale.width * texture.GetWidth() * 0.5f,
+		.height = scale.height * texture.GetHeight() * 0.5f
 	};
 
 	const D2D1_POINT_2F position = sprite.GetPosition();
@@ -3147,4 +3307,29 @@ void MainScene::spawnLongEffect(Sprite* effect, Texture* texture, const Monster&
 	effect->SetAngle(-angle);
 
 	effect->SetActive(true);
+}
+
+void MainScene::updateButtonState(const ButtonDesc& desc)
+{
+	Sprite* sprite = desc.sprite;
+	const bool isColliding = desc.isColliding;
+	Texture* originalTexture = desc.originalTexture;
+	Texture* effectTexture = desc.effectTexture;
+	bool* isSoundPlay = desc.isSoundPlay;
+
+	if (isColliding)
+	{
+		sprite->SetTexture(effectTexture);
+
+		if (not *isSoundPlay)
+		{
+			mButtonSound.Replay();
+			*isSoundPlay = true;
+		}
+	}
+	else
+	{
+		*isSoundPlay = false;
+		sprite->SetTexture(originalTexture);
+	}
 }

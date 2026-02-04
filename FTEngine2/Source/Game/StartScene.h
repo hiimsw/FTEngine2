@@ -22,7 +22,7 @@ struct StarDesc
 	Texture* texture;
 };
 
-struct ButtonDesc
+struct StartSceneButtonDesc
 {
 	Sprite* sprite;
 	const bool isColliding;
@@ -50,7 +50,7 @@ private:
 	float getRandom(const float min, const float max);
 	void initializeStar(const StarDesc& desc);
 	void updateFadeEffect(Star* star, const float deltaTime);
-	void updateButtonState(const ButtonDesc& desc);
+	void updateButtonState(const StartSceneButtonDesc& desc);
 
 private:
 	bool mIsUpdate = true;

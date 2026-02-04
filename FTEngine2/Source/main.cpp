@@ -114,6 +114,12 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				gGameScene = eGameScene::Main;
 				break;
 
+			case eGameScene::Main:
+				gCore.SetSceneType(Scene::Type::Main);
+				gCore.ChangeScene(new MainScene);
+				gGameScene = eGameScene::Main;
+				break;
+
 			default:
 				goto EXIT_WINDOW;
 				break;
