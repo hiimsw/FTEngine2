@@ -173,35 +173,16 @@ void MainScene::Initialize()
 	{
 		for (Monster& monster : mBigMonsters)
 		{
-			// 기본 정보를 초기화한다.
-			monster.state = eMonster_State::Spawn;
-			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::None;
-			monster.spawnStartEffectTimer = {};
-			monster.spawnEndEffectTimer = {};
-			monster.deadEffectTimer = {};
-			monster.moveSpeed = {};
-			monster.hp = BIG_MONSTER_MAX_HP;
-
-			Sprite& sprite = monster.sprite;
-			sprite.SetScale({ .width = BIG_MONSTER_SCALE, .height = BIG_MONSTER_SCALE });
-			sprite.SetActive(false);
-			sprite.SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
-
-			Sprite& hpBackground = monster.backgroundHpBar;
-			hpBackground.SetScale({ .width = BIG_MONSTER_HP_BAR_WIDTH, .height = 0.7f });
-			hpBackground.SetCenter({ .x = -0.5f, .y = 0.0f });
-			hpBackground.SetActive(false);
-			hpBackground.SetTexture(&mWhiteBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBackground);
-
-			Sprite& hpBar = monster.hpBar;
-			hpBar.SetScale({ .width = BIG_MONSTER_HP_BAR_WIDTH, .height = 0.7f });
-			hpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
-			hpBar.SetActive(false);
-			hpBar.SetTexture(&mRedBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
+			initializeMonster
+			(
+				{
+					.monster = &monster,
+					.maxHp = BIG_MONSTER_MAX_HP,
+					.monsterScale = { BIG_MONSTER_SCALE, BIG_MONSTER_SCALE },
+					.hpBackgroundScale = { BIG_MONSTER_HP_BAR_WIDTH, 0.7f },
+					.hpScale = { BIG_MONSTER_HP_BAR_WIDTH, 0.7f }
+				}
+			);
 		}
 	}
 
@@ -209,37 +190,16 @@ void MainScene::Initialize()
 	{
 		for (Monster& monster : mRunMonsters)
 		{
-			// 기본 정보를 초기화한다.
-			monster.state = eMonster_State::Spawn;
-			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::None;
-			monster.spawnStartEffectTimer = {};
-			monster.spawnEndEffectTimer = {};
-			monster.deadEffectTimer = {};
-			monster.moveSpeed = {};
-			monster.hp = RUN_MONSTER_MAX_HP;
-
-			Sprite& sprite = monster.sprite;
-			sprite.SetScale({ .width = RUN_MONSTER_SCALE, .height = RUN_MONSTER_SCALE });
-			sprite.SetActive(false);
-			sprite.SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
-
-			// 체력바 배경 정보를 초기화한다.
-			Sprite& background = monster.backgroundHpBar;
-			background.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			background.SetCenter({ -0.5f, 0.0f });
-			background.SetActive(false);
-			background.SetTexture(&mWhiteBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
-
-			// 체력바 정보를 초기화한다.
-			Sprite& hpBar = monster.hpBar;
-			hpBar.SetScale({ .width = RUN_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			hpBar.SetCenter({ -0.5f, 0.0f });
-			hpBar.SetActive(false);
-			hpBar.SetTexture(&mRedBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
+			initializeMonster
+			(
+				{
+					.monster = &monster,
+					.maxHp = RUN_MONSTER_MAX_HP,
+					.monsterScale = { RUN_MONSTER_SCALE, RUN_MONSTER_SCALE },
+					.hpBackgroundScale = { RUN_MONSTER_HP_BAR_WIDTH, 0.5f },
+					.hpScale = { RUN_MONSTER_HP_BAR_WIDTH, 0.5f }
+				}
+			);
 		}
 
 		// 시작바를 생성한다.
@@ -257,37 +217,16 @@ void MainScene::Initialize()
 	{
 		for (Monster& monster : mSlowMonsters)
 		{
-			// 기본 정보를 초기화한다.
-			monster.state = eMonster_State::Spawn;
-			monster.isBulletColliding = false;
-			monster.spawnState = eSpawnEffect_State::None;
-			monster.spawnStartEffectTimer = {};
-			monster.spawnEndEffectTimer = {};
-			monster.deadEffectTimer = {};
-			monster.moveSpeed = {};
-			monster.hp = SLOW_MONSTER_MAX_HP;
-
-			Sprite& sprite = monster.sprite;
-			sprite.SetScale({ .width = SLOW_MONSTER_SCALE, .height = SLOW_MONSTER_SCALE });
-			sprite.SetActive(false);
-			sprite.SetTexture(&mRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
-
-			// 체력바 배경 정보를 초기화한다.
-			Sprite& background = monster.backgroundHpBar;
-			background.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			background.SetCenter({ -0.5f, 0.0f });
-			background.SetActive(false);
-			background.SetTexture(&mWhiteBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&background);
-
-			// 체력바 정보를 초기화한다.
-			Sprite& hpBar = monster.hpBar;
-			hpBar.SetScale({ .width = SLOW_MONSTER_HP_BAR_WIDTH, .height = 0.5f });
-			hpBar.SetCenter({ -0.5f, 0.0f });
-			hpBar.SetActive(false);
-			hpBar.SetTexture(&mRedBarTexture);
-			mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
+			initializeMonster
+			(
+				{
+					.monster = &monster,
+					.maxHp = SLOW_MONSTER_MAX_HP,
+					.monsterScale = { SLOW_MONSTER_SCALE, SLOW_MONSTER_SCALE },
+					.hpBackgroundScale = { SLOW_MONSTER_HP_BAR_WIDTH, 0.5f },
+					.hpScale = { SLOW_MONSTER_HP_BAR_WIDTH, 0.5f }
+				}
+			);
 		}
 
 		// 그림자를 초기화한다.
@@ -321,6 +260,15 @@ void MainScene::Initialize()
 		}
 
 		for (DrawEffect& effect : mCyanEffect)
+		{
+			effect.position = {};
+			effect.scale = {};
+			effect.thick = {};
+			effect.isActive = false;
+			effect.timer = {};
+		}
+
+		for (DrawEffect& effect : mGreenEffect)
 		{
 			effect.position = {};
 			effect.scale = {};
@@ -2911,4 +2859,49 @@ void MainScene::drawEffect(const DrawEffectDesc& desc)
 	};
 
 	renderTarget->DrawRectangle(colliderSize, brush, thick.x);
+}
+
+void MainScene::initializeMonster(const MonsterInitDesc& desc)
+{			
+	Monster* monster = desc.monster;
+	const float maxHp = desc.maxHp;
+	const D2D1_SIZE_F monsterScale = desc.monsterScale;
+	const D2D1_SIZE_F hpBackgroundScale = desc.hpBackgroundScale;
+	const D2D1_SIZE_F hpScale = desc.hpScale;
+
+
+	// 기본 정보를 초기화한다.
+	monster->state = eMonster_State::Spawn;
+	monster->isBulletColliding = false;
+	monster->isShieldColliding = false;
+	monster->isOrbitColliding = false;
+	monster->spawnState = eSpawnEffect_State::None;
+	monster->spawnStartEffectTimer = {};
+	monster->spawnEndEffectTimer = {};
+	monster->deadEffectTimer = {};
+	monster->moveSpeed = {};
+	monster->hp = maxHp;
+
+	// 몬스터 Sprite의 기본 정보를 초기화한다.
+	Sprite& sprite = monster->sprite;
+	sprite.SetScale({ monsterScale.width, monsterScale.height });
+	sprite.SetActive(false);
+	sprite.SetTexture(&mRectangleTexture);
+	mSpriteLayers[uint32_t(Layer::Monster)].push_back(&sprite);
+
+	// Hp바 배경 Sprite의 기본 정보를 초기화한다.
+	Sprite& hpBackground = monster->backgroundHpBar;
+	hpBackground.SetScale({ hpBackgroundScale.width, hpBackgroundScale.height });
+	hpBackground.SetCenter({ .x = -0.5f, .y = 0.0f });
+	hpBackground.SetActive(false);
+	hpBackground.SetTexture(&mWhiteBarTexture);
+	mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBackground);
+
+	// Hp바 Sprite의 기본 정보를 초기화한다.
+	Sprite& hpBar = monster->hpBar;
+	hpBar.SetScale({ hpScale.width, hpScale.height });
+	hpBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+	hpBar.SetActive(false);
+	hpBar.SetTexture(&mRedBarTexture);
+	mSpriteLayers[uint32_t(Layer::Monster)].push_back(&hpBar);
 }

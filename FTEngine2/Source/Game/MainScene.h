@@ -185,6 +185,15 @@ struct DrawEffectDesc
 	const D2D1::Matrix3x2F& view;
 };
 
+struct MonsterInitDesc
+{
+	Monster* monster;
+	const float maxHp;
+	const D2D1_SIZE_F monsterScale;
+	const D2D1_SIZE_F hpBackgroundScale;
+	const D2D1_SIZE_F hpScale;
+};
+
 class MainScene final : public Scene
 {
 public:
@@ -216,6 +225,7 @@ private:
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
 	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
 	void drawEffect(const DrawEffectDesc& desc);
+	void initializeMonster(const MonsterInitDesc& desc);
 
 private:
 	Texture mRectangleTexture{};
