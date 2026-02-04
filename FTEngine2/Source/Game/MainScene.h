@@ -173,6 +173,16 @@ struct MonsterDeadSoundDesc
 	const float deltaTime;
 };
 
+struct DrawEffectDesc
+{
+	const BulletEffect& effect;
+	const D2D1_POINT_2F positionOffset;
+	const float angle;
+	ID2D1HwndRenderTarget* renderTarget;
+	ID2D1SolidColorBrush* brush;
+	const D2D1::Matrix3x2F& view;
+};
+
 class MainScene final : public Scene
 {
 public:
@@ -203,6 +213,7 @@ private:
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
 	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
+	void drawEffect(const DrawEffectDesc& desc);
 
 private:
 	Texture mRectangleTexture{};

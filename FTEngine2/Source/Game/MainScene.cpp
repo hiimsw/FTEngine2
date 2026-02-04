@@ -2464,25 +2464,17 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				continue;
 			}
 
-			const Matrix3x2F worldView =
-				Transformation::getWorldMatrix(
-					{
-						.x = effect.position.x,
-						.y = effect.position.y + 50.0f
-					}, 45.0f) * view;
-			renderTarget->SetTransform(worldView);
-
-
-			const D2D1_RECT_F colliderSize =
-			{
-				.left = 0.0f,
-				.top = 0.0f,
-				.right = effect.scale.width,
-				.bottom = effect.scale.height
-			};
-
-			renderTarget->DrawRectangle(colliderSize, mCyanBrush, effect.thick.x);
-
+			drawEffect
+			(
+				{
+					.effect = effect, 
+					.positionOffset = {.x = 0.0f, .y = 50.0f }, 
+					.angle = 45.0f, 
+					.renderTarget = renderTarget, 
+					.brush = mCyanBrush, 
+					.view = view
+				}
+			);
 		}
 	}
 
@@ -2495,24 +2487,17 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 				continue;
 			}
 
-			const Matrix3x2F worldView =
-				Transformation::getWorldMatrix(
-					{
-						.x = effect.position.x,
-						.y = effect.position.y + 50.0f
-					}, 45.0f) * view;
-			renderTarget->SetTransform(worldView);
-
-
-			const D2D1_RECT_F colliderSize =
-			{
-				.left = 0.0f,
-				.top = 0.0f,
-				.right = effect.scale.width,
-				.bottom = effect.scale.height
-			};
-
-			renderTarget->DrawRectangle(colliderSize, mDarkGreen, effect.thick.x);
+			drawEffect
+			(
+				{
+					.effect = effect,
+					.positionOffset = {.x = 0.0f, .y = 40.0f },
+					.angle = 45.0f,
+					.renderTarget = renderTarget,
+					.brush = mCyanBrush,
+					.view = view
+				}
+			);
 		}
 	}
 
@@ -2884,4 +2869,37 @@ void MainScene::spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosit
 	sprite.SetPosition(spawnPosition);
 	sprite.SetActive(true);
 	sprite.SetOpacity(1.0f);
+}
+
+void MainScene::drawEffect(const DrawEffectDesc& desc)
+{
+	const BulletEffect& effect = desc.effect;
+	const D2D1_POINT_2F positionOffset = desc.positionOffset;
+	const float angle = desc.angle;
+	ID2D1HwndRenderTarget* renderTarget = desc.renderTarget;
+	ID2D1SolidColorBrush* brush = desc.brush;
+	const D2D1::Matrix3x2F& view = desc.view;
+
+	const D2D1_POINT_2F position = effect.position;
+	const D2D1_SIZE_F scale = effect.scale;
+	const D2D1_POINT_2F thick = effect.thick;
+
+	const Matrix3x2F worldView =
+		Transformation::getWorldMatrix(
+			{
+				.x = position.x + positionOffset.x,
+				.y = position.y + positionOffset.y
+			}, angle) * view;
+	renderTarget->SetTransform(worldView);
+
+
+	const D2D1_RECT_F colliderSize =
+	{
+		.left = 0.0f,
+		.top = 0.0f,
+		.right = scale.width,
+		.bottom = scale.height
+	};
+
+	renderTarget->DrawRectangle(colliderSize, brush, thick.x);
 }
