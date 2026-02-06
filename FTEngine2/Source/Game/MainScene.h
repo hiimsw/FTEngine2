@@ -303,9 +303,11 @@ private:
 private:
 	Texture mRectangleTexture{};
 	Texture mRedRectangleTexture{};
+	Texture mYellowRectangleTexture{};
+	Texture mSkyBlueRectangleTexture{};
 	Texture mBlueRectangleTexture{};
 	Texture mPinkRectangleTexture{};
-	Texture mSkyBlueRectangleTexture{};
+	Texture mPurpleRectangleTexture{};
 	Texture mBlackRectangleTexture{};
 
 	Texture mCircleTexture{};
@@ -370,7 +372,7 @@ private:
 
 	// 플레이어 총알
 	static constexpr uint32_t BULLET_COUNT = 100;
-	Bullet mBullets[BULLET_COUNT]{};
+	std::array<Bullet, BULLET_COUNT> mBullets{};
 	float mBulletShootingCoolTimer{};
 	int32_t mBulletValue = BULLET_COUNT;
 	Sound mBulletSound{};
@@ -382,7 +384,7 @@ private:
 
 	// 플레이어 탄피
 	static constexpr uint32_t CASING_COUNT = BULLET_COUNT;
-	Casing mCasings[CASING_COUNT]{};
+	std::array<Casing, CASING_COUNT> mCasings{};
 
 	// 플레이어 쉴드 스킬
 	static constexpr float SHELD_MIN_RADIUS = 50.0f;
@@ -472,19 +474,23 @@ private:
 	// 이펙트 관련
 	static constexpr uint32_t LONG_EFFECT_COUNT = BIG_MONSTER_COUNT;
 	static constexpr D2D1_SIZE_F LONG_EFFECT_SCALE = { 1.2f, 50.0f };
-	Sprite mLongEffect[LONG_EFFECT_COUNT]{};
+	std::array<Sprite, LONG_EFFECT_COUNT> mLongEffect{};
+
 	float mLongEffectTimer[LONG_EFFECT_COUNT]{};
 
 	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
-	DiamondEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
+	std::array<DiamondEffect, CYAN_EFFECT_COUNT> mCyanEffect{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
-	DiamondEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
+	std::array<DiamondEffect, SLOW_MONSTER_COUNT> mGreenEffect{};
 
 	// 파티클 관련
-	static constexpr uint32_t PARTICLE_COUNT = 102;
+	static constexpr uint32_t STAR_PARTICLE_COUNT = 102;
 	static constexpr uint32_t PARTICLE_PER = 6;
-	Particle mParticles[PARTICLE_COUNT]{};
+	std::array<Particle, STAR_PARTICLE_COUNT> mStarParticles{};
+
+	static constexpr uint32_t RECT_PARTICLE_COUNT = 13 * 6;
+	std::array<Particle, RECT_PARTICLE_COUNT> mRectParticles{};
 
 	Texture mRedStarTexture{};
 	Texture mOrangeStarTexture{};

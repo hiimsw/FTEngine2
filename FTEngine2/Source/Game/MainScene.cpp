@@ -49,9 +49,11 @@ void MainScene::Initialize()
 	{
 		mRectangleTexture.Initialize(GetHelper(), L"Resource/Rectangle.png");
 		mRedRectangleTexture.Initialize(GetHelper(), L"Resource/RedRectangle.png");
+		mYellowRectangleTexture.Initialize(GetHelper(), L"Resource/YellowRectangle.png");
+		mSkyBlueRectangleTexture.Initialize(GetHelper(), L"Resource/SkyBlueRectangle.png");
 		mBlueRectangleTexture.Initialize(GetHelper(), L"Resource/BlueRectangle.png");
 		mPinkRectangleTexture.Initialize(GetHelper(), L"Resource/PinkRectangle.png");
-		mSkyBlueRectangleTexture.Initialize(GetHelper(), L"Resource/SkyBlueRectangle.png");
+		mPurpleRectangleTexture.Initialize(GetHelper(), L"Resource/PurpleRectangle.png");
 		mBlackRectangleTexture.Initialize(GetHelper(), L"Resource/BlackRectangle.png");
 
 		mCircleTexture.Initialize(GetHelper(), L"Resource/Circle.png");
@@ -147,7 +149,7 @@ void MainScene::Initialize()
 			sprite.SetOpacity(0.3f);
 			sprite.SetActive(false);
 			sprite.SetTexture(&mRedRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::Player)].push_back(&sprite);
+			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
 		}
 	}
 
@@ -257,7 +259,7 @@ void MainScene::Initialize()
 		mPurpleStarTexture.Initialize(GetHelper(), L"Resource/PurpleStar.png");
 
 		constexpr uint32_t COLOR_COUNT = 6;
-		Texture* particleTextures[COLOR_COUNT] =
+		Texture* starParticleTextures[COLOR_COUNT] =
 		{
 			&mRedStarTexture,
 			&mOrangeStarTexture,
@@ -267,16 +269,42 @@ void MainScene::Initialize()
 			&mPurpleStarTexture
 		};
 
-		for (uint32_t i = 0; i < PARTICLE_COUNT; ++i)
+		Texture* rectParticleTextures[COLOR_COUNT] =
 		{
-			Particle& particle = mParticles[i];
+			&mRectangleTexture,
+			&mRedRectangleTexture,
+			&mYellowRectangleTexture,
+			&mPinkRectangleTexture,
+			&mBlueRectangleTexture,
+			&mPurpleStarTexture
+		};
+
+		// Star
+		for (uint32_t i = 0; i < mStarParticles.size(); ++i)
+		{
+			Particle& particle = mStarParticles[i];
 			particle.direction = {};
 			particle.speed = getRandom(100.0f, 300.0f);
 
 			Sprite& sprite = particle.sprite;
 			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
 			sprite.SetActive(false);
-			sprite.SetTexture(particleTextures[i % COLOR_COUNT]);
+			sprite.SetTexture(starParticleTextures[i % COLOR_COUNT]);
+			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
+		}
+
+		// Rect
+		for (uint32_t i = 0; i < mRectParticles.size(); ++i)
+		{
+			Particle& particle = mRectParticles[i];
+
+			particle.direction = {};
+			particle.speed = getRandom(100.0f, 300.0f);
+
+			Sprite& sprite = particle.sprite;
+			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
+			sprite.SetActive(false);
+			sprite.SetTexture(rectParticleTextures[i % COLOR_COUNT]);
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
 		}
 	}
@@ -1656,7 +1684,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnLongEffect(mLongEffect, LONG_EFFECT_COUNT, &mSkyBlueRectangleTexture, monster);
+			spawnLongEffect(mLongEffect.data(), mLongEffect.size(), &mSkyBlueRectangleTexture, monster);
 			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
@@ -1670,7 +1698,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnDiamondEffect(mCyanEffect, CYAN_EFFECT_COUNT, monster);
+			spawnDiamondEffect(mCyanEffect.data(), mCyanEffect.size(), monster);
 			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
@@ -1684,7 +1712,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnDiamondEffect(mGreenEffect, GREEN_EFFECT_COUNT, monster);
+			spawnDiamondEffect(mGreenEffect.data(), mGreenEffect.size(), monster);
 			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
@@ -1700,7 +1728,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnLongEffect(mLongEffect, LONG_EFFECT_COUNT, &mBlueRectangleTexture, monster);
+			spawnLongEffect(mLongEffect.data(), mLongEffect.size() , & mBlueRectangleTexture, monster);
 			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
@@ -1714,7 +1742,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnDiamondEffect(mCyanEffect, CYAN_EFFECT_COUNT, monster);
+			spawnDiamondEffect(mCyanEffect.data(), mCyanEffect.size(), monster);
 			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
@@ -1728,7 +1756,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnDiamondEffect(mGreenEffect, GREEN_EFFECT_COUNT, monster);
+			spawnDiamondEffect(mGreenEffect.data(), mGreenEffect.size(), monster);
 			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
@@ -1825,7 +1853,7 @@ bool MainScene::Update(const float deltaTime)
 	}
 
 	// 파티클을 업데이트한다.
-	updateParticle(mParticles, PARTICLE_COUNT, deltaTime);
+	updateParticle(mStarParticles.data(), STAR_PARTICLE_COUNT, deltaTime);
 
 	// 이펙트를 업데이트한다.
 	{
@@ -1833,7 +1861,7 @@ bool MainScene::Update(const float deltaTime)
 		updateLongEffect
 		(
 			{
-				.sprite = mLongEffect,
+				.sprite = mLongEffect.data(),
 				.size = LONG_EFFECT_COUNT,
 				.timer = mLongEffectTimer,
 				.time = 0.5f,
@@ -1846,7 +1874,7 @@ bool MainScene::Update(const float deltaTime)
 		updateDiamondEffect
 		(
 			{
-				.effect = mCyanEffect,
+				.effect = mCyanEffect.data(),
 				.size = CYAN_EFFECT_COUNT,
 				.scale = { .width = 80.0f, .height = 80.0f },
 				.speed = 3.0f,
@@ -1860,7 +1888,7 @@ bool MainScene::Update(const float deltaTime)
 		updateDiamondEffect
 		(
 			{
-				.effect = mGreenEffect,
+				.effect = mGreenEffect.data(),
 				.size = GREEN_EFFECT_COUNT,
 				.scale = {.width = 70.0f, .height = 70.0f },
 				.speed = 3.0f,
@@ -2802,9 +2830,11 @@ void MainScene::Finalize()
 
 	mRectangleTexture.Finalize();
 	mRedRectangleTexture.Finalize();
+	mYellowRectangleTexture.Finalize();
+	mSkyBlueRectangleTexture.Finalize();
 	mBlueRectangleTexture.Finalize();
 	mPinkRectangleTexture.Finalize();
-	mSkyBlueRectangleTexture.Finalize();
+	mPurpleRectangleTexture.Finalize();
 	mBlackRectangleTexture.Finalize();
 
 	mCircleTexture.Finalize();
@@ -3137,7 +3167,7 @@ void MainScene::spawnParticle(Monster* monster, uint32_t spawnCount)
 {
 	ASSERT(monster != nullptr);
 
-	for (Particle& particle : mParticles)
+	for (Particle& particle : mStarParticles)
 	{
 		if (particle.sprite.IsActive())
 		{
@@ -3282,24 +3312,24 @@ void MainScene::spawnLongEffect(Sprite* sprites, const uint32_t size, Texture* t
 
 	for (uint32_t i = 0; i < size; ++i)
 	{
-		Sprite& effect = sprites[i];
-		if (effect.IsActive())
+		Sprite& sprite = sprites[i];
+		if (sprite.IsActive())
 		{
 			continue;
 		}
 
-		effect.SetTexture(texture);
+		sprite.SetTexture(texture);
 
 		const D2D1_POINT_2F position = monster.sprite.GetPosition();
-		effect.SetPosition(position);
+		sprite.SetPosition(position);
 
 		D2D1_POINT_2F direction = Math::SubtractVector(position, mHero.sprite.GetPosition());
 		direction = Math::NormalizeVector(direction);
 
 		float angle = Math::ConvertRadianToDegree(direction.y);
-		effect.SetAngle(-angle);
+		sprite.SetAngle(-angle);
 
-		effect.SetActive(true);
+		sprite.SetActive(true);
 		break;
 	}
 }
