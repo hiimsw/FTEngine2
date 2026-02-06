@@ -116,7 +116,7 @@ struct Monster
 	float deadEffectTimer;
 	float moveSpeed;
 
-	bool isActiveHpBar;
+	bool isHpBarActivated;
 	Sprite backgroundHpBar;
 	Sprite hpBar;
 	int32_t hp;
@@ -184,6 +184,7 @@ struct MonsterSpawnDesc
 	const D2D1_SIZE_F scale;
 	const D2D1_SIZE_F hitEffect;
 	const int32_t maxHp;
+	const D2D1_POINT_2F hpBarOffset;
 };
 
 struct MonsterSpawnEffectDesc
@@ -282,6 +283,7 @@ private:
 	void initializeMonster(const MonsterInitDesc& desc);
 	void spawnMonster(const MonsterSpawnDesc& desc);
 	void updateMonsterHp(Monster* monster, const float maxWidthBar, const uint32_t maxHp, const float deltaTime);
+	D2D1_POINT_2F getHpBarOffset(const Sprite& sprite, const D2D1_POINT_2F offset);
 	
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
@@ -325,7 +327,7 @@ private:
 
 	// 공용
 	static constexpr float IN_BOUNDARY_RADIUS = 60.0f;
-	static constexpr float BOUNDARY_RADIUS = 400.0f;
+	static constexpr float BOUNDARY_RADIUS = 700.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
 
@@ -393,6 +395,11 @@ private:
 	Orbit mOrbit{};
 	Sound mOrbitSound{};
 
+	// 플레이어 몬스터 all kill 스킬
+	static constexpr uint32_t KILL_ALL_MONSTER_COUNT = 2;
+	bool mIsKillAllMonster = false;
+	int32_t mKillMonsterCount{};
+
 	// UI
 	static constexpr float UI_DASH_SCALE_WIDTH = 1.5f;
 	Sprite mUiDashBar{};
@@ -425,7 +432,7 @@ private:
 	Sound mEndingSound{};
 
 	// 몬스터
-	static constexpr uint32_t BIG_MONSTER_COUNT = 1;
+	static constexpr uint32_t BIG_MONSTER_COUNT = 5;
 	static constexpr uint32_t BIG_MONSTER_MAX_HP = 20;
 	static constexpr float BIG_MONSTER_SCALE = 1.2f;
 	static constexpr float BIG_MONSTER_HP_BAR_WIDTH = 0.1f;
@@ -448,7 +455,7 @@ private:
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
-	static constexpr uint32_t SLOW_MONSTER_COUNT = 1;
+	static constexpr uint32_t SLOW_MONSTER_COUNT = 5;
 	static constexpr float SLOW_MONSTER_SCALE = 0.7f;
 
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;

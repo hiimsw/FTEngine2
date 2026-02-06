@@ -103,10 +103,6 @@ void MainScene::Initialize()
 
 	// 플레이어를 초기화한다.
 	{
-		mHero.velocity = {};
-		mHero.isHitEffect = false;
-		mHero.isHitBoundry = false;
-
 		mHero.hp = HERO_MAX_HP;
 		mHero.prevHp = mHero.hp;
 
@@ -124,20 +120,13 @@ void MainScene::Initialize()
 			mSpriteLayers[uint32_t(Layer::Player)].push_back(&shadow);
 		}
 
-		mDash.shadowCoolTimer = {};
 		mDash.count = DASH_MAX_COUNT;
-		mDash.timer = {};
-		mDash.moveSpeed = {};
-		mDash.isActive = {};
 	}
 
 	// 총알을 초기화한다.
 	{
 		for (Bullet& bullet : mBullets)
 		{
-			bullet.prevPosition = {};
-			bullet.direction = {};
-
 			Sprite& sprite = bullet.sprite;
 			sprite.SetPosition(mHero.sprite.GetPosition());
 			sprite.SetCenter({ .x = -0.5f, .y = 0.0f });
@@ -152,11 +141,6 @@ void MainScene::Initialize()
 	{
 		for (Casing& casing : mCasings)
 		{
-			casing.casingDirection = {};
-			casing.startPosition = {};
-			casing.endPosition = {};
-			casing.casingTimer = {};
-
 			Sprite& sprite = casing.sprite;
 			sprite.SetScale({ .width = 0.2f, .height = 0.2f });
 			sprite.SetCenter({ -0.5f, 0.0f });
@@ -214,10 +198,6 @@ void MainScene::Initialize()
 				}
 			);
 
-			// 시작바
-			run.isMoveable = false;
-			run.direction = {};
-
 			Sprite& startBar = run.startBar;
 			startBar.SetScale({ .width = 0.0f, .height = 0.1f });
 			startBar.SetCenter({ .x = -0.5f, .y = 0.0f });
@@ -252,13 +232,7 @@ void MainScene::Initialize()
 				}
 			);
 
-			slow.movingTimer = {};
-			slow.stopTimer = {};
-
-			slow.startPosition = {};
-			slow.endPosition = {};
-
-			slow.shadowCoolTimer = {};
+			slow.moveState = eSlow_Monster_State::End;
 		}
 	}
 
@@ -270,24 +244,6 @@ void MainScene::Initialize()
 			effect.SetActive(false);
 			effect.SetTexture(&mSkyBlueRectangleTexture);
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&effect);
-		}
-
-		for (DiamondEffect& effect : mCyanEffect)
-		{
-			effect.position = {};
-			effect.scale = {};
-			effect.thick = {};
-			effect.isActive = false;
-			effect.thickTimer = {};
-		}
-
-		for (DiamondEffect& effect : mGreenEffect)
-		{
-			effect.position = {};
-			effect.scale = {};
-			effect.thick = {};
-			effect.isActive = false;
-			effect.thickTimer = {};
 		}
 	}
 
@@ -1157,6 +1113,56 @@ bool MainScene::Update(const float deltaTime)
 				break;
 			}
 		}
+
+		// 모든 몬스터를 죽일 수 있는 스킬을 업데이트한다.
+		{
+			DEBUG_LOG("%d", mKillMonsterCount);
+			
+			if (Input::Get().GetKeyDown('F'))
+			{
+				if (mKillMonsterCount >= KILL_ALL_MONSTER_COUNT)
+				{
+					mIsKillAllMonster = true;
+				}
+			}
+
+			if (mIsKillAllMonster)
+			{
+				for (Monster& monster : mBigMonsters)
+				{
+					if (not monster.sprite.IsActive())
+					{
+						continue;
+					}
+
+					monster.hp = 0;
+				}
+
+				for (RunMonster& run : mRunMonsters)
+				{
+					if (not run.monster.sprite.IsActive())
+					{
+						continue;
+					}
+
+					run.monster.hp = 0;
+				}
+
+				for (SlowMonster& slow : mSlowMonsters)
+				{
+					if (not slow.monster.sprite.IsActive())
+					{
+						continue;
+					}
+
+					slow.monster.hp = 0;
+				}
+
+				mKillMonsterCount = 0;
+				mIsKillAllMonster = false;
+			}
+
+		}
 	}
 
 	// 몬스터를 일정 시간마다 스폰한다.
@@ -1176,7 +1182,8 @@ bool MainScene::Update(const float deltaTime)
 					{
 						.monster = &monster,
 						.scale {.width = BIG_MONSTER_SCALE , .height = BIG_MONSTER_SCALE },
-						.maxHp = BIG_MONSTER_MAX_HP
+						.maxHp = BIG_MONSTER_MAX_HP,
+						.hpBarOffset = { .x = 3.5f, .y = -10.0f }
 					}
 				);
 
@@ -1202,7 +1209,8 @@ bool MainScene::Update(const float deltaTime)
 					{
 						.monster = &run.monster,
 						.scale {.width = RUN_MONSTER_SCALE , .height = RUN_MONSTER_SCALE },
-						.maxHp = RUN_MONSTER_MAX_HP
+						.maxHp = RUN_MONSTER_MAX_HP,
+						.hpBarOffset = {.x = 0.0f, .y = -10.0f }
 					}
 				);
 
@@ -1235,7 +1243,8 @@ bool MainScene::Update(const float deltaTime)
 					{
 						.monster = &monster,
 						.scale {.width = SLOW_MONSTER_SCALE , .height = SLOW_MONSTER_SCALE },
-						.maxHp = SLOW_MONSTER_MAX_HP
+						.maxHp = SLOW_MONSTER_MAX_HP,
+						.hpBarOffset = {.x = 2.0f, .y = -10.0f }
 					}
 				);
 
@@ -1264,14 +1273,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
-			if (monster.spawnState == eSpawnEffect_State::End
-				and not monster.isActiveHpBar)
-			{
-				monster.isActiveHpBar = true;
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
-			}
 		}
 
 		// 돌진 몬스터
@@ -1293,8 +1294,6 @@ bool MainScene::Update(const float deltaTime)
 					.deltaTime = deltaTime
 				}
 			);
-
-			run.startBar.SetActive(true);
 		}
 
 		// 느린 몬스터 
@@ -1316,15 +1315,76 @@ bool MainScene::Update(const float deltaTime)
 						.deltaTime = deltaTime
 					}
 				);
+			}
+		}
+	}
 
-				if (not monster.isActiveHpBar)
+	// 몬스터의 HpBar Active를 업데이트한다.
+	{
+		// 큰 몬스터
+		for (Monster& monster : mBigMonsters)
+		{
+			if (not monster.sprite.IsActive())
+			{
+				continue;
+			}
+
+			if (monster.state == eMonster_State::Life
+				and not monster.isHpBarActivated)
+			{
+				monster.backgroundHpBar.SetActive(true);
+				monster.hpBar.SetActive(true);
+
+				monster.isHpBarActivated = true;
+			}
+		}
+
+		// 돌진 몬스터
+		for (RunMonster& run : mRunMonsters)
+		{
+			Monster& monster = run.monster;
+			if (not monster.sprite.IsActive())
+			{
+				continue;
+			}
+
+			if (monster.state == eMonster_State::Life)
+			{
+				if (not run.isMoveable)
 				{
-					slow.moveState = eSlow_Monster_State::Stop;
+					D2D1_SIZE_F scale = run.startBar.GetScale();
+					if (scale.width < RUN_MONSTER_START_BAR_WIDTH)
+					{
+						run.startBar.SetActive(true);
+					}
+					else
+					{
+						run.startBar.SetActive(false);
 
-					monster.backgroundHpBar.SetActive(true);
-					monster.hpBar.SetActive(true);
-					monster.isActiveHpBar = true;
+						monster.backgroundHpBar.SetActive(true);
+						monster.hpBar.SetActive(true);
+					}
 				}
+			}
+		}
+
+		// 느린 몬스터
+		for (SlowMonster& slow : mSlowMonsters)
+		{
+			Monster& monster = slow.monster;
+			if (not monster.sprite.IsActive())
+			{
+				continue;
+			}
+
+			if (monster.state == eMonster_State::Life
+				and not monster.isHpBarActivated)
+			{
+				slow.moveState = eSlow_Monster_State::Stop;
+				monster.backgroundHpBar.SetActive(true);
+				monster.hpBar.SetActive(true);
+
+				monster.isHpBarActivated = true;
 			}
 		}
 	}
@@ -1351,20 +1411,9 @@ bool MainScene::Update(const float deltaTime)
 
 			// hp를 좌표를 업데이트한다.
 			{
-				const D2D1_SIZE_F scaleOffset =
-				{
-					.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-						.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
-				};
-
-				const D2D1_POINT_2F offset =
-				{
-					.x = position.x - scaleOffset.width + 3.5f,
-					.y = position.y - scaleOffset.height - 10.0f
-				};
-
-				monster.backgroundHpBar.SetPosition(offset);
-				monster.hpBar.SetPosition(offset);
+				const D2D1_POINT_2F position = getHpBarOffset(sprite, { .x = 3.5f, .y = -10.0f });
+				monster.backgroundHpBar.SetPosition(position);
+				monster.hpBar.SetPosition(position);
 			}
 		}
 
@@ -1418,30 +1467,10 @@ bool MainScene::Update(const float deltaTime)
 			sprite.SetPosition(position);
 
 			// hp를 좌표를 업데이트한다.
-			const D2D1_SIZE_F scaleOffset =
 			{
-				.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-				.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
-			};
-
-			const D2D1_POINT_2F offset =
-			{
-				.x = position.x - scaleOffset.width,
-				.y = position.y - scaleOffset.height - 10.0f
-			};
-
-			monster.backgroundHpBar.SetPosition(offset);
-			monster.hpBar.SetPosition(offset);
-
-			// hp바를 생성한다.
-			if (run.isMoveable
-				and not monster.isActiveHpBar)
-			{
-				run.startBar.SetActive(false);
-
-				monster.isActiveHpBar = true;
-				monster.backgroundHpBar.SetActive(true);
-				monster.hpBar.SetActive(true);
+				const D2D1_POINT_2F position = getHpBarOffset(sprite, { .x = 0.0f, .y = -10.0f });
+				monster.backgroundHpBar.SetPosition(position);
+				monster.hpBar.SetPosition(position);
 			}
 		}
 
@@ -1484,38 +1513,27 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					// hp를 좌표를 업데이트한다.
-					const D2D1_SIZE_F scaleOffset =
 					{
-						.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
-						.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
-					};
+						const D2D1_POINT_2F position = getHpBarOffset(sprite, { .x = 2.0f, .y = -10.0f });
+						monster.backgroundHpBar.SetPosition(position);
+						monster.hpBar.SetPosition(position);
+					}
 
-					const D2D1_POINT_2F offset =
-					{
-						.x = sprite.GetPosition().x - scaleOffset.width + 2.0f,
-						.y = sprite.GetPosition().y - scaleOffset.height - 10.0f
-					};
-
-					monster.backgroundHpBar.SetPosition(offset);
-					monster.hpBar.SetPosition(offset);
 					break;
 				}
 
 				case eSlow_Monster_State::Stop:
 				{
-					slow.shadowCoolTimer = 0.0f;
+					slow.stopTimer += deltaTime;
 
-					slow.shadowCoolTimer += deltaTime;
-
-					if (slow.shadowCoolTimer >= STOP_TIME)
+					if (slow.stopTimer >= STOP_TIME)
 					{
 						slow.movingTimer = 0.0f;
+						slow.shadowCoolTimer = 0.0f;
 
 						slow.startPosition = sprite.GetPosition();
-
 						D2D1_POINT_2F direction = Math::SubtractVector({}, slow.startPosition);
 						direction = Math::NormalizeVector(direction);
-
 						slow.endPosition = Math::AddVector(slow.startPosition, Math::ScaleVector(direction, LENGTH));
 
 						slow.moveState = eSlow_Monster_State::Moving;
@@ -1590,6 +1608,12 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnParticle(&monster, PARTICLE_PER);
+
+			if (monster.hp <= 0)
+			{
+				++mKillMonsterCount;
+			}
+
 			monster.isBulletColliding = false;
 		}
 
@@ -1603,6 +1627,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnParticle(&monster, PARTICLE_PER);
+			++mKillMonsterCount;
 			monster.isBulletColliding = false;
 		}
 
@@ -1616,6 +1641,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnParticle(&monster, PARTICLE_PER);
+			++mKillMonsterCount;
 			monster.isBulletColliding = false;
 		}
 	}
@@ -1631,6 +1657,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnLongEffect(mLongEffect, LONG_EFFECT_COUNT, &mSkyBlueRectangleTexture, monster);
+			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
 
@@ -1644,6 +1671,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnDiamondEffect(mCyanEffect, CYAN_EFFECT_COUNT, monster);
+			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
 
@@ -1657,6 +1685,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnDiamondEffect(mGreenEffect, GREEN_EFFECT_COUNT, monster);
+			++mKillMonsterCount;
 			monster.isShieldColliding = false;
 		}
 	}
@@ -1672,6 +1701,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnLongEffect(mLongEffect, LONG_EFFECT_COUNT, &mBlueRectangleTexture, monster);
+			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
 
@@ -1685,6 +1715,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnDiamondEffect(mCyanEffect, CYAN_EFFECT_COUNT, monster);
+			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
 
@@ -1698,6 +1729,7 @@ bool MainScene::Update(const float deltaTime)
 			}
 
 			spawnDiamondEffect(mGreenEffect, GREEN_EFFECT_COUNT, monster);
+			++mKillMonsterCount;
 			monster.isOrbitColliding = false;
 		}
 	}
@@ -1745,7 +1777,6 @@ bool MainScene::Update(const float deltaTime)
 				monster.state = eMonster_State::Dead;
 				mRunMonsterDeadSound.Replay();
 
-				monster.sprite.SetActive(false);
 				run.startBar.SetActive(false);
 			}
 
@@ -2942,32 +2973,45 @@ void MainScene::spawnMonster(const MonsterSpawnDesc& desc)
 	Monster* monster = desc.monster;
 	const D2D1_SIZE_F scale = desc.scale;
 	const int32_t maxHp = desc.maxHp;
+	const D2D1_POINT_2F hpBarOffset = desc.hpBarOffset;
 
-	// 초기 정보를 업데이트한다.
-	monster->state = eMonster_State::Spawn;
-	monster->spawnState = eSpawnEffect_State::None;
-	monster->hp = maxHp;
-	monster->isActiveHpBar = false;
-	monster->backgroundHpBar.SetActive(false);
-	monster->hpBar.SetActive(false);
-
-	constexpr float MIN_ANGLE = 0.0f;
-	constexpr float MAX_ANGLE = 2.0f * Math::PI;
-	const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
-
-	const D2D1_POINT_2F spawnDirection =
+	// 초기 정보를 세팅한다.
 	{
-		.x = cos(angle),
-		.y = sin(angle)
-	};
+		monster->state = eMonster_State::Spawn;
+		monster->spawnState = eSpawnEffect_State::None;
+		monster->hp = maxHp;
+		monster->isHpBarActivated = false;
+	}
 
-	const float SPAWN_DISTANCE = BOUNDARY_RADIUS - 30.0f;
-	const D2D1_POINT_2F spawnPosition = Math::ScaleVector(spawnDirection, SPAWN_DISTANCE);
+	// 초기 Sprite를 세팅한다.
+	{
+		constexpr float MIN_ANGLE = 0.0f;
+		constexpr float MAX_ANGLE = 2.0f * Math::PI;
+		const float angle = getRandom(MIN_ANGLE, MAX_ANGLE);
 
-	Sprite& sprite = monster->sprite;
-	sprite.SetPosition(spawnPosition);
-	sprite.SetScale(scale);
-	sprite.SetActive(true);
+		const D2D1_POINT_2F spawnDirection =
+		{
+			.x = cos(angle),
+			.y = sin(angle)
+		};
+
+		const float SPAWN_DISTANCE = BOUNDARY_RADIUS - 30.0f;
+		const D2D1_POINT_2F spawnPosition = Math::ScaleVector(spawnDirection, SPAWN_DISTANCE);
+
+		Sprite& sprite = monster->sprite;
+		sprite.SetPosition(spawnPosition);
+		sprite.SetScale(scale);
+		sprite.SetActive(true);
+	}
+
+	// 초기 HpBar를 세팅한다.
+	{
+		const D2D1_POINT_2F offset = getHpBarOffset(monster->sprite, hpBarOffset);
+		monster->backgroundHpBar.SetPosition(offset);
+		monster->hpBar.SetPosition(offset);
+		monster->backgroundHpBar.SetActive(false);
+		monster->hpBar.SetActive(false);
+	}
 }
 
 void MainScene::spawnMonsterEffect(const MonsterSpawnEffectDesc& desc)
@@ -3035,6 +3079,23 @@ void MainScene::updateMonsterHp(Monster* monster, const float maxWidthBar, const
 	hpBar.SetScale({ scale.x, scale.y });
 }
 
+D2D1_POINT_2F MainScene::getHpBarOffset(const Sprite& sprite, const D2D1_POINT_2F offset)
+{
+	const D2D1_SIZE_F scaleOffset =
+	{
+		.width = sprite.GetScale().width * mRectangleTexture.GetWidth() * 0.5f,
+			.height = sprite.GetScale().height * mRectangleTexture.GetHeight() * 0.5f
+	};
+
+	const D2D1_POINT_2F result =
+	{
+		.x = sprite.GetPosition().x - scaleOffset.width + offset.x,
+		.y = sprite.GetPosition().y - scaleOffset.height + offset.y
+	};
+
+	return result;
+}
+
 void MainScene::deadMonsterEffect(const MonsterDeadSoundDesc& desc)
 {
 	Monster* monster = desc.monster;
@@ -3052,7 +3113,7 @@ void MainScene::deadMonsterEffect(const MonsterDeadSoundDesc& desc)
 		initializeCameraShake(amplitude, duration, frequency);
 
 		monster->hp = 0;
-		monster->isActiveHpBar = false;
+		monster->isHpBarActivated = false;
 		monster->backgroundHpBar.SetActive(false);
 		monster->hpBar.SetActive(false);
 
@@ -3188,7 +3249,7 @@ void MainScene::initializeMonster(const MonsterInitDesc& desc)
 	monster->deadEffectTimer = {};
 	monster->moveSpeed = {};
 	monster->hp = maxHp;
-	monster->isActiveHpBar = false;
+	monster->isHpBarActivated = false;
 
 	// 몬스터 Sprite의 기본 정보를 초기화한다.
 	Sprite& sprite = monster->sprite;
