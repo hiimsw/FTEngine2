@@ -64,7 +64,7 @@ static constexpr uint32_t SHADOW_COUNT = 10;
 
 struct Dash
 {
-	Sprite shadow[SHADOW_COUNT];
+	std::array<Sprite, SHADOW_COUNT> shadow;
 	float shadowCoolTimer;
 	int32_t count;
 	float timer;
@@ -142,7 +142,7 @@ struct SlowMonster
 	D2D1_POINT_2F endPosition;
 
 	// 그림자 관련
-	Sprite shadow[SHADOW_COUNT];
+	std::array<Sprite, SHADOW_COUNT> shadow;
 	float shadowCoolTimer;
 };
 
@@ -430,7 +430,7 @@ private:
 	static constexpr float BIG_MONSTER_SCALE = 1.2f;
 	static constexpr float BIG_MONSTER_HP_BAR_WIDTH = 0.1f;
 
-	Monster mBigMonsters[BIG_MONSTER_COUNT]{};
+	std::array<Monster, BIG_MONSTER_COUNT> mBigMonsters{};
 	float mBigMonsterSpawnTimer{};
 	Sound mBigMonsterDeadSound{};
 
@@ -443,7 +443,7 @@ private:
 	static constexpr uint32_t RUN_MONSTER_MAX_HP = 1;
 	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
 
-	RunMonster mRunMonsters[RUN_MONSTER_COUNT]{};
+	std::array<RunMonster, RUN_MONSTER_COUNT> mRunMonsters{};
 	float mRunMonsterSpawnTimer{};
 	Sound mRunMonsterDeadSound{};
 
@@ -454,7 +454,7 @@ private:
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
 	static constexpr uint32_t SLOW_MONSTER_MAX_HP = 10;
 
-	SlowMonster mSlowMonsters[SLOW_MONSTER_COUNT]{};
+	std::array<SlowMonster, SLOW_MONSTER_COUNT> mSlowMonsters{};
 	float mSlowMonsterSpawnTimer{};
 	Sound mSlowMonsterDeadSound{};
 

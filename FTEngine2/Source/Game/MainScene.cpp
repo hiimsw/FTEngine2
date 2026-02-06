@@ -2627,20 +2627,19 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 #ifdef _DEBUG
 	// 몬스터 충돌박스를 그린다.
 	{
-		for (uint32_t i = 0; i < BIG_MONSTER_COUNT; ++i)
+		for (Monster& monster : mBigMonsters)
 		{
-			Sprite& monsterSprite = mBigMonsters[i].sprite;
-
-			if (mIsColliderKeyDown and monsterSprite.IsActive())
+			Sprite& sprite = monster.sprite;
+			if (mIsColliderKeyDown and sprite.IsActive())
 			{
 				const Matrix3x2F worldView = Transformation::getWorldMatrix(
 					{
-						.x = getRectangleFromSprite(monsterSprite).left,
-						.y = getRectangleFromSprite(monsterSprite).top
+						.x = getRectangleFromSprite(sprite).left,
+						.y = getRectangleFromSprite(sprite).top
 					}) * view;
 				renderTarget->SetTransform(worldView);
 
-				const D2D1_SIZE_F scale = monsterSprite.GetScale();
+				const D2D1_SIZE_F scale = sprite.GetScale();
 
 				const D2D1_RECT_F colliderSize =
 				{
@@ -2652,29 +2651,80 @@ void MainScene::PostDraw(const D2D1::Matrix3x2F& view, const D2D1::Matrix3x2F& v
 
 				renderTarget->DrawRectangle(colliderSize, mCyanBrush);
 			}
-		}
-	}
 
-	// 총알 충돌박스를 그린다.
-	{
-		for (uint32_t i = 0; i < BULLET_COUNT; ++i)
-		{
-			Sprite& bulletSprite = mBullets[i].sprite;
-
-			if (mIsColliderKeyDown and bulletSprite.IsActive())
+			for (RunMonster& run : mRunMonsters)
 			{
-				const Matrix3x2F worldView = Transformation::getWorldMatrix(getCircleFromSprite(bulletSprite).point) * view;
-				renderTarget->SetTransform(worldView);
-
-				const D2D1_SIZE_F scale = bulletSprite.GetScale();
-
-				const D2D1_ELLIPSE circleSize =
+				Sprite& sprite = run.monster.sprite;
+				if (mIsColliderKeyDown and sprite.IsActive())
 				{
-					.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
-					.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
-				};
+					const Matrix3x2F worldView = Transformation::getWorldMatrix(
+						{
+							.x = getRectangleFromSprite(sprite).left,
+							.y = getRectangleFromSprite(sprite).top
+						}) * view;
+					renderTarget->SetTransform(worldView);
 
-				renderTarget->DrawEllipse(circleSize, mYellowBrush);
+					const D2D1_SIZE_F scale = sprite.GetScale();
+
+					const D2D1_RECT_F colliderSize =
+					{
+						.left = 0.0f,
+						.top = 0.0f,
+						.right = scale.width * mRectangleTexture.GetWidth(),
+						.bottom = scale.width * mRectangleTexture.GetWidth()
+					};
+
+					renderTarget->DrawRectangle(colliderSize, mCyanBrush);
+				}
+			}
+
+			for (SlowMonster& slow : mSlowMonsters)
+			{
+				Sprite& sprite = slow.monster.sprite;
+				if (mIsColliderKeyDown and sprite.IsActive())
+				{
+					const Matrix3x2F worldView = Transformation::getWorldMatrix(
+						{
+							.x = getRectangleFromSprite(sprite).left,
+							.y = getRectangleFromSprite(sprite).top
+						}) * view;
+					renderTarget->SetTransform(worldView);
+
+					const D2D1_SIZE_F scale = sprite.GetScale();
+
+					const D2D1_RECT_F colliderSize =
+					{
+						.left = 0.0f,
+						.top = 0.0f,
+						.right = scale.width * mRectangleTexture.GetWidth(),
+						.bottom = scale.width * mRectangleTexture.GetWidth()
+					};
+
+					renderTarget->DrawRectangle(colliderSize, mCyanBrush);
+				}
+			}
+		}
+
+		// 총알 충돌박스를 그린다.
+		{
+			for (Bullet& bullet : mBullets)
+			{
+				Sprite& sprite = bullet.sprite;
+				if (mIsColliderKeyDown and sprite.IsActive())
+				{
+					const Matrix3x2F worldView = Transformation::getWorldMatrix(getCircleFromSprite(sprite).point) * view;
+					renderTarget->SetTransform(worldView);
+
+					const D2D1_SIZE_F scale = sprite.GetScale();
+
+					const D2D1_ELLIPSE circleSize =
+					{
+						.radiusX = scale.width * mCircleTexture.GetWidth() * 0.5f,
+						.radiusY = scale.height * mCircleTexture.GetHeight() * 0.5f
+					};
+
+					renderTarget->DrawEllipse(circleSize, mYellowBrush);
+				}
 			}
 		}
 	}
