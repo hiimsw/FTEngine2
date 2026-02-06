@@ -288,7 +288,7 @@ private:
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
 	
-	void spawnParticle(Monster* monster, uint32_t spawnCount);
+	void spawnParticle(Particle* particle, uint32_t size, Monster* monster, uint32_t spawnCount);
 	void updateParticle(Particle* particlee, const uint32_t particleCount, const float deltaTime);
 
 	void spawnLongEffect(Sprite* sprites, const uint32_t size, Texture* texture, const Monster& monster);
@@ -316,6 +316,7 @@ private:
 	Texture mWhiteBarTexture{};
 	Texture mRedBarTexture{};
 	Texture mYellowBarTexture{};
+	Texture mBlueBarTexture{};
 
 	Camera mMainCamera{};
 	float mCameraShakeTime = 0.0f;
@@ -398,9 +399,12 @@ private:
 	Sound mOrbitSound{};
 
 	// 플레이어 몬스터 all kill 스킬
-	static constexpr uint32_t KILL_ALL_MONSTER_COUNT = 2;
+	static constexpr uint32_t KILL_ALL_MONSTER_COUNT = 10;
+	static constexpr float UI_KILL_SCALE_WIDTH = 0.2f;
 	bool mIsKillAllMonster = false;
 	int32_t mKillMonsterCount{};
+	Sprite mUiKillBackgroundBar{};
+	Sprite mUiKillCountBar{};
 
 	// UI
 	static constexpr float UI_DASH_SCALE_WIDTH = 1.5f;
@@ -421,6 +425,8 @@ private:
 
 	Label mOrbitLabel{};
 	Label mOrbitKeyLabel{};
+
+	Label mKillAllMonsterLabel{};
 
 	Font mTimerFont{};
 	Label mTimerLabel{};

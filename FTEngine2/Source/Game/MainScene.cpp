@@ -62,6 +62,7 @@ void MainScene::Initialize()
 		mWhiteBarTexture.Initialize(GetHelper(), L"Resource/WhiteBar.png");
 		mRedBarTexture.Initialize(GetHelper(), L"Resource/RedBar.png");
 		mYellowBarTexture.Initialize(GetHelper(), L"Resource/YellowBar.png");
+		mBlueBarTexture.Initialize(GetHelper(), L"Resource/BlueBar.png");
 	}
 
 	// 사운드를 초기화한다.
@@ -302,7 +303,8 @@ void MainScene::Initialize()
 			particle.speed = getRandom(100.0f, 300.0f);
 
 			Sprite& sprite = particle.sprite;
-			sprite.SetScale({ .width = 0.5f, .height = 0.5f });
+			sprite.SetScale({ .width = 0.7f, .height = 0.7f });
+			sprite.SetAngle(45.0f);
 			sprite.SetActive(false);
 			sprite.SetTexture(rectParticleTextures[i % COLOR_COUNT]);
 			mSpriteLayers[uint32_t(Layer::Effect)].push_back(&sprite);
@@ -364,6 +366,26 @@ void MainScene::Initialize()
 		mUiHpBar.SetUI(true);
 		mUiHpBar.SetTexture(&mRedBarTexture);
 		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiHpBar);
+	}
+
+	// All Kill Bar를 초기화한다.
+	{
+		mUiKillBackgroundBar.SetPosition({ .x = -float(Constant::Get().GetWidth()) * 0.5f + 100.0f, .y = mUiBackgroundHpBar.GetPosition().y - 20.0f });
+		mUiKillBackgroundBar.SetScale({ .width = UI_KILL_SCALE_WIDTH, .height = 1.0f });
+		mUiKillBackgroundBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiKillBackgroundBar.SetUI(true);
+		mUiKillBackgroundBar.SetTexture(&mWhiteBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiKillBackgroundBar);
+		
+		mUiKillCountBar.SetPosition(mUiKillBackgroundBar.GetPosition());
+
+		float targetWidth = UI_KILL_SCALE_WIDTH * (float(mKillMonsterCount) / float(KILL_ALL_MONSTER_COUNT));
+		mUiKillCountBar.SetScale({ targetWidth, mUiKillBackgroundBar.GetScale().height});
+
+		mUiKillCountBar.SetCenter({ .x = -0.5f, .y = 0.0f });
+		mUiKillCountBar.SetUI(true);
+		mUiKillCountBar.SetTexture(&mBlueBarTexture);
+		mSpriteLayers[uint32_t(Layer::UI)].push_back(&mUiKillCountBar);
 	}
 
 	// 라벨을 초기화한다.
@@ -475,6 +497,18 @@ void MainScene::Initialize()
 			mOrbitKeyLabel.SetText(L"Q");
 			mOrbitKeyLabel.SetCenter({ .x = -0.5f, .y = 0.0f });
 			mLabels.push_back(&mOrbitKeyLabel);
+		}
+
+		// 모든 몬스터 삭제 라벨
+		{
+			mKillAllMonsterLabel.SetFont(&mDefaultFont);
+			mKillAllMonsterLabel.SetUI(true);
+
+			D2D1_POINT_2F offset = { .x = mUiKillBackgroundBar.GetPosition().x - 5.0f, .y = mUiKillBackgroundBar.GetPosition().y };
+			mKillAllMonsterLabel.SetPosition(offset);
+			mKillAllMonsterLabel.SetText(L"F: " + std::to_wstring(mKillMonsterCount) + L" / " + std::to_wstring(KILL_ALL_MONSTER_COUNT));
+			mKillAllMonsterLabel.SetCenter({ .x = 0.5f, .y = 0.0f });
+			mLabels.push_back(&mKillAllMonsterLabel);
 		}
 
 		// 엔딩
@@ -1143,9 +1177,7 @@ bool MainScene::Update(const float deltaTime)
 		}
 
 		// 모든 몬스터를 죽일 수 있는 스킬을 업데이트한다.
-		{
-			DEBUG_LOG("%d", mKillMonsterCount);
-			
+		{			
 			if (Input::Get().GetKeyDown('F'))
 			{
 				if (mKillMonsterCount >= KILL_ALL_MONSTER_COUNT)
@@ -1164,6 +1196,7 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					monster.hp = 0;
+					spawnParticle(mRectParticles.data(), mRectParticles.size(), &monster, PARTICLE_PER);
 				}
 
 				for (RunMonster& run : mRunMonsters)
@@ -1174,6 +1207,7 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					run.monster.hp = 0;
+					spawnParticle(mRectParticles.data(), mRectParticles.size(), &run.monster, PARTICLE_PER);
 				}
 
 				for (SlowMonster& slow : mSlowMonsters)
@@ -1184,12 +1218,12 @@ bool MainScene::Update(const float deltaTime)
 					}
 
 					slow.monster.hp = 0;
+					spawnParticle(mRectParticles.data(), mRectParticles.size(), &slow.monster, PARTICLE_PER);
 				}
 
 				mKillMonsterCount = 0;
 				mIsKillAllMonster = false;
 			}
-
 		}
 	}
 
@@ -1635,7 +1669,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnParticle(&monster, PARTICLE_PER);
+			spawnParticle(mStarParticles.data(), mStarParticles.size(), &monster, PARTICLE_PER);
 
 			if (monster.hp <= 0)
 			{
@@ -1654,7 +1688,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnParticle(&monster, PARTICLE_PER);
+			spawnParticle(mStarParticles.data(), mStarParticles.size(), &monster, PARTICLE_PER);
 			++mKillMonsterCount;
 			monster.isBulletColliding = false;
 		}
@@ -1668,7 +1702,7 @@ bool MainScene::Update(const float deltaTime)
 				continue;
 			}
 
-			spawnParticle(&monster, PARTICLE_PER);
+			spawnParticle(mStarParticles.data(), mStarParticles.size(), &monster, PARTICLE_PER);
 			++mKillMonsterCount;
 			monster.isBulletColliding = false;
 		}
@@ -1854,6 +1888,7 @@ bool MainScene::Update(const float deltaTime)
 
 	// 파티클을 업데이트한다.
 	updateParticle(mStarParticles.data(), STAR_PARTICLE_COUNT, deltaTime);
+	updateParticle(mRectParticles.data(), RECT_PARTICLE_COUNT, deltaTime);
 
 	// 이펙트를 업데이트한다.
 	{
@@ -2054,9 +2089,25 @@ bool MainScene::Update(const float deltaTime)
 
 		// 플레이어 체력바를 업데이트한다.
 		D2D1_POINT_2F scale = { mUiHpBar.GetScale().width, mUiHpBar.GetScale().height };
-		scale = Math::LerpVector(scale,
-			{ UI_HP_SCALE_WIDTH * (float(mHero.hp) / float(HERO_MAX_HP)), scale.y }, 10.0f * deltaTime);
+		float targetWidth = UI_HP_SCALE_WIDTH * (float(mHero.hp) / float(HERO_MAX_HP));
+		scale = Math::LerpVector(scale, { .x = targetWidth, .y = scale.y }, 10.0f * deltaTime);
 		mUiHpBar.SetScale({ scale.x, scale.y });
+	}
+
+	// F 스킬바를 업데이트한다.
+	{
+		DEBUG_LOG("%f", mUiKillCountBar.GetScale().width);
+		D2D1_POINT_2F scale = { mUiKillCountBar.GetScale().width, mUiKillCountBar.GetScale().height };
+		float targetWidth = UI_KILL_SCALE_WIDTH * (float(mKillMonsterCount) / float(KILL_ALL_MONSTER_COUNT));
+		scale = Math::LerpVector(scale, { .x = targetWidth, .y = scale.y }, 20.0f * deltaTime);
+		mUiKillCountBar.SetScale({ scale.x, scale.y });
+
+		mKillAllMonsterLabel.SetText(L"F: " + std::to_wstring(mKillMonsterCount) + L" / " + std::to_wstring(KILL_ALL_MONSTER_COUNT));
+
+		if (mKillMonsterCount >= KILL_ALL_MONSTER_COUNT)
+		{
+			mKillMonsterCount = 10;
+		}
 	}
 
 	// 플레이어 대쉬바를 업데이트한다.
@@ -3163,12 +3214,14 @@ void MainScene::deadMonsterEffect(const MonsterDeadSoundDesc& desc)
 	}
 }
 
-void MainScene::spawnParticle(Monster* monster, uint32_t spawnCount)
+void MainScene::spawnParticle(Particle* particles, uint32_t size, Monster* monster, uint32_t spawnCount)
 {
 	ASSERT(monster != nullptr);
 
-	for (Particle& particle : mStarParticles)
+	for (uint32_t i = 0; i < size; ++i)
 	{
+		Particle& particle = particles[i];
+
 		if (particle.sprite.IsActive())
 		{
 			continue;
@@ -3198,9 +3251,9 @@ void MainScene::spawnParticle(Monster* monster, uint32_t spawnCount)
 	}
 }
 
-void MainScene::updateParticle(Particle* particles, const uint32_t particleCount, const float deltaTime)
+void MainScene::updateParticle(Particle* particles, const uint32_t size, const float deltaTime)
 {
-	for (uint32_t i = 0; i < particleCount; ++i)
+	for (uint32_t i = 0; i < size; ++i)
 	{
 		Particle& particle = particles[i];
 		Sprite& sprite = particle.sprite;
