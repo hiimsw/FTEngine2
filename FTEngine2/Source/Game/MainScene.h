@@ -432,12 +432,12 @@ private:
 	Label mTimerLabel{};
 	float mGameTimer{};
 
-	Sprite mEndingBackground{};
-	Font mEndingFont{};
-	Label mEndingLabel{};
-	float mEndingTimer{};
-	bool mIsEnding = false;
-	Sound mEndingSound{};
+	Sprite mGameOverBackground{};
+	Sprite mGameOver{};
+	Texture mGameOverTexture{};
+	float mGameOverTimer{};
+	bool mIsGameOver = false;
+	Sound mGameOverSound{};
 
 	// ∏ÛΩ∫≈Õ
 	static constexpr uint32_t BIG_MONSTER_COUNT = 5;

@@ -280,7 +280,7 @@ D2D1_RECT_F StartScene::getRectangleFromSprite(const Sprite& sprite, const Textu
 
 float StartScene::getRandom(const float min, const float max)
 {
-	const float result = float(rand()) / RAND_MAX * (max - min) + min;
+	const float	result = float(rand()) / RAND_MAX * (max - min) + min;
 	return result;
 }
 

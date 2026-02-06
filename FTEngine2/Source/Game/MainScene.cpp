@@ -27,7 +27,6 @@ void MainScene::Initialize()
 
 		mTimerFont.Initialize(GetHelper(), L"Arial", 40.0f);
 		mDefaultFont.Initialize(GetHelper(), L"Arial", 20.0f);
-		mEndingFont.Initialize(GetHelper(), L"Arial", 50.0f);
 		mBulletFont.Initialize(GetHelper(), L"Arial", 30.0f);
 
 		Input::Get().SetCursorVisible(false);
@@ -97,8 +96,8 @@ void MainScene::Initialize()
 		mSlowMonsterDeadSound.Initialize(GetHelper(), "Resource/Sound/bone_break3.mp3", false);
 		mSlowMonsterDeadSound.SetVolume(0.5f);
 
-		mEndingSound.Initialize(GetHelper(), "Resource/Sound/game_over.mp3", false);
-		mEndingSound.SetVolume(0.3f);
+		mGameOverSound.Initialize(GetHelper(), "Resource/Sound/game_over.mp3", false);
+		mGameOverSound.SetVolume(0.3f);
 
 		mButtonSound.Initialize(GetHelper(), "Resource/Sound/button_sound.wav", false);
 		mButtonSound.SetVolume(0.2f);
@@ -513,18 +512,19 @@ void MainScene::Initialize()
 
 		// 엔딩
 		{
-			mEndingBackground.SetPosition({ .x = 0.0f, .y = -60.0f });
-			mEndingBackground.SetScale({ 10.0f, 6.0f });
-			mEndingBackground.SetUI(true);
-			mEndingBackground.SetActive(false);
-			mEndingBackground.SetTexture(&mBlackRectangleTexture);
-			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mEndingBackground);
+			mGameOverBackground.SetPosition({ .x = 0.0f, .y = -60.0f });
+			mGameOverBackground.SetScale({ 10.0f, 6.0f });
+			mGameOverBackground.SetUI(true);
+			mGameOverBackground.SetActive(false);
+			mGameOverBackground.SetTexture(&mBlackRectangleTexture);
+			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mGameOverBackground);
 
-			mEndingLabel.SetFont(&mEndingFont);
-			mEndingLabel.SetUI(true);
-			mEndingLabel.SetActive(false);
-			mEndingLabel.SetText(L"GameOver");
-			mLabels.push_back(&mEndingLabel);
+			mGameOverTexture.Initialize(GetHelper(), L"Resource/GameOver.png");
+			mGameOver.SetScale({ .width = 1.5f, .height = 1.5f });
+			mGameOver.SetUI(true);
+			mGameOver.SetActive(false);
+			mGameOver.SetTexture(&mGameOverTexture);
+			mSpriteLayers[uint32_t(Layer::UI)].push_back(&mGameOver);
 		}
 
 		// 다시 시작 버튼
@@ -806,8 +806,8 @@ bool MainScene::Update(const float deltaTime)
 					// 거리에 따라 반동효과가 다르다.
 					const float length = Math::GetVectorLength(bullet.direction);
 					bullet.direction = (length >= 200.0f) ?
-						Math::RotateVector(bullet.direction, getRandom(-10.0f, 10.0f))
-						: Math::RotateVector(bullet.direction, getRandom(-5.0f, 5.0f));
+						Math::RotateVector(bullet.direction, getRandom(-5.0f, 5.0f))
+						: Math::RotateVector(bullet.direction, getRandom(0.0f, 0.0f));
 
 					bullet.direction = Math::NormalizeVector(bullet.direction);
 
@@ -986,6 +986,9 @@ bool MainScene::Update(const float deltaTime)
 				mShield.state = eShield_State::Growing;
 			}
 
+			constexpr float SHIELD_SKILL_DURATION = 3.0f;
+			constexpr float COOL_TIME = 8.0f;
+
 			// 쿨타임을 표시한다.
 			{
 				mShield.labelCoolTimer += deltaTime;
@@ -994,7 +997,8 @@ bool MainScene::Update(const float deltaTime)
 				if (mShield.state != eShield_State::End)
 				{
 					mShieldKeyLabel.SetActive(false);
-					mShieldLabel.SetText(std::to_wstring(8 - seconds));
+					mShieldLabel.SetText(std::to_wstring(uint32_t(2.0f + SHIELD_SKILL_DURATION + COOL_TIME) - seconds));
+
 				}
 				else
 				{
@@ -1002,8 +1006,6 @@ bool MainScene::Update(const float deltaTime)
 					mShieldLabel.SetActive(false);
 				}
 			}
-
-			constexpr float SHIELD_SKILL_DURATION = 3.0f;
 
 			switch (mShield.state)
 			{
@@ -1068,7 +1070,7 @@ bool MainScene::Update(const float deltaTime)
 
 				mShield.coolTimer += deltaTime;
 
-				if (mShield.coolTimer >= 2.0f)
+				if (mShield.coolTimer >= COOL_TIME)
 				{
 					mShield.coolTimer = 0.0f;
 					mShield.state = eShield_State::End;
@@ -1831,7 +1833,6 @@ bool MainScene::Update(const float deltaTime)
 			// 체력바를 업데이트한다.
 			updateMonsterHp(&monster, RUN_MONSTER_HP_BAR_WIDTH, RUN_MONSTER_MAX_HP, deltaTime);
 
-
 			// 몬스터가 죽으면 이펙트가 생성된다.
 			if (monster.hp <= 0
 				and monster.state == eMonster_State::Life)
@@ -1964,37 +1965,37 @@ bool MainScene::Update(const float deltaTime)
 			mShield.state = eShield_State::End;
 			mOrbit.state = eOrbit_State::End;
 
-			mEndingSound.Play();
+			mGameOverSound.Play();
 		}
 
 		// UI 버튼 관련
 		{
 			// 플레이어가 죽었을 때 딱 한 번 실행된다.
-			if (not mIsEnding
+			if (not mIsGameOver
 				and mHero.hp <= 0)
 			{
-				mEndingLabel.SetActive(true);
+				mGameOver.SetActive(true);
 
-				mEndingTimer += deltaTime;
+				mGameOverTimer += deltaTime;
 
-				if (mEndingTimer >= 2.0f)
+				if (mGameOverTimer >= 2.0f)
 				{
-					mIsEnding = true;
-					mEndingLabel.SetActive(false);
+					mIsGameOver = true;
+					mGameOver.SetActive(false);
 
 					Input::Get().SetCursorVisible(true);
 					mZoom.SetActive(false);
 
-					mEndingBackground.SetActive(true);
+					mGameOverBackground.SetActive(true);
 					mResumeButton.SetActive(true);
 					mExitButton.SetActive(true);
 
-					mEndingTimer = 0.0f;
+					mGameOverTimer = 0.0f;
 				}
 			}
 
 			// UI 버튼을 업데이트한다.
-			if (mIsEnding)
+			if (mIsGameOver)
 			{
 				updateButtonState
 				(
@@ -2922,7 +2923,7 @@ void MainScene::Finalize()
 	mSlowMonsterDeadSound.Finalize();
 
 	mButtonSound.Finalize();
-	mEndingSound.Finalize();
+	mGameOverSound.Finalize();
 }
 
 D2D1_RECT_F MainScene::getRectangleFromSprite(const Sprite& sprite)
