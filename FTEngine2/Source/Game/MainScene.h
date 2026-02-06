@@ -36,14 +36,6 @@ enum class eMonster_State
 	Dead
 };
 
-enum class eCollision_State
-{
-	None,
-	Enter,
-	Stay,
-	Exit
-};
-
 enum class eSpawnEffect_State
 {
 	None,
@@ -66,6 +58,18 @@ struct Player
 	bool isHitBoundry;
 	int32_t hp;
 	int32_t prevHp;
+};
+
+static constexpr uint32_t SHADOW_COUNT = 10;
+
+struct Dash
+{
+	Sprite shadow[SHADOW_COUNT];
+	float shadowCoolTimer;
+	int32_t count;
+	float timer;
+	float moveSpeed;
+	bool isActive;
 };
 
 struct Shield
@@ -112,9 +116,34 @@ struct Monster
 	float deadEffectTimer;
 	float moveSpeed;
 
+	bool isActiveHpBar;
 	Sprite backgroundHpBar;
 	Sprite hpBar;
 	int32_t hp;
+};
+
+struct RunMonster
+{
+	Monster monster;
+	Sprite startBar;
+	bool isMoveable;
+	D2D1_POINT_2F direction;
+};
+
+struct SlowMonster
+{
+	Monster monster;
+	eSlow_Monster_State moveState;
+
+	float movingTimer;
+	float stopTimer;
+
+	D2D1_POINT_2F startPosition;
+	D2D1_POINT_2F endPosition;
+
+	// 그림자 관련
+	Sprite shadow[SHADOW_COUNT];
+	float shadowCoolTimer;
 };
 
 struct Bullet
@@ -203,6 +232,27 @@ struct ButtonDesc
 	bool* isSoundPlay;
 };
 
+struct LongEffectDesc
+{
+	Sprite* sprite;
+	const uint32_t size;
+	float* timer;
+	const float time;
+	const D2D1_SIZE_F scale;
+	const float deltaTime;
+};
+
+struct DiamondEffectDesc
+{
+	DiamondEffect* effect;
+	const uint32_t size;
+	const D2D1_SIZE_F scale;
+	const float speed;
+	const float time;
+	const D2D1_POINT_2F thick;
+	const float deltaTime;
+};
+
 class MainScene final : public Scene
 {
 public:
@@ -236,9 +286,14 @@ private:
 	void spawnMonsterEffect(const MonsterSpawnEffectDesc& desc);
 	void deadMonsterEffect(const MonsterDeadSoundDesc& desc);
 	
-	void spawnParticle(Particle* particle, const D2D1_POINT_2F spawnPosition);
-	void spawnLongEffect(Sprite* effect, Texture* texture, const Monster& monster);
+	void spawnParticle(Monster* monster, uint32_t spawnCount);
+	void updateParticle(Particle* particlee, const uint32_t particleCount, const float deltaTime);
 
+	void spawnLongEffect(Sprite* sprites, const uint32_t size, Texture* texture, const Monster& monster);
+	void updateLongEffect(const LongEffectDesc& desc);
+
+	void spawnDiamondEffect(DiamondEffect* diamondEffect, const uint32_t effectSize, const Monster& monster);
+	void updateDiamondEffect(const DiamondEffectDesc& desc);
 	void drawDiamondEffect(const DrawDiamondEffectDesc& desc);
 
 	void updateButtonState(const ButtonDesc& desc);
@@ -270,11 +325,9 @@ private:
 
 	// 공용
 	static constexpr float IN_BOUNDARY_RADIUS = 60.0f;
-	static constexpr float BOUNDARY_RADIUS = 700.0f;
+	static constexpr float BOUNDARY_RADIUS = 400.0f;
 
 	static constexpr float UI_CENTER_POSITION_Y = 300.0f;
-
-	static constexpr uint32_t SHADOW_COUNT = 40;
 
 	static constexpr uint32_t PLAYER_ATTACK_VALUE = 10;
 	static constexpr uint32_t MONSTER_ATTACK_VALUE = 10;
@@ -310,12 +363,7 @@ private:
 
 	// 플레이어 대쉬
 	static constexpr uint32_t DASH_MAX_COUNT = 10;
-	Sprite mDashShadows[SHADOW_COUNT]{};
-	int32_t mDashCount = DASH_MAX_COUNT;
-	float mDashCountTimer{};
-	float mDashShadowCoolTimer{};
-	float mDashSpeed = 0.0f;
-	bool mIsDashing = false;
+	Dash mDash{};
 	Sound mDashSound{};
 
 	// 플레이어 총알
@@ -382,30 +430,21 @@ private:
 	static constexpr float BIG_MONSTER_SCALE = 1.2f;
 	static constexpr float BIG_MONSTER_HP_BAR_WIDTH = 0.1f;
 
-	static constexpr float BIG_MONSTER_DIE_EFFECT_TIME = 0.2f;
-
 	Monster mBigMonsters[BIG_MONSTER_COUNT]{};
 	float mBigMonsterSpawnTimer{};
-
 	Sound mBigMonsterDeadSound{};
 
 	// 돌진 몬스터
-	static constexpr uint32_t RUN_MONSTER_COUNT = 5;
+	static constexpr uint32_t RUN_MONSTER_COUNT = 3;
 	static constexpr float RUN_MONSTER_SCALE = 0.5f;
 	static constexpr float RUN_MONSTER_START_BAR_WIDTH = 0.4f;
-
-	Monster mRunMonsters[RUN_MONSTER_COUNT]{};
-	float mRunMonsterSpawnTimer{};
 
 	// 바가 다 차면, 이동한다.
 	static constexpr uint32_t RUN_MONSTER_MAX_HP = 1;
 	static constexpr float RUN_MONSTER_HP_BAR_WIDTH = 0.05f;
 
-	Sprite mRunMonsterStartBars[RUN_MONSTER_COUNT]{};
-	bool mRunMonsterisMoveables[RUN_MONSTER_COUNT]{};
-	D2D1_POINT_2F mRunMonsterMoveDirections[RUN_MONSTER_COUNT]{};
-	float mRunMonsterMoveSpeeds[RUN_MONSTER_COUNT]{};
-
+	RunMonster mRunMonsters[RUN_MONSTER_COUNT]{};
+	float mRunMonsterSpawnTimer{};
 	Sound mRunMonsterDeadSound{};
 
 	// 느린 몬스터
@@ -415,25 +454,9 @@ private:
 	static constexpr float SLOW_MONSTER_HP_BAR_WIDTH = 0.06f;
 	static constexpr uint32_t SLOW_MONSTER_MAX_HP = 10;
 
-	static constexpr float SLOW_MONSTER_DIE_EFFECT_TIME = 0.5f;
-
-	Monster mSlowMonsters[SLOW_MONSTER_COUNT]{};
+	SlowMonster mSlowMonsters[SLOW_MONSTER_COUNT]{};
 	float mSlowMonsterSpawnTimer{};
-
-	// 이동 관련
-	eSlow_Monster_State mSlowMonsterState[SLOW_MONSTER_COUNT] = { eSlow_Monster_State::End };
-
-	float mSlowMonsterMovingTimers[SLOW_MONSTER_COUNT]{};
-	float mSlowMonsterStopTimers[SLOW_MONSTER_COUNT]{};
-
-	D2D1_POINT_2F mSlowMonsterStartPositions[SLOW_MONSTER_COUNT]{};
-	D2D1_POINT_2F mSlowMonsterEndPositions[SLOW_MONSTER_COUNT]{};
-
 	Sound mSlowMonsterDeadSound{};
-
-	// 그림자 관련
-	Sprite mSlowMonsterShadows[SLOW_MONSTER_COUNT][SHADOW_COUNT]{};
-	float mSlowMonsterShadowCoolTimer{};
 
 	// 충돌 관련
 	Sprite* mTargetMonster = nullptr;
@@ -446,11 +469,9 @@ private:
 	float mLongEffectTimer[LONG_EFFECT_COUNT]{};
 
 	static constexpr uint32_t CYAN_EFFECT_COUNT = RUN_MONSTER_COUNT;
-	static constexpr float CYAN_EFFECT_TIME = 0.4f;
 	DiamondEffect mCyanEffect[CYAN_EFFECT_COUNT]{};
 
 	static constexpr uint32_t GREEN_EFFECT_COUNT = SLOW_MONSTER_COUNT;
-	static constexpr float GREEN_EFFECT_TIME = 0.7f;
 	DiamondEffect mGreenEffect[SLOW_MONSTER_COUNT]{};
 
 	// 파티클 관련

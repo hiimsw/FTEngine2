@@ -23,7 +23,7 @@ void StartScene::Initialize()
 	mBackgroundSound.Play();
 
 	mButtonSound.Initialize(GetHelper(), "Resource/Sound/button_sound.wav", false);
-	mButtonSound.SetVolume(1.0f);
+	mButtonSound.SetVolume(0.2f);
 
 	// Star를 초기화한다.
 	{
@@ -34,94 +34,41 @@ void StartScene::Initialize()
 		mBlueStarTexture.Initialize(GetHelper(), L"Resource/BlueStar.png");
 		mPurpleStarTexture.Initialize(GetHelper(), L"Resource/PurpleStar.png");
 
-		for (Star& star : mRedStars)
+		Texture* textures[6] =
 		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mRedStarTexture
-				}
-			);
-		}
+			&mRedStarTexture,
+			&mOrangeStarTexture,
+			&mYellowStarTexture,
+			&mGreenStarTexture,
+			&mBlueStarTexture,
+			&mPurpleStarTexture
+		};
 
-		for (Star& star : mOrangeStars)
-		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mOrangeStarTexture
-				}
-			);
-		}
+		// 파일 읽기
+		std::wifstream file(L"Resource/StarPosition.txt");
+		ASSERT(file);
 
-		for (Star& star : mYellowStars)
-		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mYellowStarTexture
-				}
-			);
-		}
+		D2D1_POINT_2F position{};
+		uint32_t starCount{};
 
-		for (Star& star : mGreenStars)
+		while (file >> position.x >> position.y)
 		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mGreenStarTexture
-				}
-			);
-		}
+			if (starCount >= STAR_COUNT)
+			{
+				break;
+			}
 
-		for (Star& star : mBlueStars)
-		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mBlueStarTexture
-				}
-			);
-		}
+			Star& star = mStars[starCount];
+			star.isOpacityVisible = false;
+			star.speed = getRandom(0.09f, 1.0f);
 
-		for (Star& star : mPurpleStars)
-		{
-			initializeStar
-			(
-				{
-					.star = &star,
-					.isVisible = false,
-					.minSpeed = 0.09f,
-					.maxSpeed = 1.0f,
-					.opacity = 0.0f,
-					.texture = &mPurpleStarTexture
-				}
-			);
+			Sprite& sprite = star.sprite;
+			sprite.SetPosition(position);
+			sprite.SetOpacity(0.0f);
+			sprite.SetTexture(textures[starCount % 6]);
+			mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
+
+			++starCount;
 		}
 	}
 
@@ -172,34 +119,32 @@ bool StartScene::Update(const float deltaTime)
 
 	// 투명도를 업데이트한다.
 	{
-		for (Star& red : mRedStars)
+		for (Star& star : mStars)
 		{
-			updateFadeEffect(&red, deltaTime);
-		}
+			float opacity = star.sprite.GetOpacity();
 
-		for (Star& orange : mOrangeStars)
-		{
-			updateFadeEffect(&orange, deltaTime);
-		}
+			if (star.isOpacityVisible)
+			{
+				opacity -= star.speed * deltaTime;
 
-		for (Star& orange : mYellowStars)
-		{
-			updateFadeEffect(&orange, deltaTime);
-		}
+				if (opacity <= 0.0f)
+				{
+					opacity = 0.0f;
+					star.isOpacityVisible = false;
+				}
+			}
+			else
+			{
+				opacity += star.speed * deltaTime;
 
-		for (Star& green : mGreenStars)
-		{
-			updateFadeEffect(&green, deltaTime);
-		}
+				if (opacity >= 1.0f)
+				{
+					opacity = 1.0f;
+					star.isOpacityVisible = true;
+				}
+			}
 
-		for (Star& blue : mBlueStars)
-		{
-			updateFadeEffect(&blue, deltaTime);
-		}
-
-		for (Star& purple : mPurpleStars)
-		{
-			updateFadeEffect(&purple, deltaTime);
+			star.sprite.SetOpacity(opacity);
 		}
 	}
 
@@ -216,14 +161,6 @@ bool StartScene::Update(const float deltaTime)
 			}
 		);
 
-		if (mIsStartButtonColliding)
-		{
-			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
-			{
-				mIsUpdate = false;
-			}
-		}
-
 		updateButtonState
 		(
 			{
@@ -234,6 +171,14 @@ bool StartScene::Update(const float deltaTime)
 				.isSoundPlay = &mIsExitButtonSoundPlay
 			}
 		);
+
+		if (mIsStartButtonColliding)
+		{
+			if (Input::Get().GetMouseButtonDown(Input::eMouseButton::Left))
+			{
+				mIsUpdate = false;
+			}
+		}
 
 		if (mIsExitButtonColliding)
 		{
@@ -341,35 +286,6 @@ float StartScene::getRandom(const float min, const float max)
 
 void StartScene::initializeStar(const StarDesc& desc)
 {
-	Star* star = desc.star;
-	const bool isVisible = desc.isVisible;
-	const float minSpeed = desc.minSpeed;
-	const float maxSpeed = desc.maxSpeed;
-	const float opacity = desc.opacity;
-	Texture* texture = desc.texture;
-
-	star->isVisible = isVisible;
-	star->speed = getRandom(minSpeed, maxSpeed);
-
-	const D2D1_SIZE_F screenScale = 
-	{ 
-		.width = float(Constant::Get().GetWidth()) * 0.5f, 
-		.height = float(Constant::Get().GetHeight()) * 0.5f 
-	};
-
-	constexpr float TITLE_RECT_OFFSET = 50.0f;
-
-	const D2D1_POINT_2F screenPoint =
-	{
-		.x = getRandom(-screenScale.width + TITLE_RECT_OFFSET, screenScale.width - TITLE_RECT_OFFSET),
-		.y = getRandom(-screenScale.height + TITLE_RECT_OFFSET, screenScale.height - TITLE_RECT_OFFSET)
-	};
-
-	Sprite& sprite = star->sprite;
-	sprite.SetPosition(screenPoint);
-	sprite.SetOpacity(opacity);
-	sprite.SetTexture(texture);
-	mSpriteLayers[uint32_t(Layer::Background)].push_back(&sprite);
 }
 
 void StartScene::updateFadeEffect(Star* star, const float deltaTime)
@@ -377,33 +293,9 @@ void StartScene::updateFadeEffect(Star* star, const float deltaTime)
 	ASSERT(star != nullptr);
 	
 	Sprite& sprite = star->sprite;
-	bool& isVisible = star->isVisible;
+	bool& isVisible = star->isOpacityVisible;
 	const float speed = star->speed;
 
-	float opacity = sprite.GetOpacity();
-
-	if (isVisible)
-	{
-		opacity -= speed * deltaTime;
-
-		if (opacity <= 0.0f)
-		{
-			opacity = 0.0f;
-			isVisible = false;
-		}
-	}
-	else
-	{
-		opacity += speed * deltaTime;
-
-		if (opacity >= 1.0f)
-		{
-			opacity = 1.0f;
-			isVisible = true;
-		}
-	}
-
-	sprite.SetOpacity(opacity);
 }
 
 void StartScene::updateButtonState(const StartSceneButtonDesc& desc)

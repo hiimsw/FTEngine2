@@ -8,7 +8,7 @@
 struct Star
 {
 	Sprite sprite;
-	bool isVisible;
+	bool isOpacityVisible;
 	float speed;
 };
 
@@ -58,23 +58,14 @@ private:
 	std::array<std::vector<Sprite*>, uint32_t(Layer::End)> mSpriteLayers{};
 	Camera mMainCamera{};
 
-	static constexpr uint32_t COUNT = 3;
-	Star mRedStars[COUNT]{};
+	static constexpr uint32_t STAR_COUNT = 18;
+	Star mStars[STAR_COUNT]{};
+
 	Texture mRedStarTexture{};
-
-	Star mOrangeStars[COUNT]{};
 	Texture mOrangeStarTexture{};
-
-	Star mYellowStars[COUNT]{};
 	Texture mYellowStarTexture{};
-
-	Star mGreenStars[COUNT]{};
 	Texture mGreenStarTexture{};
-
-	Star mBlueStars[COUNT]{};
 	Texture mBlueStarTexture{};
-
-	Star mPurpleStars[COUNT]{};
 	Texture mPurpleStarTexture{};
 
 	Sprite mStartButton{};
